@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "image.tmdb.org" },
     ],
   },
+  // Silencia el warning de Turbopack cuando usamos webpack
+  turbopack: {},
 };
 
 export default nextConfig;

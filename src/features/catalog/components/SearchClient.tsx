@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { InfiniteData, QueryClient, QueryClientProvider, useInfiniteQuery } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -122,11 +122,5 @@ function SearchInner() {
 }
 
 export default function SearchClient() {
-  const [client] = useState(() => new QueryClient());
-
-  return (
-    <QueryClientProvider client={client}>
-      <SearchInner />
-    </QueryClientProvider>
-  );
+  return <SearchInner />;
 }
