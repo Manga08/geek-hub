@@ -115,3 +115,73 @@ export async function addMember(
     throw new Error(`Error adding member to group: ${error.message}`);
   }
 }
+
+export async function isUserMemberOfGroup(
+  supabase: SupabaseServerClient,
+  userId: string,
+  groupId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("group_members")
+    .select("group_id")
+    .eq("user_id", userId)
+    .eq("group_id", groupId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Error checking membership: ${error.message}`);
+  }
+
+  return !!data;
+}
+
+export async function setDefaultGroupForUser(
+  supabase: SupabaseServerClient,
+  userId: string,
+  groupId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("profiles")
+    .update({ default_group_id: groupId })
+    .eq("id", userId);
+
+  if (error) {
+    throw new Error(`Error setting default group: ${error.message}`);
+  }
+}
+
+export async function getGroupById(
+  supabase: SupabaseServerClient,
+  groupId: string,
+): Promise<GroupRow | null> {
+  const { data, error } = await supabase
+    .from("groups")
+    .select("id, name, created_by, created_at")
+    .eq("id", groupId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Error fetching group: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function getUserRoleInGroup(
+  supabase: SupabaseServerClient,
+  userId: string,
+  groupId: string,
+): Promise<GroupRole | null> {
+  const { data, error } = await supabase
+    .from("group_members")
+    .select("member_role")
+    .eq("user_id", userId)
+    .eq("group_id", groupId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Error fetching role: ${error.message}`);
+  }
+
+  return data?.member_role as GroupRole | null;
+}

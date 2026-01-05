@@ -28,3 +28,20 @@ export async function fetchGroupsList(): Promise<GroupRow[]> {
 
   return res.json();
 }
+
+export async function setCurrentGroup(
+  groupId: string
+): Promise<CurrentGroupResponse> {
+  const res = await fetch("/api/groups/current", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ group_id: groupId }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.error || "Error setting current group");
+  }
+
+  return res.json();
+}
