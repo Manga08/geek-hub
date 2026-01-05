@@ -11,10 +11,14 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
     exclude: ["node_modules/**", ".next/**"],
+    deps: {
+      inline: ["html-encoding-sniffer", "@exodus/bytes"],
+    },
+    passWithNoTests: true,
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "."),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
 });
