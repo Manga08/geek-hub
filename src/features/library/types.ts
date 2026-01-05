@@ -5,6 +5,7 @@ export type EntryStatus = "planned" | "in_progress" | "completed" | "dropped";
 export interface LibraryEntry {
   id: string;
   user_id: string;
+  group_id: string;
   type: UnifiedItemType;
   provider: Provider;
   external_id: string;
@@ -22,6 +23,7 @@ export interface CreateEntryDTO {
   type: UnifiedItemType;
   provider: Provider;
   external_id: string;
+  group_id?: string; // Optional - will use default group if not provided
   title?: string | null;
   poster_url?: string | null;
   status?: EntryStatus;

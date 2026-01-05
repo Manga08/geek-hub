@@ -5,16 +5,37 @@ async function getSupabase() {
   return createSupabaseServerClient();
 }
 
+async function getCurrentGroupId(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("default_group_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.default_group_id) {
+    throw new Error("No default group set for user");
+  }
+
+  return profile.default_group_id;
+}
+
 export class LibraryRepo {
   async findByItem(
     type: string,
     provider: string,
-    externalId: string
+    externalId: string,
+    groupId?: string
   ): Promise<LibraryEntry | null> {
     const supabase = await getSupabase();
+    const gid = groupId ?? await getCurrentGroupId(supabase);
+
     const { data, error } = await supabase
       .from("library_entries")
       .select("*")
+      .eq("group_id", gid)
       .eq("type", type)
       .eq("provider", provider)
       .eq("external_id", externalId)
@@ -44,9 +65,12 @@ export class LibraryRepo {
 
   async create(dto: CreateEntryDTO): Promise<LibraryEntry> {
     const supabase = await getSupabase();
+    const groupId = dto.group_id ?? await getCurrentGroupId(supabase);
+
     const { data, error } = await supabase
       .from("library_entries")
       .insert({
+        group_id: groupId,
         type: dto.type,
         provider: dto.provider,
         external_id: dto.external_id,
@@ -107,7 +131,8 @@ export class LibraryRepo {
     return this.update(id, { is_favorite: !entry.is_favorite });
   }
 
-  async listByUser(options?: {
+  async listByGroup(options?: {
+    groupId?: string;
     type?: string;
     status?: string;
     isFavorite?: boolean;
@@ -116,6 +141,7 @@ export class LibraryRepo {
     offset?: number;
   }): Promise<LibraryEntry[]> {
     const supabase = await getSupabase();
+    const groupId = options?.groupId ?? await getCurrentGroupId(supabase);
 
     // Build query with sort option
     const sortColumn = options?.sort === "rating" ? "rating" : "updated_at";
@@ -124,6 +150,7 @@ export class LibraryRepo {
     let query = supabase
       .from("library_entries")
       .select("*")
+      .eq("group_id", groupId)
       .order(sortColumn, { ascending, nullsFirst: false });
 
     if (options?.type) {
@@ -149,6 +176,18 @@ export class LibraryRepo {
     }
 
     return data as LibraryEntry[];
+  }
+
+  // Alias for backwards compatibility
+  async listByUser(options?: {
+    type?: string;
+    status?: string;
+    isFavorite?: boolean;
+    sort?: "recent" | "rating";
+    limit?: number;
+    offset?: number;
+  }): Promise<LibraryEntry[]> {
+    return this.listByGroup(options);
   }
 }
 

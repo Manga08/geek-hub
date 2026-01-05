@@ -7,12 +7,13 @@ export interface LibraryListFilters {
   status?: string;
   favorite?: boolean;
   sort?: "recent" | "rating";
+  groupId?: string; // Optional for multi-tenant queries
 }
 
 export const libraryKeys = {
   all: ["library"] as const,
-  byItem: (type: string, provider: string, externalId: string) =>
-    [...libraryKeys.all, "item", type, provider, externalId] as const,
+  byItem: (type: string, provider: string, externalId: string, groupId?: string) =>
+    [...libraryKeys.all, "item", type, provider, externalId, groupId ?? "current"] as const,
   byId: (id: string) => [...libraryKeys.all, "id", id] as const,
   list: (filters?: LibraryListFilters) =>
     [...libraryKeys.all, "list", filters ?? {}] as const,

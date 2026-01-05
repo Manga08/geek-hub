@@ -63,6 +63,7 @@ export function useLibraryEntry({
       queryClient.setQueryData<LibraryEntry | null>(queryKey, {
         id: "optimistic",
         user_id: "optimistic",
+        group_id: "optimistic",
         type,
         provider,
         external_id: externalId,

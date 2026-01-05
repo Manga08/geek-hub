@@ -62,11 +62,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if entry already exists
+    // Check if entry already exists in the current group
     const existing = await libraryRepo.findByItem(
       body.type,
       body.provider,
-      body.external_id
+      body.external_id,
+      body.group_id // Pass group_id if provided
     );
 
     if (existing) {
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create entry (group_id will be resolved from user's default if not provided)
     const entry = await libraryRepo.create(body);
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
