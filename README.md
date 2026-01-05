@@ -43,6 +43,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - Fase 0C — Sanity post-migración a `/src`: se verificó estructura, aliases, Tailwind/shadcn, vitest config y se documentaron reglas del agente.
 - Fase 0D — Fix Vitest v4 config (build fix): se eliminó `test.deps.inline` inválido, se mantuvo alias `@ -> src`, `exclude e2e/**`, `passWithNoTests`, y se aseguró compatibilidad con Vitest v4/TypeScript para que `pnpm build` no falle.
 - Fase 1A — Supabase SSR + Auth (login/signup/callback): se agregó scaffolding de auth SSR (Supabase), rutas /login, /signup, /auth/callback, middleware de sesión y home protegido.
+- Fase 1B — Fix build auth forms (client components): se movieron los formularios de login/signup a Client Components (useFormState/useFormStatus), manteniendo server actions y dejando las pages como Server Components para que el build no falle.
 
 ## Auth (Supabase SSR)
 
