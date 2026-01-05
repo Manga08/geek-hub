@@ -68,6 +68,10 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - Hotfix — Fix build TMDb + callback sin 500:
 	- normalizeTmdb ahora tiene overloads separados para movie vs tv/anime y deja de romper el build por tipos.
 	- /auth/callback captura errores de ensureProfileAndDefaultGroup y redirige a /auth/auth-code-error en lugar de responder 500.
+- Hotfix 2 — Fix build TMDb (tipos popularity/vote_*):
+	- Se añadieron popularity, vote_average y vote_count a los tipos base de TMDb.
+	- normalizeTmdb usa esos campos en meta junto con runtime o number_of_seasons/episode_run_time según el tipo.
+	- Sin cambios de lógica ni dependencias; objetivo desbloquear el build.
 
 ## Auth (Supabase SSR)
 

@@ -34,6 +34,9 @@ export interface TmdbBase {
   backdrop_path?: string | null;
   genre_ids?: number[];
   genres?: TmdbGenre[];
+  popularity?: number | null;
+  vote_average?: number | null;
+  vote_count?: number | null;
 }
 
 export interface TmdbMovie extends TmdbBase {
