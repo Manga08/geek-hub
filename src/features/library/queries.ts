@@ -2,14 +2,39 @@ import type { LibraryEntry, CreateEntryDTO, UpdateEntryDTO } from "./types";
 
 const API_BASE = "/api/library/entry";
 
+export interface LibraryListFilters {
+  type?: string;
+  status?: string;
+  favorite?: boolean;
+  sort?: "recent" | "rating";
+}
+
 export const libraryKeys = {
   all: ["library"] as const,
   byItem: (type: string, provider: string, externalId: string) =>
     [...libraryKeys.all, "item", type, provider, externalId] as const,
   byId: (id: string) => [...libraryKeys.all, "id", id] as const,
-  list: (filters?: { type?: string; status?: string; isFavorite?: boolean }) =>
+  list: (filters?: LibraryListFilters) =>
     [...libraryKeys.all, "list", filters ?? {}] as const,
 };
+
+export async function fetchLibraryList(
+  filters?: LibraryListFilters
+): Promise<LibraryEntry[]> {
+  const params = new URLSearchParams();
+  if (filters?.type) params.set("type", filters.type);
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.favorite !== undefined) params.set("favorite", String(filters.favorite));
+  if (filters?.sort) params.set("sort", filters.sort);
+
+  const res = await fetch(`/api/library/list?${params}`);
+
+  if (!res.ok) {
+    throw new Error("Error fetching library list");
+  }
+
+  return res.json();
+}
 
 export async function fetchEntryByItem(
   type: string,

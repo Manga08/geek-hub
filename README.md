@@ -122,7 +122,15 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
   - EntryQuickActions integrado en MediaCard: botones heart (favorito) y plus (agregar/ver).
   - ItemDetail muestra estado actual de la entrada con badge de status, estrellas y botón editar.
   - useLibraryEntry hook con optimistic updates y React Query invalidation.
-  - Estados: planned, in_progress, completed, dropped. Rating 1-5 estrellas.
+  - Estados: planned, in_progress, completed, dropped. Rating 1-10.
+- Fase 3M — Library page + filters + premium UX:
+  - Nueva página `/library` con grid de entradas y filtros premium.
+  - API route GET `/api/library/list` con filtros type/status/favorite/sort.
+  - Filtros: tipo (game/movie/tv/anime), estado, favoritos, orden (recientes/rating).
+  - LibraryCard con acciones rápidas: favorito, editar, eliminar (con confirmación).
+  - Empty states premium: biblioteca vacía y sin resultados con filtros.
+  - Loading skeleton acorde al tema glass.
+  - Link en Navbar a /library.
 
 ## Catálogo (UI)
 
@@ -133,15 +141,22 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Library (Biblioteca personal)
 
+- **/library**: Página principal con grid de entradas y filtros premium (tipo, estado, favoritos, orden).
 - Cada usuario puede agregar ítems del catálogo a su biblioteca personal.
 - Estados disponibles: Planeado, En progreso, Completado, Abandonado.
-- Rating de 1-5 estrellas y campo de notas libre.
+- Rating de 1-10 puntos y campo de notas libre.
 - Marcar como favorito desde cards o detalle.
 - Acciones rápidas en hover de MediaCard: corazón (favorito) y plus (agregar/editar).
+- LibraryCard con botones: favorito, editar, eliminar (con confirmación).
 - Dialog premium (glass) para crear/editar entradas con todos los campos.
 - Supabase RLS asegura que cada usuario solo ve/edita sus propias entradas.
 - **Setup DB:** ejecutar `supabase/migrations/001_library_entries.sql` en tu proyecto Supabase (Dashboard → SQL Editor).
 - **Variables de entorno requeridas:** las mismas de Auth (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).
+- **Cómo probar:**
+  1. Ejecutar la migración SQL en Supabase
+  2. Iniciar sesión en la app
+  3. Ir a /search, agregar items a biblioteca
+  4. Ir a /library para ver, filtrar y gestionar tus entradas
 
 - Hotfix — group_members member_role + TMDb dispatch overload + getUser():
   - addMember inserta en group_members usando la columna member_role.

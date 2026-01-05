@@ -111,14 +111,20 @@ export class LibraryRepo {
     type?: string;
     status?: string;
     isFavorite?: boolean;
+    sort?: "recent" | "rating";
     limit?: number;
     offset?: number;
   }): Promise<LibraryEntry[]> {
     const supabase = await getSupabase();
+    
+    // Build query with sort option
+    const sortColumn = options?.sort === "rating" ? "rating" : "updated_at";
+    const ascending = false; // Always descending (newest first, highest rating first)
+    
     let query = supabase
       .from("library_entries")
       .select("*")
-      .order("updated_at", { ascending: false });
+      .order(sortColumn, { ascending, nullsFirst: false });
 
     if (options?.type) {
       query = query.eq("type", options.type);
