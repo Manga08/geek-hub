@@ -57,3 +57,13 @@ export function normalizeTmdb(type: UnifiedItemType, raw: TmdbMovie | TmdbTv): U
     meta,
   };
 }
+
+export function normalizeTmdbDispatch(
+  type: "movie" | "tv" | "anime",
+  raw: TmdbMovie | TmdbTv,
+): UnifiedCatalogItem {
+  if (type === "movie") {
+    return normalizeTmdb("movie", raw as TmdbMovie);
+  }
+  return normalizeTmdb(type, raw as TmdbTv);
+}

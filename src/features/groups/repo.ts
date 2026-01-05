@@ -41,7 +41,7 @@ export async function addMember(
 ): Promise<void> {
   const { error } = await supabase
     .from("group_members")
-    .insert({ group_id: groupId, user_id: userId, role })
+    .insert({ group_id: groupId, user_id: userId, member_role: role })
     .select("group_id")
     .single();
 

@@ -72,6 +72,11 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- Se añadieron popularity, vote_average y vote_count a los tipos base de TMDb.
 	- normalizeTmdb usa esos campos en meta junto con runtime o number_of_seasons/episode_run_time según el tipo.
 	- Sin cambios de lógica ni dependencias; objetivo desbloquear el build.
+- Hotfix — group_members member_role + TMDb dispatch overload + getUser():
+	- addMember inserta en group_members usando la columna member_role.
+	- Se agregó normalizeTmdbDispatch para resolver overloads en el servicio de catálogo.
+	- El servicio usa el dispatcher y mantiene tipado sin any.
+	- En layout/page se usa supabase.auth.getUser() para validar sesión antes de renderizar.
 
 ## Auth (Supabase SSR)
 
