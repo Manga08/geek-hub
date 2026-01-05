@@ -1,5 +1,5 @@
 import { normalizeRawgItem } from "@/features/catalog/normalize/rawg.normalize";
-import { normalizeTmdbItem } from "@/features/catalog/normalize/tmdb.normalize";
+import { normalizeTmdb } from "@/features/catalog/normalize/tmdb.normalize";
 import type { UnifiedCatalogItem, UnifiedItemType, Provider } from "@/features/catalog/normalize/unified.types";
 import { rawgGetGameDetail, rawgSearchGames } from "@/features/catalog/providers/rawg.client";
 import { tmdbGetDetail, tmdbSearch } from "@/features/catalog/providers/tmdb.client";
@@ -27,7 +27,7 @@ export async function searchUnified({
   const tmdbType = type === "movie" ? "movie" : "tv";
   const data = await tmdbSearch({ type: tmdbType, query, page });
   const items = Array.isArray(data.results)
-    ? data.results.map((item) => normalizeTmdbItem(item, type))
+    ? data.results.map((item) => normalizeTmdb(type, item))
     : [];
   const hasMore = typeof data.total_pages === "number" ? page < data.total_pages : false;
   return { items, page: data.page ?? page, hasMore };
@@ -55,5 +55,5 @@ export async function getUnifiedItem({
   }
   const tmdbType = type === "movie" ? "movie" : "tv";
   const data = await tmdbGetDetail({ type: tmdbType, id: externalId });
-  return normalizeTmdbItem(data, type);
+  return normalizeTmdb(type, data);
 }

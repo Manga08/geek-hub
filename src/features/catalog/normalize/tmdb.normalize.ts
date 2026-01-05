@@ -10,12 +10,16 @@ function parseYear(dateString?: string | null): number | null {
   return Number.isNaN(year) ? null : year;
 }
 
-export function normalizeTmdbItem(raw: TmdbMovie | TmdbTv, type: UnifiedItemType): UnifiedCatalogItem {
+export function normalizeTmdb(type: "movie", raw: TmdbMovie): UnifiedCatalogItem;
+export function normalizeTmdb(type: "tv" | "anime", raw: TmdbTv): UnifiedCatalogItem;
+export function normalizeTmdb(type: UnifiedItemType, raw: TmdbMovie | TmdbTv): UnifiedCatalogItem {
   const externalId = String(raw.id ?? "");
   const isMovie = type === "movie";
 
-  const title = isMovie ? raw.title ?? "" : raw.name ?? "";
-  const year = isMovie ? parseYear(raw.release_date) : parseYear(raw.first_air_date);
+  const title = isMovie ? (raw as TmdbMovie).title ?? "" : (raw as TmdbTv).name ?? "";
+  const year = isMovie
+    ? parseYear((raw as TmdbMovie).release_date)
+    : parseYear((raw as TmdbTv).first_air_date);
 
   const posterUrl = raw.poster_path ? `${POSTER_BASE}${raw.poster_path}` : null;
   const backdropUrl = raw.backdrop_path ? `${BACKDROP_BASE}${raw.backdrop_path}` : null;
@@ -25,9 +29,9 @@ export function normalizeTmdbItem(raw: TmdbMovie | TmdbTv, type: UnifiedItemType
     : [];
 
   const meta: Record<string, unknown> = {
-    runtime: raw.runtime,
-    number_of_seasons: raw.number_of_seasons,
-    episode_run_time: raw.episode_run_time,
+    runtime: isMovie ? (raw as TmdbMovie).runtime : undefined,
+    number_of_seasons: !isMovie ? (raw as TmdbTv).number_of_seasons : undefined,
+    episode_run_time: !isMovie ? (raw as TmdbTv).episode_run_time : undefined,
     popularity: raw.popularity,
     vote_average: raw.vote_average,
   };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { normalizeRawgItem } from "@/features/catalog/normalize/rawg.normalize";
-import { normalizeTmdbItem } from "@/features/catalog/normalize/tmdb.normalize";
+import { normalizeTmdb } from "@/features/catalog/normalize/tmdb.normalize";
 
 describe("normalizeRawgItem", () => {
   it("builds unified game item", () => {
@@ -36,7 +36,7 @@ describe("normalizeTmdbItem", () => {
       overview: "A hacker learns the world is a simulation.",
     };
 
-    const item = normalizeTmdbItem(raw, "movie");
+    const item = normalizeTmdb("movie", raw);
 
     expect(item.key).toBe("tmdb-42");
     expect(item.type).toBe("movie");

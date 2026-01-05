@@ -65,6 +65,9 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- Normalizadores usan tipos concretos y meta con Record<string, unknown>.
 	- Clientes RAWG/TMDb y servicio/catalog routes evitan catch any y serializan mensajes seguros.
 	- Sin cambios de lógica ni dependencias nuevas; objetivo solo pasar lint no-explicit-any.
+- Hotfix — Fix build TMDb + callback sin 500:
+	- normalizeTmdb ahora tiene overloads separados para movie vs tv/anime y deja de romper el build por tipos.
+	- /auth/callback captura errores de ensureProfileAndDefaultGroup y redirige a /auth/auth-code-error en lugar de responder 500.
 
 ## Auth (Supabase SSR)
 

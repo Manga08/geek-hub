@@ -21,7 +21,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
   }
 
-  await ensureProfileAndDefaultGroup(supabase);
+  try {
+    await ensureProfileAndDefaultGroup(supabase);
+  } catch (err) {
+    console.error("ensureProfileAndDefaultGroup failed", err);
+    return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
+  }
 
   return NextResponse.redirect(new URL(nextPath, origin));
 }
