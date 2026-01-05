@@ -14,23 +14,21 @@ export async function createSupabaseServerClient() {
 
   return createServerClient(url, key, {
     cookies: {
-      get(name) {
-        return cookieStore.get(name)?.value;
+      getAll() {
+        try {
+          return cookieStore.getAll();
+        } catch {
+          return [];
+        }
       },
-      set(name, value, options) {
-        cookieStore.set({
-          name,
-          value,
-          ...options,
-        });
-      },
-      remove(name, options) {
-        cookieStore.set({
-          name,
-          value: "",
-          ...options,
-          maxAge: 0,
-        });
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set({ name, value, ...options });
+          });
+        } catch {
+          // In Server Components, cookies.set throws; swallow to avoid crashing the render.
+        }
       },
     },
   });

@@ -84,6 +84,11 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- Se removió el try/catch con JSX en /item/... y la validación ocurre antes del render.
 	- Modo oscuro por defecto desde el layout root y auth con fondo oscuro + cards estilizadas.
 	- Post-login redirige a /search (callbacks, sign-in) y home (/ ) ahora redirige a /search.
+- Fase 3E — Fix Select (Radix) + Supabase SSR cookies:
+	- Se añadió @radix-ui/react-select.
+	- Select usa iconos de lucide-react (sin @radix-ui/react-icons).
+	- Supabase server client protege set de cookies con try/catch para evitar crash en Server Components.
+	- Nota: tras actualizar deps, ejecutar pnpm install.
 
 ## Catálogo (UI)
 
