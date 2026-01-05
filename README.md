@@ -47,6 +47,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - Fase 1C — Fix build (headers async en server actions): se ajustó headers() a await en getOrigin() y sus llamadas para cumplir con el tipado async de Next 16.
 - Fase 1D — Fix build (cookies async en Supabase SSR): se hizo async createSupabaseServerClient() esperando cookies(), y se actualizaron llamadas para evitar el error de tipado en Next 16.
 - Fase 1E — Fix build (await client en signInAction): se agregó await al cliente Supabase en signInAction para resolver el tipado de Next/TypeScript.
+- Fase 1F — Hardening auth (sanitize redirects + layouts + primer test): se agregó sanitizeNextPath para evitar open redirects, layouts que protegen (app) y redirigen desde (auth) si hay sesión, y primer test de redirect.
 
 ## Auth (Supabase SSR)
 

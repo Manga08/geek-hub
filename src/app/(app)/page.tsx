@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/features/auth/actions";
@@ -10,11 +8,7 @@ export default async function HomePage() {
     data: { session },
   } = await supabase.auth.getSession();
 
-  if (!session) {
-    redirect("/login");
-  }
-
-  const email = session.user.email ?? "(sin email)";
+  const email = session?.user.email ?? "(sin email)";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-12">
