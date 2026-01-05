@@ -2,10 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Bookmark, ListChecks, Search, User } from "lucide-react"
+import { BarChart3, Bookmark, ListChecks, Search, User, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useCurrentGroup } from "@/features/groups"
 
 const links = [
   { href: "/search", label: "Search", icon: Search },
@@ -16,6 +17,7 @@ const links = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const { data: groupData, isLoading: isGroupLoading } = useCurrentGroup();
 
   return (
     <header className="sticky top-0 z-40 mb-4 w-full border-b border-white/10 bg-black/40 backdrop-blur-xl">
@@ -24,6 +26,15 @@ export function Navbar() {
           <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 shadow-sm">
             <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_0_6px_rgba(124,92,255,0.15)]" aria-hidden />
             <span className="text-sm font-semibold tracking-tight text-foreground">GeekHub</span>
+          </div>
+          {/* Group indicator */}
+          <div className="hidden items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground md:flex">
+            <Users className="h-3 w-3" />
+            {isGroupLoading ? (
+              <span className="h-3 w-12 animate-pulse rounded bg-white/10" />
+            ) : (
+              <span className="max-w-25 truncate">{groupData?.group?.name ?? "Sin grupo"}</span>
+            )}
           </div>
           <div className="hidden items-center gap-1 rounded-full border border-white/5 bg-white/5 px-1 text-sm text-muted-foreground shadow-sm sm:flex">
             {links.map(({ href, label }) => (

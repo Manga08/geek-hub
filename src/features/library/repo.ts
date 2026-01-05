@@ -116,11 +116,11 @@ export class LibraryRepo {
     offset?: number;
   }): Promise<LibraryEntry[]> {
     const supabase = await getSupabase();
-    
+
     // Build query with sort option
     const sortColumn = options?.sort === "rating" ? "rating" : "updated_at";
     const ascending = false; // Always descending (newest first, highest rating first)
-    
+
     let query = supabase
       .from("library_entries")
       .select("*")
