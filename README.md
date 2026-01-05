@@ -40,3 +40,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## Progress / Changelog
 
 - Migrated project structure to `/src` (app, components, lib) and updated configs/aliases accordingly.
+- Fase 0C — Sanity post-migración a `/src`: se verificó estructura, aliases, Tailwind/shadcn, vitest config y se documentaron reglas del agente.

@@ -8,11 +8,15 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   test: {
     globals: true,
-    environment: "jsdom",
+    environment: "node",
     setupFiles: ["./tests/setup.ts"],
-    exclude: ["node_modules/**", ".next/**"],
+    exclude: ["node_modules/**", ".next/**", "e2e/**"],
     deps: {
-      inline: ["html-encoding-sniffer", "@exodus/bytes"],
+      inline: [
+        /html-encoding-sniffer/,
+        /@exodus\/bytes/,
+        /jsdom/,
+      ],
     },
     passWithNoTests: true,
   },
