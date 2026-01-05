@@ -4,13 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Heart, Plus } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { catalogItemKey, fetchCatalogItem } from "@/features/catalog/queries";
+import { EntryQuickActions } from "@/features/library/components";
 import type { UnifiedCatalogItem } from "@/features/catalog/normalize/unified.types";
 
 // Tiny 1x1 transparent placeholder for blur effect
@@ -109,22 +110,14 @@ export function MediaCard({ item }: { item: UnifiedCatalogItem }) {
 
           {/* Quick actions */}
           <div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 translate-y-1 transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="h-7 w-7 rounded-full border border-white/20 bg-black/50 text-white/80 backdrop-blur-sm hover:bg-black/70 hover:text-white"
-              onClick={(e) => e.preventDefault()}
-            >
-              <Heart className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="h-7 w-7 rounded-full border border-white/20 bg-black/50 text-white/80 backdrop-blur-sm hover:bg-black/70 hover:text-white"
-              onClick={(e) => e.preventDefault()}
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
+            <EntryQuickActions
+              itemType={item.type}
+              provider={item.provider}
+              externalId={item.externalId}
+              title={item.title}
+              posterUrl={item.posterUrl}
+              className="flex items-center gap-1.5"
+            />
             <Button
               variant="ghost"
               size="icon-sm"

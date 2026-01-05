@@ -114,6 +114,15 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
   - ItemPageClient con AnimatePresence para transición skeleton→content.
   - PageTransition wrapper en AppShell para fade suave entre páginas.
   - Respeta prefers-reduced-motion en todas las animaciones.
+- Fase 3L — MVP Library (Favorites + CRUD + Supabase RLS):
+  - Nueva tabla `library_entries` con RLS en Supabase (migración en `supabase/migrations/001_library_entries.sql`).
+  - Feature folder `src/features/library/` con types, queries, repo y hooks.
+  - API routes `/api/library/entry` (GET/POST/PATCH/DELETE) y `/api/library/entry/favorite` (toggle).
+  - EntryDialog (glass premium) para agregar/editar entradas con status, rating, notas y favorito.
+  - EntryQuickActions integrado en MediaCard: botones heart (favorito) y plus (agregar/ver).
+  - ItemDetail muestra estado actual de la entrada con badge de status, estrellas y botón editar.
+  - useLibraryEntry hook con optimistic updates y React Query invalidation.
+  - Estados: planned, in_progress, completed, dropped. Rating 1-5 estrellas.
 
 ## Catálogo (UI)
 
@@ -121,6 +130,19 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - /item/[type]/[key]: Detalle con backdrop/poster, géneros, resumen y badge de proveedor.
 - /credits: Atribución TMDb y RAWG; enlaces obligatorios.
 - Cómo probar: definir RAWG_API_KEY y TMDB_ACCESS_TOKEN (o TMDB_API_KEY) en .env.local; `pnpm dev`, navegar a /search, realizar búsquedas y abrir un ítem.
+
+## Library (Biblioteca personal)
+
+- Cada usuario puede agregar ítems del catálogo a su biblioteca personal.
+- Estados disponibles: Planeado, En progreso, Completado, Abandonado.
+- Rating de 1-5 estrellas y campo de notas libre.
+- Marcar como favorito desde cards o detalle.
+- Acciones rápidas en hover de MediaCard: corazón (favorito) y plus (agregar/editar).
+- Dialog premium (glass) para crear/editar entradas con todos los campos.
+- Supabase RLS asegura que cada usuario solo ve/edita sus propias entradas.
+- **Setup DB:** ejecutar `supabase/migrations/001_library_entries.sql` en tu proyecto Supabase (Dashboard → SQL Editor).
+- **Variables de entorno requeridas:** las mismas de Auth (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).
+
 - Hotfix — group_members member_role + TMDb dispatch overload + getUser():
   - addMember inserta en group_members usando la columna member_role.
   - Se agregó normalizeTmdbDispatch para resolver overloads en el servicio de catálogo.
