@@ -1,4 +1,5 @@
 import type { UnifiedCatalogItem, UnifiedItemType } from "./unified.types";
+import type { TmdbGenre, TmdbMovie, TmdbTv } from "@/features/catalog/providers/types";
 
 const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
 const BACKDROP_BASE = "https://image.tmdb.org/t/p/w1280";
@@ -9,7 +10,7 @@ function parseYear(dateString?: string | null): number | null {
   return Number.isNaN(year) ? null : year;
 }
 
-export function normalizeTmdbItem(raw: any, type: UnifiedItemType): UnifiedCatalogItem {
+export function normalizeTmdbItem(raw: TmdbMovie | TmdbTv, type: UnifiedItemType): UnifiedCatalogItem {
   const externalId = String(raw.id ?? "");
   const isMovie = type === "movie";
 
@@ -19,9 +20,11 @@ export function normalizeTmdbItem(raw: any, type: UnifiedItemType): UnifiedCatal
   const posterUrl = raw.poster_path ? `${POSTER_BASE}${raw.poster_path}` : null;
   const backdropUrl = raw.backdrop_path ? `${BACKDROP_BASE}${raw.backdrop_path}` : null;
 
-  const genres = Array.isArray(raw.genres) ? raw.genres.map((g: any) => g?.name).filter(Boolean) : [];
+  const genres = Array.isArray(raw.genres)
+    ? raw.genres.map((g: TmdbGenre) => g.name).filter((name): name is string => Boolean(name))
+    : [];
 
-  const meta: Record<string, any> = {
+  const meta: Record<string, unknown> = {
     runtime: raw.runtime,
     number_of_seasons: raw.number_of_seasons,
     episode_run_time: raw.episode_run_time,

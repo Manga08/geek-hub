@@ -27,7 +27,7 @@ export async function searchUnified({
   const tmdbType = type === "movie" ? "movie" : "tv";
   const data = await tmdbSearch({ type: tmdbType, query, page });
   const items = Array.isArray(data.results)
-    ? data.results.map((item: any) => normalizeTmdbItem(item, type))
+    ? data.results.map((item) => normalizeTmdbItem(item, type))
     : [];
   const hasMore = typeof data.total_pages === "number" ? page < data.total_pages : false;
   return { items, page: data.page ?? page, hasMore };

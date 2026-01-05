@@ -1,3 +1,4 @@
+import type { TmdbMovie, TmdbSearchResponse, TmdbTv } from "@/features/catalog/providers/types";
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const DEFAULT_TIMEOUT_MS = 10000;
 
@@ -52,13 +53,14 @@ export async function tmdbSearch({
   type: "movie" | "tv";
   query: string;
   page?: number;
-}): Promise<any> {
+}): Promise<TmdbSearchResponse<TmdbMovie | TmdbTv>> {
   const { url, headers } = buildUrl(`/search/${type}`, { query, page });
   const response = await fetchWithTimeout(url, { headers });
   if (!response.ok) {
     throw new Error(`TMDb search failed with status ${response.status}`);
   }
-  return response.json();
+  const data: TmdbSearchResponse<TmdbMovie | TmdbTv> = await response.json();
+  return data;
 }
 
 export async function tmdbGetDetail({
@@ -67,11 +69,12 @@ export async function tmdbGetDetail({
 }: {
   type: "movie" | "tv";
   id: string | number;
-}): Promise<any> {
+}): Promise<TmdbMovie | TmdbTv> {
   const { url, headers } = buildUrl(`/${type}/${id}`, {});
   const response = await fetchWithTimeout(url, { headers });
   if (!response.ok) {
     throw new Error(`TMDb detail failed with status ${response.status}`);
   }
-  return response.json();
+  const data: TmdbMovie | TmdbTv = await response.json();
+  return data;
 }

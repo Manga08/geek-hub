@@ -1,3 +1,4 @@
+import type { RawgGameLike, RawgSearchResponse } from "@/features/catalog/providers/types";
 const RAWG_BASE_URL = "https://api.rawg.io/api";
 const DEFAULT_TIMEOUT_MS = 10000;
 
@@ -28,7 +29,7 @@ export async function rawgSearchGames({
 }: {
   query: string;
   page?: number;
-}): Promise<any> {
+}): Promise<RawgSearchResponse> {
   const key = getRawgApiKey();
   const url = new URL(`${RAWG_BASE_URL}/games`);
   url.searchParams.set("key", key);
@@ -39,10 +40,11 @@ export async function rawgSearchGames({
   if (!response.ok) {
     throw new Error(`RAWG search failed with status ${response.status}`);
   }
-  return response.json();
+  const data: RawgSearchResponse = await response.json();
+  return data;
 }
 
-export async function rawgGetGameDetail({ id }: { id: string | number }): Promise<any> {
+export async function rawgGetGameDetail({ id }: { id: string | number }): Promise<RawgGameLike> {
   const key = getRawgApiKey();
   const url = new URL(`${RAWG_BASE_URL}/games/${id}`);
   url.searchParams.set("key", key);
@@ -51,5 +53,6 @@ export async function rawgGetGameDetail({ id }: { id: string | number }): Promis
   if (!response.ok) {
     throw new Error(`RAWG detail failed with status ${response.status}`);
   }
-  return response.json();
+  const data: RawgGameLike = await response.json();
+  return data;
 }

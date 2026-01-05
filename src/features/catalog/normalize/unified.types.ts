@@ -13,5 +13,5 @@ export interface UnifiedCatalogItem {
   backdropUrl?: string | null;
   genres: string[];
   summary?: string | null;
-  meta: Record<string, any>;
+  meta: Record<string, unknown>;
 }

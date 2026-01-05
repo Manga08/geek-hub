@@ -60,6 +60,11 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- Se implementó servicio de búsqueda/detalle unificado con hasMore según proveedor.
 	- Endpoints internos GET /api/catalog/search e GET /api/catalog/item para consumir desde el frontend.
 	- Claves RAWG/TMDb solo se usan server-side (no exponer en cliente).
+- Fase 3B — Fix lint (tipado catálogo, sin any):
+	- Se tiparon RAWG/TMDb DTO mínimos en providers/types para evitar any.
+	- Normalizadores usan tipos concretos y meta con Record<string, unknown>.
+	- Clientes RAWG/TMDb y servicio/catalog routes evitan catch any y serializan mensajes seguros.
+	- Sin cambios de lógica ni dependencias nuevas; objetivo solo pasar lint no-explicit-any.
 
 ## Auth (Supabase SSR)
 
