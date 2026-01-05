@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {

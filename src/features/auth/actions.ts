@@ -10,8 +10,8 @@ type ActionState = {
   success?: boolean;
 };
 
-function getOrigin() {
-  const hdrs = headers();
+async function getOrigin(): Promise<string> {
+  const hdrs = await headers();
   const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "localhost:3000";
   const proto = hdrs.get("x-forwarded-proto") ?? "http";
   return `${proto}://${host}`;
@@ -25,7 +25,7 @@ export async function signInAction(_: ActionState, formData: FormData): Promise<
     return { error: "Email y password son requeridos" };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
@@ -43,8 +43,8 @@ export async function signUpAction(_: ActionState, formData: FormData): Promise<
     return { error: "Email y password son requeridos" };
   }
 
-  const supabase = createSupabaseServerClient();
-  const origin = getOrigin();
+  const supabase = await createSupabaseServerClient();
+  const origin = await getOrigin();
   const emailRedirectTo = `${origin}/auth/callback?next=/`;
 
   const { error } = await supabase.auth.signUp({
@@ -61,7 +61,7 @@ export async function signUpAction(_: ActionState, formData: FormData): Promise<
 }
 
 export async function signOutAction() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   redirect("/login");
 }
