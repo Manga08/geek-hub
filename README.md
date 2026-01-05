@@ -49,60 +49,64 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - Fase 1E — Fix build (await client en signInAction): se agregó await al cliente Supabase en signInAction para resolver el tipado de Next/TypeScript.
 - Fase 1F — Hardening auth (sanitize redirects + layouts + primer test): se agregó sanitizeNextPath para evitar open redirects, layouts que protegen (app) y redirigen desde (auth) si hay sesión, y primer test de redirect.
 - Fase 2A — Perfil + grupo por defecto:
-	- En login (/auth/callback o signInAction) se asegura profile en profiles (id = auth.uid) si falta, usando email antes de "@" como display_name o "Usuario".
-	- Se busca el primer group_members del usuario; si existe se reutiliza ese group_id.
-	- Si no tiene grupo se crea uno por defecto con name "Mi grupo" y created_by = auth.uid.
-	- Se inserta membership en group_members con role "admin" para el usuario que inició sesión.
-	- Se mantiene sanitizeNextPath y el flujo de redirect; solo se agrega la garantía de datos multi-tenant.
+  - En login (/auth/callback o signInAction) se asegura profile en profiles (id = auth.uid) si falta, usando email antes de "@" como display_name o "Usuario".
+  - Se busca el primer group_members del usuario; si existe se reutiliza ese group_id.
+  - Si no tiene grupo se crea uno por defecto con name "Mi grupo" y created_by = auth.uid.
+  - Se inserta membership en group_members con role "admin" para el usuario que inició sesión.
+  - Se mantiene sanitizeNextPath y el flujo de redirect; solo se agrega la garantía de datos multi-tenant.
 - Fase 3A — Catálogo unificado (backend):
-	- Se definió UnifiedCatalogItem (game, movie, tv, anime) y provider rawg/tmdb.
-	- Se agregaron normalizadores RAWG y TMDb con URLs de imágenes y metadatos básicos.
-	- Se implementó servicio de búsqueda/detalle unificado con hasMore según proveedor.
-	- Endpoints internos GET /api/catalog/search e GET /api/catalog/item para consumir desde el frontend.
-	- Claves RAWG/TMDb solo se usan server-side (no exponer en cliente).
+  - Se definió UnifiedCatalogItem (game, movie, tv, anime) y provider rawg/tmdb.
+  - Se agregaron normalizadores RAWG y TMDb con URLs de imágenes y metadatos básicos.
+  - Se implementó servicio de búsqueda/detalle unificado con hasMore según proveedor.
+  - Endpoints internos GET /api/catalog/search e GET /api/catalog/item para consumir desde el frontend.
+  - Claves RAWG/TMDb solo se usan server-side (no exponer en cliente).
 - Fase 3B — Fix lint (tipado catálogo, sin any):
-	- Se tiparon RAWG/TMDb DTO mínimos en providers/types para evitar any.
-	- Normalizadores usan tipos concretos y meta con Record<string, unknown>.
-	- Clientes RAWG/TMDb y servicio/catalog routes evitan catch any y serializan mensajes seguros.
-	- Sin cambios de lógica ni dependencias nuevas; objetivo solo pasar lint no-explicit-any.
+  - Se tiparon RAWG/TMDb DTO mínimos en providers/types para evitar any.
+  - Normalizadores usan tipos concretos y meta con Record<string, unknown>.
+  - Clientes RAWG/TMDb y servicio/catalog routes evitan catch any y serializan mensajes seguros.
+  - Sin cambios de lógica ni dependencias nuevas; objetivo solo pasar lint no-explicit-any.
 - Hotfix — Fix build TMDb + callback sin 500:
-	- normalizeTmdb ahora tiene overloads separados para movie vs tv/anime y deja de romper el build por tipos.
-	- /auth/callback captura errores de ensureProfileAndDefaultGroup y redirige a /auth/auth-code-error en lugar de responder 500.
-- Hotfix 2 — Fix build TMDb (tipos popularity/vote_*):
-	- Se añadieron popularity, vote_average y vote_count a los tipos base de TMDb.
-	- normalizeTmdb usa esos campos en meta junto con runtime o number_of_seasons/episode_run_time según el tipo.
-	- Sin cambios de lógica ni dependencias; objetivo desbloquear el build.
+  - normalizeTmdb ahora tiene overloads separados para movie vs tv/anime y deja de romper el build por tipos.
+  - /auth/callback captura errores de ensureProfileAndDefaultGroup y redirige a /auth/auth-code-error en lugar de responder 500.
+- Hotfix 2 — Fix build TMDb (tipos popularity/vote\_\*):
+  - Se añadieron popularity, vote_average y vote_count a los tipos base de TMDb.
+  - normalizeTmdb usa esos campos en meta junto con runtime o number_of_seasons/episode_run_time según el tipo.
+  - Sin cambios de lógica ni dependencias; objetivo desbloquear el build.
 - Fase 3C — UI Search + Detail (Catálogo):
-	- Página /search con búsqueda por tipo (game, movie, tv, anime), estados loading/empty/error y grid de resultados.
-	- Cards con poster, título, año y badge de tipo; clic navega a /item/[type]/[key].
-	- Detalle /item/... muestra hero/poster, géneros, resumen y botón placeholder "Agregar a biblioteca".
-	- Footer de atribución RAWG/TMDb en vistas de catálogo y página /credits dedicada.
-	- Consultas via TanStack Query a los endpoints internos /api/catalog/search e /api/catalog/item.
+  - Página /search con búsqueda por tipo (game, movie, tv, anime), estados loading/empty/error y grid de resultados.
+  - Cards con poster, título, año y badge de tipo; clic navega a /item/[type]/[key].
+  - Detalle /item/... muestra hero/poster, géneros, resumen y botón placeholder "Agregar a biblioteca".
+  - Footer de atribución RAWG/TMDb en vistas de catálogo y página /credits dedicada.
+  - Consultas via TanStack Query a los endpoints internos /api/catalog/search e /api/catalog/item.
 - Fase 3D — Hotfix UI catálogo (shadcn faltantes) + lint + dark default + redirect /search:
-	- Se agregaron componentes ui badge/input/select de shadcn para resolver imports faltantes.
-	- SearchClient usa useInfiniteQuery (TanStack) sin useEffect+setState y pagina via hasMore.
-	- Se removió el try/catch con JSX en /item/... y la validación ocurre antes del render.
-	- Modo oscuro por defecto desde el layout root y auth con fondo oscuro + cards estilizadas.
-	- Post-login redirige a /search (callbacks, sign-in) y home (/ ) ahora redirige a /search.
+  - Se agregaron componentes ui badge/input/select de shadcn para resolver imports faltantes.
+  - SearchClient usa useInfiniteQuery (TanStack) sin useEffect+setState y pagina via hasMore.
+  - Se removió el try/catch con JSX en /item/... y la validación ocurre antes del render.
+  - Modo oscuro por defecto desde el layout root y auth con fondo oscuro + cards estilizadas.
+  - Post-login redirige a /search (callbacks, sign-in) y home (/ ) ahora redirige a /search.
 - Fase 3E — Fix Select (Radix) + Supabase SSR cookies:
-	- Se añadió @radix-ui/react-select.
-	- Select usa iconos de lucide-react (sin @radix-ui/react-icons).
-	- Supabase server client protege set de cookies con try/catch para evitar crash en Server Components.
-	- Nota: tras actualizar deps, ejecutar pnpm install.
+  - Se añadió @radix-ui/react-select.
+  - Select usa iconos de lucide-react (sin @radix-ui/react-icons).
+  - Supabase server client protege set de cookies con try/catch para evitar crash en Server Components.
+  - Nota: tras actualizar deps, ejecutar pnpm install.
 - Fase 3F — UI System GeekHub Dark Premium + Fix Search (images/infiniteQuery):
-	- next/image ahora permite hosts RAWG y TMDb en remotePatterns.
-	- SearchClient usa useInfiniteQuery con initialPageParam tipado para paginación segura.
-	- Tokens GeekHub Dark y fondo radial + stripe aplicados como base del tema.
-	- Nuevos AppShell/Navbar/GlassCard y skin aplicado a Auth, Search, Item y Credits.
+  - next/image ahora permite hosts RAWG y TMDb en remotePatterns.
+  - SearchClient usa useInfiniteQuery con initialPageParam tipado para paginación segura.
+  - Tokens GeekHub Dark y fondo radial + stripe aplicados como base del tema.
+  - Nuevos AppShell/Navbar/GlassCard y skin aplicado a Auth, Search, Item y Credits.
 - Fase 3G — Cards premium + RAWG HD + Next 16 fixes:
-	- MediaCard con GlassCard premium, brillo en hover, quick actions, imágenes HQ y animación fade-up.
-	- RAWG normalizer prioriza background_image_additional/short_screenshots y sube thumbnails 288→640.
-	- Item page espera params async (Next 16) y useInfiniteQuery tipa InfiniteData para pages.
-	- Tests nuevos cubren preferencia de fondo RAWG y upgrade de screenshots.
+  - MediaCard con GlassCard premium, brillo en hover, quick actions, imágenes HQ y animación fade-up.
+  - RAWG normalizer prioriza background_image_additional/short_screenshots y sube thumbnails 288→640.
+  - Item page espera params async (Next 16) y useInfiniteQuery tipa InfiniteData para pages.
+  - Tests nuevos cubren preferencia de fondo RAWG y upgrade de screenshots.
 - Fase 3H — Fix RAWG types/tests + TMDb cache + loading item page:
-	- RAWG DTO ahora incluye short_screenshots opcional; tests sin any usando RawgGameLike.
-	- TMDb search/detail cachean con revalidate (10 min / 1 día) para abrir detalle más rápido.
-	- loading.tsx para /item y /search con skeleton premium y glass acorde al tema.
+  - RAWG DTO ahora incluye short_screenshots opcional; tests sin any usando RawgGameLike.
+  - TMDb search/detail cachean con revalidate (10 min / 1 día) para abrir detalle más rápido.
+  - loading.tsx para /item y /search con skeleton premium y glass acorde al tema.
+- Fase 3I — Stabilize Dev Env (Windows/Webpack) + lint fixes:
+  - MediaGrid.tsx usa `Variants` tipados y `React.isValidElement` para evitar any.
+  - Scripts: `dev` usa `--webpack`; agregados `dev:turbo` y `build:webpack` opcionales.
+  - Documentación de troubleshooting cross-env (Windows/WSL) en README.
 
 ## Catálogo (UI)
 
@@ -111,17 +115,66 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - /credits: Atribución TMDb y RAWG; enlaces obligatorios.
 - Cómo probar: definir RAWG_API_KEY y TMDB_ACCESS_TOKEN (o TMDB_API_KEY) en .env.local; `pnpm dev`, navegar a /search, realizar búsquedas y abrir un ítem.
 - Hotfix — group_members member_role + TMDb dispatch overload + getUser():
-	- addMember inserta en group_members usando la columna member_role.
-	- Se agregó normalizeTmdbDispatch para resolver overloads en el servicio de catálogo.
-	- El servicio usa el dispatcher y mantiene tipado sin any.
-	- En layout/page se usa supabase.auth.getUser() para validar sesión antes de renderizar.
+  - addMember inserta en group_members usando la columna member_role.
+  - Se agregó normalizeTmdbDispatch para resolver overloads en el servicio de catálogo.
+  - El servicio usa el dispatcher y mantiene tipado sin any.
+  - En layout/page se usa supabase.auth.getUser() para validar sesión antes de renderizar.
 
 ## Auth (Supabase SSR)
 
 - Rutas: /login, /signup, /auth/callback, /auth/auth-code-error
 - Variables de entorno: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (o NEXT_PUBLIC_SUPABASE_ANON_KEY), SUPABASE_SERVICE_ROLE_KEY
 - Pruebas manuales:
-	- Crear .env.local con las claves de Supabase.
-	- `pnpm dev` y visitar /signup para crear cuenta; confirmar correo si aplica.
-	- Ingresar en /login y acceder a `/` (redirige a login si no hay sesión).
-	- Usar botón Logout en `/` para cerrar sesión y volver a /login.
+  - Crear .env.local con las claves de Supabase.
+  - `pnpm dev` y visitar /signup para crear cuenta; confirmar correo si aplica.
+  - Ingresar en /login y acceder a `/` (redirige a login si no hay sesión).
+  - Usar botón Logout en `/` para cerrar sesión y volver a /login.
+
+## Entorno de Desarrollo (Windows/WSL)
+
+### Reglas generales
+
+- **No mezclar entornos:** si instalas con `pnpm install` en WSL, corre el proyecto en WSL. Si instalas en CMD/PowerShell, corre desde ahí.
+- Si aparecen errores tipo:
+  - `Cannot find module '@rollup/rollup-*-gnu'`
+  - `Cannot find module '../lightningcss.*.node'`
+    es porque node_modules contiene binarios compilados para un SO/ABI distinto.
+
+### Reinstalación limpia (Windows CMD/PowerShell)
+
+```powershell
+rmdir /s /q node_modules
+rmdir /s /q .next
+pnpm store prune
+pnpm install --force
+pnpm lint
+pnpm test
+pnpm dev
+```
+
+### Reinstalación limpia (WSL / Linux / macOS)
+
+```bash
+rm -rf node_modules .next
+pnpm store prune
+pnpm install --force
+pnpm lint
+pnpm test
+pnpm dev
+```
+
+### Scripts disponibles
+
+| Comando              | Descripción                                         |
+| -------------------- | --------------------------------------------------- |
+| `pnpm dev`           | Dev server con Webpack (estable en Windows)         |
+| `pnpm dev:turbo`     | Dev server con Turbopack (más rápido, experimental) |
+| `pnpm build`         | Build producción (Turbopack por defecto en Next 16) |
+| `pnpm build:webpack` | Build producción forzando Webpack                   |
+| `pnpm lint`          | ESLint                                              |
+| `pnpm test`          | Vitest (unit tests)                                 |
+
+### Recomendación para WSL
+
+- Preferir tener el repo **dentro del filesystem de WSL** (`~/proyectos/geek-hub`) en lugar de `/mnt/c/...` para mejor performance de I/O.
+- Instalar y correr todo desde la misma terminal WSL.
