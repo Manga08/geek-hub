@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Bookmark, ExternalLink, Heart, Plus } from "lucide-react";
+import { ExternalLink, Heart, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 
