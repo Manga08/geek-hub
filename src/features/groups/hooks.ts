@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { groupKeys, fetchCurrentGroup, fetchGroupsList } from "./queries";
-import type { CurrentGroupResponse, GroupRow } from "./queries";
+import type { CurrentGroupResponse, GroupRow } from "./types";
 
 export function useCurrentGroup() {
   return useQuery<CurrentGroupResponse | null>({

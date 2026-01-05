@@ -1,9 +1,8 @@
 // Types
-export type { GroupRow, GroupMemberRow, GroupRole } from "./types";
+export type { GroupRow, GroupMemberRow, GroupRole, CurrentGroupResponse } from "./types";
 
 // Queries & Keys
 export { groupKeys, fetchCurrentGroup, fetchGroupsList } from "./queries";
-export type { CurrentGroupResponse } from "./queries";
 
 // Hooks
 export { useCurrentGroup, useGroupsList } from "./hooks";

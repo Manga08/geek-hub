@@ -1,4 +1,4 @@
-import type { GroupRow } from "./types";
+import type { GroupRow, CurrentGroupResponse } from "./types";
 
 export const groupKeys = {
   all: ["groups"] as const,
@@ -6,11 +6,6 @@ export const groupKeys = {
   list: () => [...groupKeys.all, "list"] as const,
   detail: (id: string) => [...groupKeys.all, "detail", id] as const,
 };
-
-export interface CurrentGroupResponse {
-  group: GroupRow;
-  role: "admin" | "member";
-}
 
 export async function fetchCurrentGroup(): Promise<CurrentGroupResponse | null> {
   const res = await fetch("/api/groups/current");

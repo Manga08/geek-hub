@@ -16,4 +16,9 @@ export type GroupMemberRow = {
   joined_at?: string | null;
 };
 
+export interface CurrentGroupResponse {
+  group: GroupRow;
+  role: GroupRole;
+}
+
 export type SupabaseServerClient = SupabaseClient;

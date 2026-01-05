@@ -1,56 +1,15 @@
 -- ===========================================
 -- GEEK-HUB: Profiles, Groups & Group Members
--- Phase 3N: Multi-tenant groups system
--- Run this SQL in your Supabase SQL Editor
+-- Phase 3N (fixed): Multi-tenant groups system
+-- Run this SQL in Supabase SQL Editor
 -- ===========================================
 
--- Enable pgcrypto if not already enabled
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- ===========================================
--- Table: profiles
--- ===========================================
-CREATE TABLE IF NOT EXISTS profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  display_name text,
-  avatar_url text,
-  default_group_id uuid, -- Will add FK after groups table exists
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
+-- =========================
+-- Tables
+-- =========================
 
--- Enable RLS
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies for profiles
-CREATE POLICY "Users can view own profile"
-  ON profiles FOR SELECT
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can insert own profile"
-  ON profiles FOR INSERT
-  WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-  ON profiles FOR UPDATE
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
--- Users can view profiles of group members (for "Us" feature)
-CREATE POLICY "Users can view group member profiles"
-  ON profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM group_members gm1
-      JOIN group_members gm2 ON gm1.group_id = gm2.group_id
-      WHERE gm1.user_id = auth.uid()
-        AND gm2.user_id = profiles.id
-    )
-  );
-
--- ===========================================
--- Table: groups
--- ===========================================
 CREATE TABLE IF NOT EXISTS groups (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
@@ -59,49 +18,15 @@ CREATE TABLE IF NOT EXISTS groups (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- Enable RLS
-ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
+CREATE TABLE IF NOT EXISTS profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  display_name text,
+  avatar_url text,
+  default_group_id uuid NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 
--- RLS Policies for groups
-CREATE POLICY "Users can view groups they are members of"
-  ON groups FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM group_members
-      WHERE group_members.group_id = groups.id
-        AND group_members.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can create groups"
-  ON groups FOR INSERT
-  WITH CHECK (auth.uid() = created_by);
-
-CREATE POLICY "Group admins can update groups"
-  ON groups FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM group_members
-      WHERE group_members.group_id = groups.id
-        AND group_members.user_id = auth.uid()
-        AND group_members.member_role = 'admin'
-    )
-  );
-
-CREATE POLICY "Group admins can delete groups"
-  ON groups FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM group_members
-      WHERE group_members.group_id = groups.id
-        AND group_members.user_id = auth.uid()
-        AND group_members.member_role = 'admin'
-    )
-  );
-
--- ===========================================
--- Table: group_members
--- ===========================================
 CREATE TABLE IF NOT EXISTS group_members (
   group_id uuid NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -110,81 +35,14 @@ CREATE TABLE IF NOT EXISTS group_members (
   PRIMARY KEY (group_id, user_id)
 );
 
--- Index for faster lookups
 CREATE INDEX IF NOT EXISTS group_members_user_idx ON group_members(user_id);
 CREATE INDEX IF NOT EXISTS group_members_group_idx ON group_members(group_id);
 
--- Enable RLS
-ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies for group_members
-CREATE POLICY "Users can view members of groups they belong to"
-  ON group_members FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM group_members gm
-      WHERE gm.group_id = group_members.group_id
-        AND gm.user_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Users can add themselves to groups"
-  ON group_members FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Group admins can add members"
-  ON group_members FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM group_members gm
-      WHERE gm.group_id = group_members.group_id
-        AND gm.user_id = auth.uid()
-        AND gm.member_role = 'admin'
-    )
-  );
-
-CREATE POLICY "Group admins can update member roles"
-  ON group_members FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM group_members gm
-      WHERE gm.group_id = group_members.group_id
-        AND gm.user_id = auth.uid()
-        AND gm.member_role = 'admin'
-    )
-  );
-
-CREATE POLICY "Group admins can remove members"
-  ON group_members FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM group_members gm
-      WHERE gm.group_id = group_members.group_id
-        AND gm.user_id = auth.uid()
-        AND gm.member_role = 'admin'
-    )
-  );
-
-CREATE POLICY "Users can leave groups"
-  ON group_members FOR DELETE
-  USING (auth.uid() = user_id);
-
--- ===========================================
--- Add default_group_id column if missing, then FK
--- ===========================================
-DO $$ 
+-- FK default_group_id -> groups (si no existe)
+DO $$
 BEGIN
-  -- Add column if it doesn't exist
   IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns 
-    WHERE table_name = 'profiles' AND column_name = 'default_group_id'
-  ) THEN
-    ALTER TABLE profiles ADD COLUMN default_group_id uuid;
-  END IF;
-  
-  -- Add FK if it doesn't exist
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.table_constraints 
+    SELECT 1 FROM information_schema.table_constraints
     WHERE constraint_name = 'profiles_default_group_id_fkey'
   ) THEN
     ALTER TABLE profiles
@@ -193,9 +51,10 @@ BEGIN
   END IF;
 END $$;
 
--- ===========================================
--- Auto-update timestamps
--- ===========================================
+-- =========================
+-- updated_at triggers
+-- =========================
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -216,50 +75,226 @@ CREATE TRIGGER groups_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- ===========================================
--- Backfill: Create default groups for existing users
--- ===========================================
+-- =========================
+-- RLS
+-- =========================
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
+
+-- =========================
+-- Policies: profiles (drop old + create new)
+-- =========================
+
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can view group member profiles" ON profiles;
+DROP POLICY IF EXISTS "profiles_select_own_or_same_group" ON profiles;
+DROP POLICY IF EXISTS "profiles_insert_own" ON profiles;
+DROP POLICY IF EXISTS "profiles_update_own" ON profiles;
+
+-- Select: own profile OR profiles of members in same group
+CREATE POLICY "profiles_select_own_or_same_group"
+  ON profiles FOR SELECT
+  USING (
+    auth.uid() = id
+    OR EXISTS (
+      SELECT 1
+      FROM group_members gm1
+      JOIN group_members gm2 ON gm1.group_id = gm2.group_id
+      WHERE gm1.user_id = auth.uid()
+        AND gm2.user_id = profiles.id
+    )
+  );
+
+CREATE POLICY "profiles_insert_own"
+  ON profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "profiles_update_own"
+  ON profiles FOR UPDATE
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+-- =========================
+-- Policies: groups (drop old + create new)
+-- =========================
+
+DROP POLICY IF EXISTS "Users can view groups they are members of" ON groups;
+DROP POLICY IF EXISTS "Users can create groups" ON groups;
+DROP POLICY IF EXISTS "Group admins can update groups" ON groups;
+DROP POLICY IF EXISTS "Group admins can delete groups" ON groups;
+DROP POLICY IF EXISTS "groups_select_member" ON groups;
+DROP POLICY IF EXISTS "groups_insert_creator" ON groups;
+DROP POLICY IF EXISTS "groups_update_admin" ON groups;
+DROP POLICY IF EXISTS "groups_delete_admin" ON groups;
+
+CREATE POLICY "groups_select_member"
+  ON groups FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM group_members gm
+      WHERE gm.group_id = groups.id
+        AND gm.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "groups_insert_creator"
+  ON groups FOR INSERT
+  WITH CHECK (auth.uid() = created_by);
+
+CREATE POLICY "groups_update_admin"
+  ON groups FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM group_members gm
+      WHERE gm.group_id = groups.id
+        AND gm.user_id = auth.uid()
+        AND gm.member_role = 'admin'
+    )
+  );
+
+CREATE POLICY "groups_delete_admin"
+  ON groups FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM group_members gm
+      WHERE gm.group_id = groups.id
+        AND gm.user_id = auth.uid()
+        AND gm.member_role = 'admin'
+    )
+  );
+
+-- =========================
+-- Policies: group_members (drop old + create new)
+-- =========================
+
+DROP POLICY IF EXISTS "Users can view members of groups they belong to" ON group_members;
+DROP POLICY IF EXISTS "Users can add themselves to groups" ON group_members;
+DROP POLICY IF EXISTS "Group admins can add members" ON group_members;
+DROP POLICY IF EXISTS "Group admins can update member roles" ON group_members;
+DROP POLICY IF EXISTS "Group admins can remove members" ON group_members;
+DROP POLICY IF EXISTS "Users can leave groups" ON group_members;
+DROP POLICY IF EXISTS "group_members_select_member" ON group_members;
+DROP POLICY IF EXISTS "group_members_insert_creator_self_admin" ON group_members;
+DROP POLICY IF EXISTS "group_members_insert_admin_add" ON group_members;
+DROP POLICY IF EXISTS "group_members_update_admin" ON group_members;
+DROP POLICY IF EXISTS "group_members_delete_admin" ON group_members;
+DROP POLICY IF EXISTS "group_members_delete_self_leave" ON group_members;
+
+CREATE POLICY "group_members_select_member"
+  ON group_members FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM group_members gm
+      WHERE gm.group_id = group_members.group_id
+        AND gm.user_id = auth.uid()
+    )
+  );
+
+-- Creator can add self as admin (needed for default group creation)
+CREATE POLICY "group_members_insert_creator_self_admin"
+  ON group_members FOR INSERT
+  WITH CHECK (
+    auth.uid() = user_id
+    AND member_role = 'admin'
+    AND EXISTS (
+      SELECT 1 FROM groups g
+      WHERE g.id = group_members.group_id
+        AND g.created_by = auth.uid()
+    )
+  );
+
+-- Admin can add members (future invites)
+CREATE POLICY "group_members_insert_admin_add"
+  ON group_members FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM group_members gm
+      WHERE gm.group_id = group_members.group_id
+        AND gm.user_id = auth.uid()
+        AND gm.member_role = 'admin'
+    )
+  );
+
+CREATE POLICY "group_members_update_admin"
+  ON group_members FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM group_members gm
+      WHERE gm.group_id = group_members.group_id
+        AND gm.user_id = auth.uid()
+        AND gm.member_role = 'admin'
+    )
+  );
+
+CREATE POLICY "group_members_delete_admin"
+  ON group_members FOR DELETE
+  USING (
+    EXISTS (
+      SELECT 1 FROM group_members gm
+      WHERE gm.group_id = group_members.group_id
+        AND gm.user_id = auth.uid()
+        AND gm.member_role = 'admin'
+    )
+  );
+
+CREATE POLICY "group_members_delete_self_leave"
+  ON group_members FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- =========================
+-- Backfill
+-- =========================
+
 DO $$
 DECLARE
-  user_rec RECORD;
+  r RECORD;
   new_group_id uuid;
 BEGIN
-  -- Loop through users who don't have a profile yet
-  FOR user_rec IN 
-    SELECT id, email FROM auth.users u
-    WHERE NOT EXISTS (SELECT 1 FROM profiles p WHERE p.id = u.id)
-  LOOP
-    -- Create profile
-    INSERT INTO profiles (id, display_name)
-    VALUES (user_rec.id, split_part(user_rec.email, '@', 1))
-    ON CONFLICT DO NOTHING;
-    
-    -- Create default group
-    INSERT INTO groups (name, created_by)
-    VALUES ('Mi grupo', user_rec.id)
-    RETURNING id INTO new_group_id;
-    
-    -- Add user as admin
-    INSERT INTO group_members (group_id, user_id, member_role)
-    VALUES (new_group_id, user_rec.id, 'admin')
-    ON CONFLICT DO NOTHING;
-  END LOOP;
-  
-  -- For existing profiles without groups
-  FOR user_rec IN
+  -- Ensure profile rows exist for all auth users
+  INSERT INTO profiles (id, display_name)
+  SELECT u.id, COALESCE(split_part(u.email, '@', 1), 'user')
+  FROM auth.users u
+  ON CONFLICT (id) DO NOTHING;
+
+  -- Create default group for profiles missing default_group_id
+  FOR r IN
     SELECT p.id FROM profiles p
-    WHERE NOT EXISTS (SELECT 1 FROM group_members gm WHERE gm.user_id = p.id)
+    WHERE p.default_group_id IS NULL
   LOOP
     INSERT INTO groups (name, created_by)
-    VALUES ('Mi grupo', user_rec.id)
+    VALUES ('Mi grupo', r.id)
     RETURNING id INTO new_group_id;
-    
+
     INSERT INTO group_members (group_id, user_id, member_role)
-    VALUES (new_group_id, user_rec.id, 'admin')
+    VALUES (new_group_id, r.id, 'admin')
+    ON CONFLICT DO NOTHING;
+
+    UPDATE profiles
+    SET default_group_id = new_group_id
+    WHERE id = r.id;
+  END LOOP;
+
+  -- Ensure membership exists for default_group_id
+  FOR r IN
+    SELECT p.id, p.default_group_id AS gid
+    FROM profiles p
+    WHERE p.default_group_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM group_members gm
+        WHERE gm.group_id = p.default_group_id
+          AND gm.user_id = p.id
+      )
+  LOOP
+    INSERT INTO group_members (group_id, user_id, member_role)
+    VALUES (r.gid, r.id, 'admin')
     ON CONFLICT DO NOTHING;
   END LOOP;
 END $$;
 
 -- ===========================================
--- Done! Profiles, Groups & Group Members ready
+-- Done
 -- ===========================================
