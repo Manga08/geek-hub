@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { sanitizeNextPath } from "@/lib/auth/redirect";
+import { ensureProfileAndDefaultGroup } from "@/features/groups/service";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -19,6 +20,8 @@ export async function GET(request: NextRequest) {
   if (error) {
     return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
   }
+
+  await ensureProfileAndDefaultGroup(supabase);
 
   return NextResponse.redirect(new URL(nextPath, origin));
 }

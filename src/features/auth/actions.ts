@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { ensureProfileAndDefaultGroup } from "@/features/groups/service";
 
 type ActionState = {
   error?: string;
@@ -31,6 +32,8 @@ export async function signInAction(_: ActionState, formData: FormData): Promise<
   if (error) {
     return { error: error.message };
   }
+
+  await ensureProfileAndDefaultGroup(supabase);
 
   redirect("/");
 }

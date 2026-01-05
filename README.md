@@ -48,6 +48,18 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - Fase 1D — Fix build (cookies async en Supabase SSR): se hizo async createSupabaseServerClient() esperando cookies(), y se actualizaron llamadas para evitar el error de tipado en Next 16.
 - Fase 1E — Fix build (await client en signInAction): se agregó await al cliente Supabase en signInAction para resolver el tipado de Next/TypeScript.
 - Fase 1F — Hardening auth (sanitize redirects + layouts + primer test): se agregó sanitizeNextPath para evitar open redirects, layouts que protegen (app) y redirigen desde (auth) si hay sesión, y primer test de redirect.
+- Fase 2A — Perfil + grupo por defecto:
+	- En login (/auth/callback o signInAction) se asegura profile en profiles (id = auth.uid) si falta, usando email antes de "@" como display_name o "Usuario".
+	- Se busca el primer group_members del usuario; si existe se reutiliza ese group_id.
+	- Si no tiene grupo se crea uno por defecto con name "Mi grupo" y created_by = auth.uid.
+	- Se inserta membership en group_members con role "admin" para el usuario que inició sesión.
+	- Se mantiene sanitizeNextPath y el flujo de redirect; solo se agrega la garantía de datos multi-tenant.
+- Fase 3A — Catálogo unificado (backend):
+	- Se definió UnifiedCatalogItem (game, movie, tv, anime) y provider rawg/tmdb.
+	- Se agregaron normalizadores RAWG y TMDb con URLs de imágenes y metadatos básicos.
+	- Se implementó servicio de búsqueda/detalle unificado con hasMore según proveedor.
+	- Endpoints internos GET /api/catalog/search e GET /api/catalog/item para consumir desde el frontend.
+	- Claves RAWG/TMDb solo se usan server-side (no exponer en cliente).
 
 ## Auth (Supabase SSR)
 
