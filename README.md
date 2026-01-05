@@ -72,6 +72,19 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- Se añadieron popularity, vote_average y vote_count a los tipos base de TMDb.
 	- normalizeTmdb usa esos campos en meta junto con runtime o number_of_seasons/episode_run_time según el tipo.
 	- Sin cambios de lógica ni dependencias; objetivo desbloquear el build.
+- Fase 3C — UI Search + Detail (Catálogo):
+	- Página /search con búsqueda por tipo (game, movie, tv, anime), estados loading/empty/error y grid de resultados.
+	- Cards con poster, título, año y badge de tipo; clic navega a /item/[type]/[key].
+	- Detalle /item/... muestra hero/poster, géneros, resumen y botón placeholder "Agregar a biblioteca".
+	- Footer de atribución RAWG/TMDb en vistas de catálogo y página /credits dedicada.
+	- Consultas via TanStack Query a los endpoints internos /api/catalog/search e /api/catalog/item.
+
+## Catálogo (UI)
+
+- /search: Buscar catálogo unificado (game/movie/tv/anime), ver cards y estados de carga.
+- /item/[type]/[key]: Detalle con backdrop/poster, géneros, resumen y badge de proveedor.
+- /credits: Atribución TMDb y RAWG; enlaces obligatorios.
+- Cómo probar: definir RAWG_API_KEY y TMDB_ACCESS_TOKEN (o TMDB_API_KEY) en .env.local; `pnpm dev`, navegar a /search, realizar búsquedas y abrir un ítem.
 - Hotfix — group_members member_role + TMDb dispatch overload + getUser():
 	- addMember inserta en group_members usando la columna member_role.
 	- Se agregó normalizeTmdbDispatch para resolver overloads en el servicio de catálogo.
