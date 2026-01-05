@@ -2,8 +2,23 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { groupKeys, fetchCurrentGroup, fetchGroupsList, setCurrentGroup } from "./queries";
-import type { CurrentGroupResponse, GroupRow } from "./types";
+import {
+  groupKeys,
+  fetchCurrentGroup,
+  fetchGroupsList,
+  setCurrentGroup,
+  fetchGroupMembers,
+  createInvite,
+  redeemInvite,
+} from "./queries";
+import type {
+  CurrentGroupResponse,
+  GroupRow,
+  GroupMemberWithProfile,
+  CreateInviteParams,
+  CreateInviteResponse,
+  RedeemInviteResponse,
+} from "./types";
 
 export function useCurrentGroup() {
   return useQuery<CurrentGroupResponse | null>({
@@ -36,6 +51,33 @@ export function useSetCurrentGroup() {
       queryClient.invalidateQueries({ queryKey: groupKeys.list() });
       // Invalidate library queries since they may depend on group context
       queryClient.invalidateQueries({ queryKey: ["library"] });
+    },
+  });
+}
+
+export function useGroupMembers(groupId: string | undefined) {
+  return useQuery<GroupMemberWithProfile[]>({
+    queryKey: groupKeys.members(groupId ?? ""),
+    queryFn: () => fetchGroupMembers(groupId!),
+    enabled: !!groupId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+}
+
+export function useCreateInvite() {
+  return useMutation<CreateInviteResponse, Error, CreateInviteParams>({
+    mutationFn: createInvite,
+  });
+}
+
+export function useRedeemInvite() {
+  const queryClient = useQueryClient();
+
+  return useMutation<RedeemInviteResponse, Error, string>({
+    mutationFn: redeemInvite,
+    onSuccess: () => {
+      // Invalidate all group queries after joining
+      queryClient.invalidateQueries({ queryKey: groupKeys.all });
     },
   });
 }

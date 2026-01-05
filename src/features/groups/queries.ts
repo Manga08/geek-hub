@@ -1,10 +1,11 @@
-import type { GroupRow, CurrentGroupResponse } from "./types";
+import type { GroupRow, CurrentGroupResponse, GroupMemberWithProfile, CreateInviteParams, CreateInviteResponse, RedeemInviteResponse } from "./types";
 
 export const groupKeys = {
   all: ["groups"] as const,
   current: () => [...groupKeys.all, "current"] as const,
   list: () => [...groupKeys.all, "list"] as const,
   detail: (id: string) => [...groupKeys.all, "detail", id] as const,
+  members: (groupId: string) => [...groupKeys.all, "members", groupId] as const,
 };
 
 export async function fetchCurrentGroup(): Promise<CurrentGroupResponse | null> {
@@ -41,6 +42,57 @@ export async function setCurrentGroup(
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: "Unknown error" }));
     throw new Error(error.error || "Error setting current group");
+  }
+
+  return res.json();
+}
+
+export async function fetchGroupMembers(
+  groupId: string
+): Promise<GroupMemberWithProfile[]> {
+  const res = await fetch(`/api/groups/members?group_id=${groupId}`);
+
+  if (!res.ok) {
+    throw new Error("Error fetching group members");
+  }
+
+  return res.json();
+}
+
+export async function createInvite(
+  params: CreateInviteParams
+): Promise<CreateInviteResponse> {
+  const res = await fetch("/api/groups/invites", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      group_id: params.groupId,
+      expires_in_hours: params.expiresInHours,
+      max_uses: params.maxUses,
+      invite_role: params.inviteRole,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.error || "Error creating invite");
+  }
+
+  return res.json();
+}
+
+export async function redeemInvite(
+  token: string
+): Promise<RedeemInviteResponse> {
+  const res = await fetch("/api/groups/invites/redeem", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.message || error.error || "Error redeeming invite");
   }
 
   return res.json();

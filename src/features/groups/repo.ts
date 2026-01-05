@@ -1,4 +1,4 @@
-import type { SupabaseServerClient, GroupRole, GroupRow } from "./types";
+import type { SupabaseServerClient, GroupRole, GroupRow, GroupMemberWithProfile, GroupInviteRow } from "./types";
 
 export async function getFirstGroupIdForUser(
   supabase: SupabaseServerClient,
@@ -184,4 +184,121 @@ export async function getUserRoleInGroup(
   }
 
   return data?.member_role as GroupRole | null;
+}
+
+// ================================
+// Members
+// ================================
+
+export async function listGroupMembers(
+  supabase: SupabaseServerClient,
+  groupId: string,
+): Promise<GroupMemberWithProfile[]> {
+  const { data, error } = await supabase
+    .from("group_members")
+    .select(`
+      user_id,
+      member_role,
+      joined_at,
+      profiles (
+        display_name,
+        avatar_url
+      )
+    `)
+    .eq("group_id", groupId)
+    .order("joined_at", { ascending: true });
+
+  if (error) {
+    throw new Error(`Error fetching group members: ${error.message}`);
+  }
+
+  return (data ?? []).map((row) => {
+    const profile = row.profiles as unknown as { display_name: string | null; avatar_url: string | null } | null;
+    return {
+      user_id: row.user_id,
+      role: row.member_role as GroupRole,
+      joined_at: row.joined_at,
+      display_name: profile?.display_name ?? null,
+      avatar_url: profile?.avatar_url ?? null,
+    };
+  });
+}
+
+// ================================
+// Invites
+// ================================
+
+export async function createGroupInvite(
+  supabase: SupabaseServerClient,
+  params: {
+    groupId: string;
+    createdBy: string;
+    inviteRole?: GroupRole;
+    expiresAt?: string | null;
+    maxUses?: number;
+  },
+): Promise<GroupInviteRow> {
+  const { data, error } = await supabase
+    .from("group_invites")
+    .insert({
+      group_id: params.groupId,
+      created_by: params.createdBy,
+      invite_role: params.inviteRole ?? "member",
+      expires_at: params.expiresAt ?? null,
+      max_uses: params.maxUses ?? 1,
+    })
+    .select("*")
+    .single();
+
+  if (error || !data) {
+    throw new Error(`Error creating invite: ${error?.message ?? "unknown"}`);
+  }
+
+  return data as GroupInviteRow;
+}
+
+export async function listGroupInvites(
+  supabase: SupabaseServerClient,
+  groupId: string,
+): Promise<GroupInviteRow[]> {
+  const { data, error } = await supabase
+    .from("group_invites")
+    .select("*")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Error fetching invites: ${error.message}`);
+  }
+
+  return (data ?? []) as GroupInviteRow[];
+}
+
+export async function revokeGroupInvite(
+  supabase: SupabaseServerClient,
+  inviteId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("group_invites")
+    .update({ revoked: true })
+    .eq("id", inviteId);
+
+  if (error) {
+    throw new Error(`Error revoking invite: ${error.message}`);
+  }
+}
+
+export async function redeemGroupInvite(
+  supabase: SupabaseServerClient,
+  token: string,
+): Promise<{ success: boolean; group_id?: string; role?: GroupRole; group?: GroupRow; error?: string; message?: string }> {
+  const { data, error } = await supabase.rpc("redeem_group_invite", {
+    invite_token: token,
+  });
+
+  if (error) {
+    throw new Error(`Error redeeming invite: ${error.message}`);
+  }
+
+  return data as { success: boolean; group_id?: string; role?: GroupRole; group?: GroupRow; error?: string; message?: string };
 }

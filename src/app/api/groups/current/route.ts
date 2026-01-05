@@ -57,6 +57,15 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(group_id)) {
+      return NextResponse.json(
+        { error: "Invalid group_id format" },
+        { status: 400 }
+      );
+    }
+
     // Check if group exists
     const group = await getGroupById(supabase, group_id);
     if (!group) {

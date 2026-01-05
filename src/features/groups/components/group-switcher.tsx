@@ -6,11 +6,13 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 import { useCurrentGroup, useGroupsList, useSetCurrentGroup } from "../hooks";
+import { ManageGroupDialog } from "./manage-group-dialog";
 
 export function GroupSwitcher() {
   const { data: currentGroupData, isLoading: isCurrentLoading } = useCurrentGroup();
@@ -28,21 +30,29 @@ export function GroupSwitcher() {
     }
   };
 
-  // Single group: just show name
+  // Single group: show dropdown with manage option only
   if (!hasMultipleGroups) {
     return (
-      <div className="hidden items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground md:flex">
-        <Users className="h-3 w-3" />
-        {isLoading ? (
-          <span className="h-3 w-12 animate-pulse rounded bg-white/10" />
-        ) : (
-          <span className="max-w-25 truncate">{currentGroupName}</span>
-        )}
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="hidden items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-white/10 md:flex">
+            <Users className="h-3 w-3" />
+            {isLoading ? (
+              <span className="h-3 w-12 animate-pulse rounded bg-white/10" />
+            ) : (
+              <span className="max-w-25 truncate">{currentGroupName}</span>
+            )}
+            <ChevronDown className="h-3 w-3 opacity-50" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="min-w-45">
+          <ManageGroupDialog />
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 
-  // Multiple groups: show dropdown
+  // Multiple groups: show dropdown with groups list + manage option
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -75,6 +85,8 @@ export function GroupSwitcher() {
             )}
           </DropdownMenuItem>
         ))}
+        <DropdownMenuSeparator />
+        <ManageGroupDialog />
       </DropdownMenuContent>
     </DropdownMenu>
   );
