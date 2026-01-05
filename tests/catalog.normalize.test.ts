@@ -10,7 +10,7 @@ describe("normalizeRawgItem", () => {
       id: 123,
       name: "Halo",
       released: "2001-11-15",
-      background_image: "https://img/halo.jpg",
+      background_image: "https://media.rawg.io/media/games/halo.jpg",
       genres: [{ name: "Action" }, { name: "Shooter" }],
     };
 
@@ -20,7 +20,7 @@ describe("normalizeRawgItem", () => {
     expect(item.type).toBe("game");
     expect(item.title).toBe("Halo");
     expect(item.year).toBe(2001);
-    expect(item.posterUrl).toBe("https://img/halo.jpg");
+    expect(item.posterUrl).toBe("https://media.rawg.io/media/resize/1280/-/games/halo.jpg");
     expect(item.genres).toEqual(["Action", "Shooter"]);
   });
 
@@ -38,7 +38,7 @@ describe("normalizeRawgItem", () => {
     expect(item.posterUrl).toBe("https://img/extra.jpg");
   });
 
-  it("upgrades RAWG screenshot thumbnails to 640 width", () => {
+  it("upgrades RAWG images to HQ with resize/1280/-", () => {
     const raw: RawgGameLike = {
       id: 8,
       name: "Celeste",
@@ -50,7 +50,20 @@ describe("normalizeRawgItem", () => {
 
     const item = normalizeRawgItem(raw);
 
-    expect(item.posterUrl).toBe("https://media.rawg.io/media/screenshots/640/abc.jpg");
+    expect(item.posterUrl).toBe("https://media.rawg.io/media/resize/1280/-/screenshots/288/abc.jpg");
+  });
+
+  it("does not double-resize already resized URLs", () => {
+    const raw: RawgGameLike = {
+      id: 9,
+      name: "Already Resized",
+      background_image: "https://media.rawg.io/media/resize/640/-/games/abc.jpg",
+      genres: [],
+    };
+
+    const item = normalizeRawgItem(raw);
+
+    expect(item.posterUrl).toBe("https://media.rawg.io/media/resize/640/-/games/abc.jpg");
   });
 });
 

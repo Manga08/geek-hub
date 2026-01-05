@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { QueryProvider } from "@/components/providers/QueryProvider"
 import { Navbar } from "@/components/shared/Navbar"
+import { PageTransition } from "@/components/shared/PageTransition"
 import { cn } from "@/lib/utils"
 
 export function AppShell({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -14,7 +15,9 @@ export function AppShell({ children, className }: { children: React.ReactNode; c
         />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/50 via-transparent to-primary/40" aria-hidden />
         <Navbar />
-        <main className="relative mx-auto w-full max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pt-6">{children}</main>
+        <main className="relative mx-auto w-full max-w-7xl px-4 pb-16 pt-4 sm:px-6 sm:pt-6">
+          <PageTransition>{children}</PageTransition>
+        </main>
       </div>
     </QueryProvider>
   )

@@ -40,7 +40,16 @@ export function normalizeRawgItem(raw: RawgGameLike): UnifiedCatalogItem {
 }
 
 export function upgradeRawgImage(url: string): string {
-  const match = url.match(/\/media\/screenshots\/(\d+)\//);
-  if (!match) return url;
-  return url.replace(/\/media\/screenshots\/\d+\//, "/media/screenshots/640/");
+  // Already resized => leave as is
+  if (url.includes("/resize/")) return url;
+
+  // media.rawg.io/media/... => insert resize/1280/-/ after /media/
+  if (url.includes("media.rawg.io/media/") && !url.includes("/resize/")) {
+    return url.replace(
+      /media\.rawg\.io\/media\//,
+      "media.rawg.io/media/resize/1280/-/"
+    );
+  }
+
+  return url;
 }

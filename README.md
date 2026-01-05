@@ -107,6 +107,13 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
   - MediaGrid.tsx usa `Variants` tipados y `React.isValidElement` para evitar any.
   - Scripts: `dev` usa `--webpack`; agregados `dev:turbo` y `build:webpack` opcionales.
   - Documentación de troubleshooting cross-env (Windows/WSL) en README.
+- Fase 3K — Premium Media Cards v2 + RAWG HQ resize + prefetch + page transitions:
+  - MediaCard rediseñada: glass premium, shine animado, quick actions (heart/plus/link), blur placeholder.
+  - RAWG images usan `resize/1280/-/` para HQ; tests actualizados.
+  - Prefetch en hover/focus/pointerDown para navegación "instant" a item.
+  - ItemPageClient con AnimatePresence para transición skeleton→content.
+  - PageTransition wrapper en AppShell para fade suave entre páginas.
+  - Respeta prefers-reduced-motion en todas las animaciones.
 
 ## Catálogo (UI)
 

@@ -2,12 +2,26 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import type { Variants } from "framer-motion";
 
 import { EmptyState } from "@/components/shared/EmptyState";
 import { GlassCard } from "@/components/shared/GlassCard";
 import { ItemDetail } from "@/features/catalog/components/ItemDetail";
 import { catalogItemKey, fetchCatalogItem } from "@/features/catalog/queries";
 import type { UnifiedItemType } from "@/features/catalog/normalize/unified.types";
+
+const contentVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -4 },
+};
+
+const contentVariantsReduced: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
+};
 
 function ItemSkeleton() {
   return (
@@ -39,6 +53,8 @@ function ItemSkeleton() {
 }
 
 export function ItemPageClient({ type, keyParam }: { type: UnifiedItemType; keyParam: string }) {
+  const prefersReducedMotion = useReducedMotion();
+  const variants = prefersReducedMotion ? contentVariantsReduced : contentVariants;
   const queryKey = useMemo(() => catalogItemKey({ type, key: keyParam }), [type, keyParam]);
   const { data, isLoading, isError, error } = useQuery({
     queryKey,
@@ -46,15 +62,43 @@ export function ItemPageClient({ type, keyParam }: { type: UnifiedItemType; keyP
     staleTime: 1000 * 60 * 10,
   });
 
-  if (isLoading) return <ItemSkeleton />;
-  if (isError || !data) {
-    const message = error instanceof Error ? error.message : "No se pudo cargar el ítem";
-    return <EmptyState message={message} />;
-  }
-
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <ItemDetail item={data} />
-    </div>
+    <AnimatePresence mode="wait">
+      {isLoading ? (
+        <motion.div
+          key="skeleton"
+          variants={variants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          transition={{ duration: 0.15 }}
+        >
+          <ItemSkeleton />
+        </motion.div>
+      ) : isError || !data ? (
+        <motion.div
+          key="error"
+          variants={variants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          transition={{ duration: 0.15 }}
+        >
+          <EmptyState message={error instanceof Error ? error.message : "No se pudo cargar el ítem"} />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="content"
+          variants={variants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          transition={{ duration: 0.15 }}
+          className="mx-auto max-w-5xl space-y-6"
+        >
+          <ItemDetail item={data} />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
