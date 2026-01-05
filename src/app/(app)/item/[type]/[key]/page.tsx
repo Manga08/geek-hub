@@ -35,7 +35,7 @@ export default async function ItemPage({ params }: { params: { type: string; key
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
+    <div className="mx-auto max-w-5xl space-y-6">
       <ItemDetail item={item} />
     </div>
   );

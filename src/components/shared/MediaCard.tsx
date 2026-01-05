@@ -13,8 +13,8 @@ export function MediaCard({ item }: { item: UnifiedCatalogItem }) {
 
   return (
     <Link href={href} className="block h-full">
-      <Card className="h-full overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md">
-        <div className="relative aspect-[2/3] w-full bg-zinc-100">
+      <Card className="h-full overflow-hidden border-white/10 bg-white/5 backdrop-blur-md transition hover:-translate-y-[1px] hover:shadow-[0_25px_70px_-60px_rgba(139,92,246,0.55)]">
+        <div className="relative aspect-[2/3] w-full bg-gradient-to-b from-white/5 to-black/40">
           {item.posterUrl ? (
             <Image
               src={item.posterUrl}
@@ -25,7 +25,7 @@ export function MediaCard({ item }: { item: UnifiedCatalogItem }) {
               priority={false}
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-zinc-500">Sin imagen</div>
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Sin imagen</div>
           )}
         </div>
         <CardContent className="space-y-2 p-3">
@@ -33,9 +33,9 @@ export function MediaCard({ item }: { item: UnifiedCatalogItem }) {
             <Badge variant="secondary" className="capitalize">
               {typeLabel(item.type)}
             </Badge>
-            {item.year ? <span className="text-xs text-zinc-500">{item.year}</span> : null}
+            {item.year ? <span className="text-xs text-muted-foreground/80">{item.year}</span> : null}
           </div>
-          <p className="line-clamp-2 text-sm font-medium text-zinc-900">{item.title}</p>
+          <p className="line-clamp-2 text-sm font-semibold text-foreground">{item.title}</p>
         </CardContent>
       </Card>
     </Link>

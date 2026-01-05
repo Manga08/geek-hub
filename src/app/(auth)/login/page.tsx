@@ -5,7 +5,7 @@ import { LoginForm } from "@/features/auth/components/LoginForm";
 
 export default function LoginPage() {
   return (
-    <Card className="w-full max-w-md border-white/10 bg-card/90 shadow-2xl backdrop-blur-sm transition-transform duration-300 ease-out hover:-translate-y-0.5">
+    <Card className="w-full max-w-md border-white/10 bg-white/10 shadow-[0_20px_80px_-60px_rgba(0,0,0,0.9)] backdrop-blur-xl transition-transform duration-200 ease-out hover:-translate-y-0.5">
       <CardHeader>
         <CardTitle className="text-xl">Inicia sesión</CardTitle>
       </CardHeader>

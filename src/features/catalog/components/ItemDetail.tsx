@@ -7,7 +7,7 @@ import type { UnifiedCatalogItem } from "@/features/catalog/normalize/unified.ty
 export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_30px_120px_-80px_rgba(139,92,246,0.6)] backdrop-blur-md">
         {item.backdropUrl ? (
           <div className="relative h-48 w-full sm:h-64">
             <Image
@@ -18,16 +18,16 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
           </div>
         ) : null}
         <div className="relative z-10 flex flex-col gap-4 p-6 sm:flex-row">
           <div className="w-full sm:w-48">
-            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-zinc-100">
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/5 to-black/40">
               {item.posterUrl ? (
                 <Image src={item.posterUrl} alt={item.title} fill sizes="200px" className="object-cover" />
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-zinc-500">Sin imagen</div>
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Sin imagen</div>
               )}
             </div>
           </div>
@@ -36,12 +36,12 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
               <Badge variant="secondary" className="capitalize">
                 {item.type}
               </Badge>
-              {item.year ? <span className="text-sm text-zinc-600">{item.year}</span> : null}
-              <span className="text-xs uppercase text-zinc-500">{item.provider}</span>
+              {item.year ? <span className="text-sm text-muted-foreground/90">{item.year}</span> : null}
+              <span className="text-xs uppercase tracking-wide text-muted-foreground/80">{item.provider}</span>
             </div>
-            <h1 className="text-2xl font-semibold text-zinc-900">{item.title}</h1>
+            <h1 className="text-2xl font-semibold text-foreground">{item.title}</h1>
             {item.genres.length ? (
-              <div className="flex flex-wrap gap-2 text-sm text-zinc-700">
+              <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                 {item.genres.map((genre) => (
                   <Badge key={genre} variant="outline" className="text-xs">
                     {genre}
@@ -49,7 +49,7 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
                 ))}
               </div>
             ) : null}
-            {item.summary ? <p className="text-sm text-zinc-700">{item.summary}</p> : null}
+            {item.summary ? <p className="text-sm text-muted-foreground">{item.summary}</p> : null}
             <div>
               <Button variant="default" disabled>
                 Agregar a biblioteca

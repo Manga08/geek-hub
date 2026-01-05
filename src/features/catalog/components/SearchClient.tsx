@@ -10,8 +10,11 @@ import { MediaCard } from "@/components/shared/MediaCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MediaGridSkeleton } from "@/components/shared/Skeletons";
 import { AttributionFooter } from "@/components/shared/AttributionFooter";
+import { GlassCard } from "@/components/shared/GlassCard";
 import type { UnifiedItemType } from "@/features/catalog/normalize/unified.types";
 import { fetchCatalogSearch } from "@/features/catalog/queries";
+
+type SearchPageResult = Awaited<ReturnType<typeof fetchCatalogSearch>>;
 
 function SearchInner() {
   const [query, setQuery] = useState("");
@@ -29,9 +32,10 @@ function SearchInner() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<SearchPageResult, Error, SearchPageResult, [string, string, UnifiedItemType, string], number>({
     queryKey: ["catalog", "search", type, submittedQuery],
     queryFn: ({ pageParam = 1 }) => fetchCatalogSearch({ type, query: submittedQuery, page: pageParam }),
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
     enabled,
     staleTime: 1000 * 30,
@@ -54,34 +58,36 @@ function SearchInner() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
-        <div className="flex-1 space-y-2">
-          <label className="text-sm font-medium text-zinc-700">Búsqueda</label>
-          <Input
-            placeholder="Buscar..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-zinc-700">Tipo</label>
-          <Select value={type} onValueChange={(v) => setType(v as UnifiedItemType)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="game">Game</SelectItem>
-              <SelectItem value="movie">Movie</SelectItem>
-              <SelectItem value="tv">TV</SelectItem>
-              <SelectItem value="anime">Anime</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <Button type="submit" className="self-end sm:self-auto" disabled={isFetching}>
-          {isFetching ? "Buscando..." : "Buscar"}
-        </Button>
-      </form>
+      <GlassCard className="p-4 sm:p-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1 space-y-2">
+            <label className="text-sm font-medium text-muted-foreground">Búsqueda</label>
+            <Input
+              placeholder="Buscar..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-muted-foreground">Tipo</label>
+            <Select value={type} onValueChange={(v) => setType(v as UnifiedItemType)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Selecciona" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="game">Game</SelectItem>
+                <SelectItem value="movie">Movie</SelectItem>
+                <SelectItem value="tv">TV</SelectItem>
+                <SelectItem value="anime">Anime</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" className="sm:w-32" disabled={isFetching}>
+            {isFetching ? "Buscando..." : "Buscar"}
+          </Button>
+        </form>
+      </GlassCard>
 
       {isInitialLoading ? <MediaGridSkeleton /> : null}
 

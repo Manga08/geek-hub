@@ -34,14 +34,14 @@ export function normalizeTmdb(type: UnifiedItemType, raw: TmdbMovie | TmdbTv): U
 
   const meta: Record<string, unknown> = isMovie
     ? {
-        ...baseMeta,
-        runtime: (raw as TmdbMovie).runtime,
-      }
+      ...baseMeta,
+      runtime: (raw as TmdbMovie).runtime,
+    }
     : {
-        ...baseMeta,
-        number_of_seasons: (raw as TmdbTv).number_of_seasons,
-        episode_run_time: (raw as TmdbTv).episode_run_time,
-      };
+      ...baseMeta,
+      number_of_seasons: (raw as TmdbTv).number_of_seasons,
+      episode_run_time: (raw as TmdbTv).episode_run_time,
+    };
 
   return {
     key: `tmdb-${externalId}`,

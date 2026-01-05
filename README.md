@@ -89,6 +89,11 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- Select usa iconos de lucide-react (sin @radix-ui/react-icons).
 	- Supabase server client protege set de cookies con try/catch para evitar crash en Server Components.
 	- Nota: tras actualizar deps, ejecutar pnpm install.
+- Fase 3F — UI System GeekHub Dark Premium + Fix Search (images/infiniteQuery):
+	- next/image ahora permite hosts RAWG y TMDb en remotePatterns.
+	- SearchClient usa useInfiniteQuery con initialPageParam tipado para paginación segura.
+	- Tokens GeekHub Dark y fondo radial + stripe aplicados como base del tema.
+	- Nuevos AppShell/Navbar/GlassCard y skin aplicado a Auth, Search, Item y Credits.
 
 ## Catálogo (UI)
 
