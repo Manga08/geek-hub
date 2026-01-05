@@ -8,6 +8,7 @@ export interface RawgGameLike {
   released?: string | null;
   background_image?: string | null;
   background_image_additional?: string | null;
+  short_screenshots?: { image?: string | null }[] | null;
   genres?: RawgGenre[] | null;
   description_raw?: string | null;
   platforms?: unknown;

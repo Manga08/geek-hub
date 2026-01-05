@@ -19,10 +19,11 @@ function parseParams(typeParam: string, keyParam: string): { type: UnifiedItemTy
   return { type: typeParam, provider, externalId };
 }
 
-export default async function ItemPage({ params }: { params: { type: string; key: string } }) {
+export default async function ItemPage({ params }: { params: Promise<{ type: string; key: string }> }) {
+  const resolvedParams = await params;
   let parsed: { type: UnifiedItemType; provider: Provider; externalId: string };
   try {
-    parsed = parseParams(params.type, params.key);
+    parsed = parseParams(resolvedParams.type, resolvedParams.key);
   } catch {
     notFound();
   }

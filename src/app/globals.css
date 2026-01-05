@@ -128,4 +128,14 @@
       linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 12%);
     background-attachment: fixed;
   }
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }

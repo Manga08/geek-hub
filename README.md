@@ -94,6 +94,15 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- SearchClient usa useInfiniteQuery con initialPageParam tipado para paginación segura.
 	- Tokens GeekHub Dark y fondo radial + stripe aplicados como base del tema.
 	- Nuevos AppShell/Navbar/GlassCard y skin aplicado a Auth, Search, Item y Credits.
+- Fase 3G — Cards premium + RAWG HD + Next 16 fixes:
+	- MediaCard con GlassCard premium, brillo en hover, quick actions, imágenes HQ y animación fade-up.
+	- RAWG normalizer prioriza background_image_additional/short_screenshots y sube thumbnails 288→640.
+	- Item page espera params async (Next 16) y useInfiniteQuery tipa InfiniteData para pages.
+	- Tests nuevos cubren preferencia de fondo RAWG y upgrade de screenshots.
+- Fase 3H — Fix RAWG types/tests + TMDb cache + loading item page:
+	- RAWG DTO ahora incluye short_screenshots opcional; tests sin any usando RawgGameLike.
+	- TMDb search/detail cachean con revalidate (10 min / 1 día) para abrir detalle más rápido.
+	- loading.tsx para /item y /search con skeleton premium y glass acorde al tema.
 
 ## Catálogo (UI)
 

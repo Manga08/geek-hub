@@ -55,7 +55,10 @@ export async function tmdbSearch({
   page?: number;
 }): Promise<TmdbSearchResponse<TmdbMovie | TmdbTv>> {
   const { url, headers } = buildUrl(`/search/${type}`, { query, page });
-  const response = await fetchWithTimeout(url, { headers });
+  const response = await fetchWithTimeout(url, {
+    headers,
+    next: { revalidate: 60 * 10 },
+  });
   if (!response.ok) {
     throw new Error(`TMDb search failed with status ${response.status}`);
   }
@@ -71,7 +74,10 @@ export async function tmdbGetDetail({
   id: string | number;
 }): Promise<TmdbMovie | TmdbTv> {
   const { url, headers } = buildUrl(`/${type}/${id}`, {});
-  const response = await fetchWithTimeout(url, { headers });
+  const response = await fetchWithTimeout(url, {
+    headers,
+    next: { revalidate: 60 * 60 * 24 },
+  });
   if (!response.ok) {
     throw new Error(`TMDb detail failed with status ${response.status}`);
   }

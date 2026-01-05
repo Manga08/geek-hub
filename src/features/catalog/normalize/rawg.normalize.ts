@@ -11,6 +11,13 @@ export function normalizeRawgItem(raw: RawgGameLike): UnifiedCatalogItem {
   const externalId = String(raw.id ?? "");
   const title = raw.name ?? "";
 
+  const posterCandidate = raw.background_image
+    ?? raw.background_image_additional
+    ?? raw.short_screenshots?.[0]?.image
+    ?? null;
+  const posterUrl = posterCandidate ? upgradeRawgImage(posterCandidate) : null;
+  const backdropUrl = raw.background_image_additional ?? raw.background_image ?? null;
+
   return {
     key: `rawg-${externalId}`,
     type: "game",
@@ -18,8 +25,8 @@ export function normalizeRawgItem(raw: RawgGameLike): UnifiedCatalogItem {
     externalId,
     title,
     year: parseYear(raw.released),
-    posterUrl: raw.background_image ?? null,
-    backdropUrl: raw.background_image_additional ?? null,
+    posterUrl,
+    backdropUrl,
     genres: Array.isArray(raw.genres) ? raw.genres.map((g) => g.name) : [],
     summary: raw.description_raw ?? null,
     meta: {
@@ -30,4 +37,10 @@ export function normalizeRawgItem(raw: RawgGameLike): UnifiedCatalogItem {
       slug: raw.slug,
     },
   };
+}
+
+export function upgradeRawgImage(url: string): string {
+  const match = url.match(/\/media\/screenshots\/(\d+)\//);
+  if (!match) return url;
+  return url.replace(/\/media\/screenshots\/\d+\//, "/media/screenshots/640/");
 }

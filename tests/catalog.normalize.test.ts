@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { normalizeRawgItem } from "@/features/catalog/normalize/rawg.normalize";
 import { normalizeTmdb } from "@/features/catalog/normalize/tmdb.normalize";
+import type { RawgGameLike } from "@/features/catalog/providers/types";
 
 describe("normalizeRawgItem", () => {
   it("builds unified game item", () => {
-    const raw = {
+    const raw: RawgGameLike = {
       id: 123,
       name: "Halo",
       released: "2001-11-15",
@@ -21,6 +22,35 @@ describe("normalizeRawgItem", () => {
     expect(item.year).toBe(2001);
     expect(item.posterUrl).toBe("https://img/halo.jpg");
     expect(item.genres).toEqual(["Action", "Shooter"]);
+  });
+
+  it("prefers additional background when main image is missing", () => {
+    const raw: RawgGameLike = {
+      id: 7,
+      name: "Stardew Valley",
+      background_image: null,
+      background_image_additional: "https://img/extra.jpg",
+      genres: [],
+    };
+
+    const item = normalizeRawgItem(raw);
+
+    expect(item.posterUrl).toBe("https://img/extra.jpg");
+  });
+
+  it("upgrades RAWG screenshot thumbnails to 640 width", () => {
+    const raw: RawgGameLike = {
+      id: 8,
+      name: "Celeste",
+      background_image: null,
+      background_image_additional: null,
+      short_screenshots: [{ image: "https://media.rawg.io/media/screenshots/288/abc.jpg" }],
+      genres: [],
+    };
+
+    const item = normalizeRawgItem(raw);
+
+    expect(item.posterUrl).toBe("https://media.rawg.io/media/screenshots/640/abc.jpg");
   });
 });
 

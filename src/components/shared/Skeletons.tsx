@@ -1,11 +1,13 @@
 export function MediaCardSkeleton() {
   return (
-    <div className="h-full animate-pulse overflow-hidden rounded-lg border border-zinc-200 bg-white">
-      <div className="aspect-[2/3] w-full bg-zinc-100" />
+    <div className="h-full animate-pulse overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur">
+      <div className="relative aspect-[2/3] w-full bg-white/10">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10" />
+      </div>
       <div className="space-y-2 p-3">
-        <div className="h-4 w-16 rounded bg-zinc-100" />
-        <div className="h-4 w-24 rounded bg-zinc-100" />
-        <div className="h-4 w-3/4 rounded bg-zinc-100" />
+        <div className="h-3 w-16 rounded-full bg-white/10" />
+        <div className="h-4 w-24 rounded bg-white/10" />
+        <div className="h-4 w-3/4 rounded bg-white/10" />
       </div>
     </div>
   );

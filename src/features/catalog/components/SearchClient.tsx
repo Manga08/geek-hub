@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { QueryClient, QueryClientProvider, useInfiniteQuery } from "@tanstack/react-query";
+import { InfiniteData, QueryClient, QueryClientProvider, useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,7 +32,7 @@ function SearchInner() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery<SearchPageResult, Error, SearchPageResult, [string, string, UnifiedItemType, string], number>({
+  } = useInfiniteQuery<SearchPageResult, Error, InfiniteData<SearchPageResult, number>, [string, string, UnifiedItemType, string], number>({
     queryKey: ["catalog", "search", type, submittedQuery],
     queryFn: ({ pageParam = 1 }) => fetchCatalogSearch({ type, query: submittedQuery, page: pageParam }),
     initialPageParam: 1,
