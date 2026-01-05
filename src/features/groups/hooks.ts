@@ -61,9 +61,10 @@ export function useSetCurrentGroup() {
       // Invalidate to refetch fresh data
       queryClient.invalidateQueries({ queryKey: groupKeys.current() });
       queryClient.invalidateQueries({ queryKey: groupKeys.list() });
-      // Invalidate library and lists queries since they depend on group context
+      // Invalidate library, lists, and activity queries since they depend on group context
       queryClient.invalidateQueries({ queryKey: ["library"] });
       queryClient.invalidateQueries({ queryKey: ["lists"] });
+      queryClient.invalidateQueries({ queryKey: ["activity"] });
     },
   });
 }

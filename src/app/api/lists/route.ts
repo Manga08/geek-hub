@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import * as listsRepo from "@/features/lists/repo";
 import type { CreateListDTO } from "@/features/lists/types";
+import { logActivityEvent } from "@/lib/activity-log";
 
 export async function GET() {
   const supabase = await createSupabaseServerClient();
@@ -42,6 +43,17 @@ export async function POST(request: NextRequest) {
     }
 
     const list = await listsRepo.createList(body);
+
+    // Log activity event
+    await logActivityEvent({
+      groupId: list.group_id,
+      actorId: user.id,
+      eventType: "list_created",
+      entityType: "list",
+      entityId: list.id,
+      metadata: { name: list.name, list_name: list.name },
+    });
+
     return NextResponse.json(list, { status: 201 });
   } catch (error) {
     console.error("POST /api/lists error:", error);

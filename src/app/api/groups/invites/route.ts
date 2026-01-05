@@ -8,6 +8,7 @@ import {
   listGroupInvites,
 } from "@/features/groups/repo";
 import type { GroupRole } from "@/features/groups/types";
+import { logActivityEvent } from "@/lib/activity-log";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -144,6 +145,19 @@ export async function POST(request: NextRequest) {
     const protocol = origin.startsWith("localhost") ? "http" : "https";
     const baseUrl = origin.startsWith("http") ? origin : `${protocol}://${origin}`;
     const inviteUrl = `${baseUrl}/join?token=${invite.token}`;
+
+    // Log activity event
+    await logActivityEvent({
+      groupId: group_id,
+      actorId: user.id,
+      eventType: "invite_created",
+      entityType: "invite",
+      entityId: invite.token,
+      metadata: {
+        invite_role: invite_role ?? "member",
+        max_uses: max_uses ?? 1,
+      },
+    });
 
     return NextResponse.json({
       token: invite.token,

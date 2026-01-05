@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { setMemberRole, getUserRoleInGroup } from "@/features/groups/repo";
 import type { GroupRole } from "@/features/groups/types";
+import { logActivityEvent } from "@/lib/activity-log";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -71,6 +72,19 @@ export async function PATCH(request: NextRequest) {
         { status }
       );
     }
+
+    // Log activity event
+    await logActivityEvent({
+      groupId: group_id,
+      actorId: user.id,
+      eventType: "member_role_changed",
+      entityType: "member",
+      entityId: user_id,
+      metadata: {
+        new_role: role,
+        target_user_id: user_id,
+      },
+    });
 
     return NextResponse.json({ success: true, new_role: result.new_role });
   } catch (error) {

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Bookmark, ListChecks, Search, User } from "lucide-react"
+import { Activity, BarChart3, Bookmark, ListChecks, Search, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -12,6 +12,7 @@ const links = [
   { href: "/search", label: "Search", icon: Search },
   { href: "/library", label: "Library", icon: Bookmark },
   { href: "/lists", label: "Lists", icon: ListChecks },
+  { href: "/activity", label: "Activity", icon: Activity },
   { href: "/stats", label: "Stats", icon: BarChart3 },
 ]
 

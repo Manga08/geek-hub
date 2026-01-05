@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { revokeInvite } from "@/features/groups/repo";
+import { logActivityEvent, getCurrentGroupId } from "@/lib/activity-log";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -50,6 +51,19 @@ export async function POST(request: NextRequest) {
         { error: result.error, message: result.message },
         { status }
       );
+    }
+
+    // Log activity event
+    const groupId = await getCurrentGroupId();
+    if (groupId) {
+      await logActivityEvent({
+        groupId,
+        actorId: user.id,
+        eventType: "invite_revoked",
+        entityType: "invite",
+        entityId: invite_id,
+        metadata: {},
+      });
     }
 
     return NextResponse.json({ success: true });

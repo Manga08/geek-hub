@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { removeMember, getUserRoleInGroup } from "@/features/groups/repo";
+import { logActivityEvent } from "@/lib/activity-log";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -61,6 +62,18 @@ export async function POST(request: NextRequest) {
         { status }
       );
     }
+
+    // Log activity event
+    await logActivityEvent({
+      groupId: group_id,
+      actorId: user.id,
+      eventType: "member_removed",
+      entityType: "member",
+      entityId: user_id,
+      metadata: {
+        removed_user_id: user_id,
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

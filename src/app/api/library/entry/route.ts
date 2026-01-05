@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { libraryRepo } from "@/features/library/repo";
 import type { CreateEntryDTO, UpdateEntryDTO } from "@/features/library/types";
+import { logActivityEvent, getCurrentGroupId } from "@/lib/activity-log";
 
 export async function GET(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
@@ -79,6 +80,20 @@ export async function POST(request: NextRequest) {
 
     // Create entry (group_id will be resolved from user's default if not provided)
     const entry = await libraryRepo.create(body);
+
+    // Log activity event
+    await logActivityEvent({
+      groupId: entry.group_id,
+      actorId: user.id,
+      eventType: "library_entry_added",
+      entityType: "library_entry",
+      entityId: entry.id,
+      metadata: {
+        item_title: entry.title ?? body.external_id,
+        item_type: body.type,
+      },
+    });
+
     return NextResponse.json(entry, { status: 201 });
   } catch (error) {
     console.error("POST /api/library/entry error:", error);
@@ -111,6 +126,22 @@ export async function PATCH(request: NextRequest) {
     }
 
     const entry = await libraryRepo.update(id, dto);
+
+    // Log activity event if status changed
+    if (dto.status) {
+      await logActivityEvent({
+        groupId: entry.group_id,
+        actorId: user.id,
+        eventType: "library_entry_updated",
+        entityType: "library_entry",
+        entityId: entry.id,
+        metadata: {
+          item_title: entry.title ?? undefined,
+          new_status: dto.status,
+        },
+      });
+    }
+
     return NextResponse.json(entry);
   } catch (error) {
     console.error("PATCH /api/library/entry error:", error);
@@ -142,7 +173,23 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Get entry first for logging
+    const groupId = await getCurrentGroupId();
+    
     await libraryRepo.delete(id);
+
+    // Log activity event
+    if (groupId) {
+      await logActivityEvent({
+        groupId,
+        actorId: user.id,
+        eventType: "library_entry_deleted",
+        entityType: "library_entry",
+        entityId: id,
+        metadata: {},
+      });
+    }
+
     return NextResponse.json({ message: "Deleted" });
   } catch (error) {
     console.error("DELETE /api/library/entry error:", error);

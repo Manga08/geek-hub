@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import * as listsRepo from "@/features/lists/repo";
 import type { AddListItemDTO, UpdateListItemDTO } from "@/features/lists/types";
+import { logActivityEvent } from "@/lib/activity-log";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -47,7 +48,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Get list for logging
+    const list = await listsRepo.getList(id);
+    if (!list) {
+      return NextResponse.json({ message: "List not found" }, { status: 404 });
+    }
+
     const item = await listsRepo.addListItem(id, body);
+
+    // Log activity event
+    await logActivityEvent({
+      groupId: list.group_id,
+      actorId: user.id,
+      eventType: "list_item_added",
+      entityType: "list_item",
+      entityId: `${id}:${body.external_id}`,
+      metadata: {
+        list_id: id,
+        list_name: list.name,
+        item_title: body.title ?? body.external_id,
+        item_type: body.item_type,
+      },
+    });
+
     return NextResponse.json(item, { status: 201 });
   } catch (error) {
     console.error("POST /api/lists/[id]/items error:", error);
@@ -116,7 +139,29 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Get list for logging
+    const list = await listsRepo.getList(id);
+    if (!list) {
+      return NextResponse.json({ message: "List not found" }, { status: 404 });
+    }
+
     await listsRepo.removeListItem(id, body.item_type, body.provider, body.external_id);
+
+    // Log activity event
+    await logActivityEvent({
+      groupId: list.group_id,
+      actorId: user.id,
+      eventType: "list_item_removed",
+      entityType: "list_item",
+      entityId: id,
+      metadata: {
+        list_id: id,
+        list_name: list.name,
+        item_title: body.external_id,
+        item_type: body.item_type,
+      },
+    });
+
     return NextResponse.json({ message: "Removed" });
   } catch (error) {
     console.error("DELETE /api/lists/[id]/items error:", error);

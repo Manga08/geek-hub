@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { redeemGroupInvite } from "@/features/groups/repo";
+import { logActivityEvent } from "@/lib/activity-log";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -52,6 +53,31 @@ export async function POST(request: NextRequest) {
         { error: result.error, message: result.message },
         { status }
       );
+    }
+
+    // Log activity events: invite_redeemed and member_joined
+    if (result.group) {
+      await logActivityEvent({
+        groupId: result.group.id,
+        actorId: user.id,
+        eventType: "invite_redeemed",
+        entityType: "invite",
+        entityId: token,
+        metadata: {
+          group_name: result.group.name,
+        },
+      });
+
+      await logActivityEvent({
+        groupId: result.group.id,
+        actorId: user.id,
+        eventType: "member_joined",
+        entityType: "member",
+        entityId: user.id,
+        metadata: {
+          role: result.role,
+        },
+      });
     }
 
     return NextResponse.json({
