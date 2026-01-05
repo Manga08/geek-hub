@@ -23,18 +23,20 @@ export default async function ItemPage({ params }: { params: { type: string; key
   let parsed: { type: UnifiedItemType; provider: Provider; externalId: string };
   try {
     parsed = parseParams(params.type, params.key);
-  } catch (error) {
-    return notFound();
+  } catch {
+    notFound();
   }
 
+  let item;
   try {
-    const item = await getUnifiedItem({ type: parsed.type, provider: parsed.provider, externalId: parsed.externalId });
-    return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <ItemDetail item={item} />
-      </div>
-    );
-  } catch (error) {
-    return notFound();
+    item = await getUnifiedItem({ type: parsed.type, provider: parsed.provider, externalId: parsed.externalId });
+  } catch {
+    notFound();
   }
+
+  return (
+    <div className="mx-auto max-w-5xl px-4 py-10">
+      <ItemDetail item={item} />
+    </div>
+  );
 }

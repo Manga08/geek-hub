@@ -3,6 +3,7 @@
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { signInAction } from "@/features/auth/actions";
 
 const initialState = { error: undefined as string | undefined };
@@ -22,24 +23,24 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Email</label>
-        <input
+        <label className="block text-sm font-medium text-foreground">Email</label>
+        <Input
           name="email"
           type="email"
+          autoComplete="email"
           required
-          className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
         />
       </div>
       <div className="space-y-2">
-        <label className="block text-sm font-medium">Password</label>
-        <input
+        <label className="block text-sm font-medium text-foreground">Password</label>
+        <Input
           name="password"
           type="password"
+          autoComplete="current-password"
           required
-          className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900"
         />
       </div>
-      {state?.error ? <p className="text-sm text-red-600">{state.error}</p> : null}
+      {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       <SubmitButton />
     </form>
   );

@@ -78,6 +78,12 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 	- Detalle /item/... muestra hero/poster, géneros, resumen y botón placeholder "Agregar a biblioteca".
 	- Footer de atribución RAWG/TMDb en vistas de catálogo y página /credits dedicada.
 	- Consultas via TanStack Query a los endpoints internos /api/catalog/search e /api/catalog/item.
+- Fase 3D — Hotfix UI catálogo (shadcn faltantes) + lint + dark default + redirect /search:
+	- Se agregaron componentes ui badge/input/select de shadcn para resolver imports faltantes.
+	- SearchClient usa useInfiniteQuery (TanStack) sin useEffect+setState y pagina via hasMore.
+	- Se removió el try/catch con JSX en /item/... y la validación ocurre antes del render.
+	- Modo oscuro por defecto desde el layout root y auth con fondo oscuro + cards estilizadas.
+	- Post-login redirige a /search (callbacks, sign-in) y home (/ ) ahora redirige a /search.
 
 ## Catálogo (UI)
 

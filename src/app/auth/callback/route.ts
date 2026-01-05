@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const next = searchParams.get("next");
   const nextPath = sanitizeNextPath(next);
+  const resolvedNextPath = !nextPath || nextPath === "/" ? "/search" : nextPath;
 
   if (!code) {
     return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
@@ -28,5 +29,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/auth-code-error", origin));
   }
 
-  return NextResponse.redirect(new URL(nextPath, origin));
+  return NextResponse.redirect(new URL(resolvedNextPath, origin));
 }

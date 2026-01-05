@@ -5,21 +5,19 @@ import { SignupForm } from "@/features/auth/components/SignupForm";
 
 export default function SignupPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-xl">Crear cuenta</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <SignupForm />
-        </CardContent>
-        <CardFooter className="justify-between text-sm">
-          <span className="text-zinc-600">¿Ya tienes cuenta?</span>
-          <Link href="/login" className="font-medium text-zinc-900 underline">
-            Inicia sesión
-          </Link>
-        </CardFooter>
-      </Card>
-    </div>
+    <Card className="w-full max-w-md border-white/10 bg-card/90 shadow-2xl backdrop-blur-sm transition-transform duration-300 ease-out hover:-translate-y-0.5">
+      <CardHeader>
+        <CardTitle className="text-xl">Crear cuenta</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <SignupForm />
+      </CardContent>
+      <CardFooter className="justify-between text-sm text-muted-foreground">
+        <span>¿Ya tienes cuenta?</span>
+        <Link href="/login" className="font-medium text-primary underline underline-offset-4">
+          Inicia sesión
+        </Link>
+      </CardFooter>
+    </Card>
   );
 }

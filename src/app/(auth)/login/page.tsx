@@ -5,21 +5,19 @@ import { LoginForm } from "@/features/auth/components/LoginForm";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-xl">Inicia sesión</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LoginForm />
-        </CardContent>
-        <CardFooter className="justify-between text-sm">
-          <span className="text-zinc-600">¿No tienes cuenta?</span>
-          <Link href="/signup" className="font-medium text-zinc-900 underline">
-            Crear cuenta
-          </Link>
-        </CardFooter>
-      </Card>
-    </div>
+    <Card className="w-full max-w-md border-white/10 bg-card/90 shadow-2xl backdrop-blur-sm transition-transform duration-300 ease-out hover:-translate-y-0.5">
+      <CardHeader>
+        <CardTitle className="text-xl">Inicia sesión</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <LoginForm />
+      </CardContent>
+      <CardFooter className="justify-between text-sm text-muted-foreground">
+        <span>¿No tienes cuenta?</span>
+        <Link href="/signup" className="font-medium text-primary underline underline-offset-4">
+          Crear cuenta
+        </Link>
+      </CardFooter>
+    </Card>
   );
 }

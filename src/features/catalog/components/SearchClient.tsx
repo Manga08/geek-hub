@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { QueryClient, QueryClientProvider, useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,44 +10,45 @@ import { MediaCard } from "@/components/shared/MediaCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MediaGridSkeleton } from "@/components/shared/Skeletons";
 import { AttributionFooter } from "@/components/shared/AttributionFooter";
-import type { UnifiedCatalogItem, UnifiedItemType } from "@/features/catalog/normalize/unified.types";
-import { catalogSearchKey, fetchCatalogSearch } from "@/features/catalog/queries";
+import type { UnifiedItemType } from "@/features/catalog/normalize/unified.types";
+import { fetchCatalogSearch } from "@/features/catalog/queries";
 
 function SearchInner() {
   const [query, setQuery] = useState("");
   const [type, setType] = useState<UnifiedItemType>("game");
   const [submittedQuery, setSubmittedQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [results, setResults] = useState<UnifiedCatalogItem[]>([]);
 
   const enabled = submittedQuery.trim().length > 0;
 
-  const searchKey = useMemo(() => catalogSearchKey({ type, q: submittedQuery, page }), [type, submittedQuery, page]);
-
-  const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: searchKey,
-    queryFn: () => fetchCatalogSearch({ type, query: submittedQuery, page }),
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["catalog", "search", type, submittedQuery],
+    queryFn: ({ pageParam = 1 }) => fetchCatalogSearch({ type, query: submittedQuery, page: pageParam }),
+    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.page + 1 : undefined),
     enabled,
     staleTime: 1000 * 30,
   });
 
-  useEffect(() => {
-    if (!enabled || !data) return;
-    setResults((prev) => (page === 1 ? data.items : [...prev, ...data.items]));
-  }, [data, enabled, page]);
-
-  const hasMore = data?.hasMore ?? false;
+  const results = data?.pages.flatMap((page) => page.items) ?? [];
+  const isInitialLoading = isLoading && enabled;
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!query.trim()) return;
     setSubmittedQuery(query.trim());
-    setPage(1);
   };
 
   const handleLoadMore = () => {
-    if (hasMore) {
-      setPage((prev) => prev + 1);
+    if (hasNextPage) {
+      fetchNextPage();
     }
   };
 
@@ -82,9 +83,9 @@ function SearchInner() {
         </Button>
       </form>
 
-      {isLoading && enabled ? <MediaGridSkeleton /> : null}
+      {isInitialLoading ? <MediaGridSkeleton /> : null}
 
-      {!isLoading && enabled && !isError && results.length === 0 ? (
+      {!isInitialLoading && enabled && !isError && results.length === 0 ? (
         <EmptyState message="Sin resultados" />
       ) : null}
 
@@ -99,10 +100,10 @@ function SearchInner() {
               <MediaCard key={item.key} item={item} />
             ))}
           </MediaGrid>
-          {hasMore ? (
+          {hasNextPage ? (
             <div className="flex justify-center">
-              <Button variant="outline" onClick={handleLoadMore} disabled={isFetching}>
-                {isFetching ? "Cargando..." : "Cargar más"}
+              <Button variant="outline" onClick={handleLoadMore} disabled={isFetchingNextPage}>
+                {isFetchingNextPage ? "Cargando..." : "Cargar más"}
               </Button>
             </div>
           ) : null}
