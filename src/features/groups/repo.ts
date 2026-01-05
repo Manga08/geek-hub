@@ -1,4 +1,4 @@
-import type { SupabaseServerClient, GroupRole, GroupRow, GroupMemberWithProfile, GroupInviteRow } from "./types";
+import type { SupabaseServerClient, GroupRole, GroupRow, GroupMemberWithProfile, GroupInviteRow, RpcResult } from "./types";
 
 export async function getFirstGroupIdForUser(
   supabase: SupabaseServerClient,
@@ -301,4 +301,74 @@ export async function redeemGroupInvite(
   }
 
   return data as { success: boolean; group_id?: string; role?: GroupRole; group?: GroupRow; error?: string; message?: string };
+}
+
+// ================================
+// Phase 3Q: Membership Management (RPC calls)
+// ================================
+
+export async function setMemberRole(
+  supabase: SupabaseServerClient,
+  groupId: string,
+  targetUserId: string,
+  newRole: GroupRole,
+): Promise<RpcResult> {
+  const { data, error } = await supabase.rpc("set_member_role", {
+    gid: groupId,
+    target_user: targetUserId,
+    new_role: newRole,
+  });
+
+  if (error) {
+    throw new Error(`Error setting member role: ${error.message}`);
+  }
+
+  return data as RpcResult;
+}
+
+export async function removeMember(
+  supabase: SupabaseServerClient,
+  groupId: string,
+  targetUserId: string,
+): Promise<RpcResult> {
+  const { data, error } = await supabase.rpc("remove_member", {
+    gid: groupId,
+    target_user: targetUserId,
+  });
+
+  if (error) {
+    throw new Error(`Error removing member: ${error.message}`);
+  }
+
+  return data as RpcResult;
+}
+
+export async function leaveGroup(
+  supabase: SupabaseServerClient,
+  groupId: string,
+): Promise<RpcResult> {
+  const { data, error } = await supabase.rpc("leave_group", {
+    gid: groupId,
+  });
+
+  if (error) {
+    throw new Error(`Error leaving group: ${error.message}`);
+  }
+
+  return data as RpcResult;
+}
+
+export async function revokeInvite(
+  supabase: SupabaseServerClient,
+  inviteId: string,
+): Promise<RpcResult> {
+  const { data, error } = await supabase.rpc("revoke_invite", {
+    invite_id: inviteId,
+  });
+
+  if (error) {
+    throw new Error(`Error revoking invite: ${error.message}`);
+  }
+
+  return data as RpcResult;
 }

@@ -5,10 +5,60 @@ import {
   getUserRoleInGroup,
   getGroupById,
   createGroupInvite,
+  listGroupInvites,
 } from "@/features/groups/repo";
 import type { GroupRole } from "@/features/groups/types";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const groupId = searchParams.get("group_id");
+
+    if (!groupId) {
+      return NextResponse.json(
+        { error: "group_id is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!UUID_REGEX.test(groupId)) {
+      return NextResponse.json(
+        { error: "Invalid group_id format" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user is admin of the group (only admins can see invites)
+    const role = await getUserRoleInGroup(supabase, user.id, groupId);
+    if (role !== "admin") {
+      return NextResponse.json(
+        { error: "Only group admins can view invites" },
+        { status: 403 }
+      );
+    }
+
+    const invites = await listGroupInvites(supabase, groupId);
+
+    return NextResponse.json(invites);
+  } catch (error) {
+    console.error("Error fetching invites:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {

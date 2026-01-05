@@ -10,6 +10,11 @@ import {
   fetchGroupMembers,
   createInvite,
   redeemInvite,
+  setMemberRole,
+  removeMember,
+  leaveGroup,
+  fetchGroupInvites,
+  revokeInvite,
 } from "./queries";
 import type {
   CurrentGroupResponse,
@@ -18,6 +23,13 @@ import type {
   CreateInviteParams,
   CreateInviteResponse,
   RedeemInviteResponse,
+  SetMemberRoleParams,
+  RemoveMemberParams,
+  LeaveGroupParams,
+  LeaveGroupResponse,
+  RevokeInviteParams,
+  RpcResult,
+  GroupInviteRow,
 } from "./types";
 
 export function useCurrentGroup() {
@@ -78,6 +90,69 @@ export function useRedeemInvite() {
     onSuccess: () => {
       // Invalidate all group queries after joining
       queryClient.invalidateQueries({ queryKey: groupKeys.all });
+    },
+  });
+}
+
+// ================================
+// Phase 3Q: Membership Management Hooks
+// ================================
+
+export function useSetMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation<RpcResult, Error, SetMemberRoleParams>({
+    mutationFn: setMemberRole,
+    onSuccess: (_, variables) => {
+      // Invalidate members list for this group
+      queryClient.invalidateQueries({ queryKey: groupKeys.members(variables.groupId) });
+    },
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation<RpcResult, Error, RemoveMemberParams>({
+    mutationFn: removeMember,
+    onSuccess: (_, variables) => {
+      // Invalidate members list for this group
+      queryClient.invalidateQueries({ queryKey: groupKeys.members(variables.groupId) });
+    },
+  });
+}
+
+export function useLeaveGroup() {
+  const queryClient = useQueryClient();
+
+  return useMutation<LeaveGroupResponse, Error, LeaveGroupParams>({
+    mutationFn: leaveGroup,
+    onSuccess: () => {
+      // Invalidate all group queries
+      queryClient.invalidateQueries({ queryKey: groupKeys.all });
+      // Also invalidate library since context may have changed
+      queryClient.invalidateQueries({ queryKey: ["library"] });
+    },
+  });
+}
+
+export function useGroupInvites(groupId: string | undefined) {
+  return useQuery<GroupInviteRow[]>({
+    queryKey: groupKeys.invites(groupId ?? ""),
+    queryFn: () => fetchGroupInvites(groupId!),
+    enabled: !!groupId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+  });
+}
+
+export function useRevokeInvite() {
+  const queryClient = useQueryClient();
+
+  return useMutation<RpcResult, Error, RevokeInviteParams & { groupId: string }>({
+    mutationFn: revokeInvite,
+    onSuccess: (_, variables) => {
+      // Invalidate invites list for this group
+      queryClient.invalidateQueries({ queryKey: groupKeys.invites(variables.groupId) });
     },
   });
 }

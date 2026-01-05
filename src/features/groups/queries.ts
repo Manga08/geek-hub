@@ -1,4 +1,18 @@
-import type { GroupRow, CurrentGroupResponse, GroupMemberWithProfile, CreateInviteParams, CreateInviteResponse, RedeemInviteResponse } from "./types";
+import type {
+  GroupRow,
+  CurrentGroupResponse,
+  GroupMemberWithProfile,
+  CreateInviteParams,
+  CreateInviteResponse,
+  RedeemInviteResponse,
+  SetMemberRoleParams,
+  RemoveMemberParams,
+  LeaveGroupParams,
+  LeaveGroupResponse,
+  RevokeInviteParams,
+  RpcResult,
+  GroupInviteRow,
+} from "./types";
 
 export const groupKeys = {
   all: ["groups"] as const,
@@ -6,6 +20,7 @@ export const groupKeys = {
   list: () => [...groupKeys.all, "list"] as const,
   detail: (id: string) => [...groupKeys.all, "detail", id] as const,
   members: (groupId: string) => [...groupKeys.all, "members", groupId] as const,
+  invites: (groupId: string) => [...groupKeys.all, "invites", groupId] as const,
 };
 
 export async function fetchCurrentGroup(): Promise<CurrentGroupResponse | null> {
@@ -93,6 +108,97 @@ export async function redeemInvite(
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: "Unknown error" }));
     throw new Error(error.message || error.error || "Error redeeming invite");
+  }
+
+  return res.json();
+}
+
+// ================================
+// Phase 3Q: Membership Management
+// ================================
+
+export async function setMemberRole(
+  params: SetMemberRoleParams
+): Promise<RpcResult> {
+  const res = await fetch("/api/groups/members/role", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      group_id: params.groupId,
+      user_id: params.userId,
+      role: params.role,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.message || error.error || "Error changing role");
+  }
+
+  return res.json();
+}
+
+export async function removeMember(
+  params: RemoveMemberParams
+): Promise<RpcResult> {
+  const res = await fetch("/api/groups/members/remove", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      group_id: params.groupId,
+      user_id: params.userId,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.message || error.error || "Error removing member");
+  }
+
+  return res.json();
+}
+
+export async function leaveGroup(
+  params: LeaveGroupParams
+): Promise<LeaveGroupResponse> {
+  const res = await fetch("/api/groups/leave", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ group_id: params.groupId }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.message || error.error || "Error leaving group");
+  }
+
+  return res.json();
+}
+
+export async function fetchGroupInvites(
+  groupId: string
+): Promise<GroupInviteRow[]> {
+  const res = await fetch(`/api/groups/invites?group_id=${groupId}`);
+
+  if (!res.ok) {
+    throw new Error("Error fetching invites");
+  }
+
+  return res.json();
+}
+
+export async function revokeInvite(
+  params: RevokeInviteParams
+): Promise<RpcResult> {
+  const res = await fetch("/api/groups/invites/revoke", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ invite_id: params.inviteId }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.message || error.error || "Error revoking invite");
   }
 
   return res.json();

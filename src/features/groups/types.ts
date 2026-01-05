@@ -61,4 +61,42 @@ export interface RedeemInviteResponse {
   role: GroupRole;
 }
 
+// ================================
+// Phase 3Q: Membership Management
+// ================================
+
+export interface SetMemberRoleParams {
+  groupId: string;
+  userId: string;
+  role: GroupRole;
+}
+
+export interface RemoveMemberParams {
+  groupId: string;
+  userId: string;
+}
+
+export interface LeaveGroupParams {
+  groupId: string;
+}
+
+export interface LeaveGroupResponse {
+  success: boolean;
+  new_default_group_id: string | null;
+  created_new_group: boolean;
+}
+
+export interface RevokeInviteParams {
+  inviteId: string;
+}
+
+export interface RpcResult {
+  success?: boolean;
+  error?: string;
+  message?: string;
+  new_role?: GroupRole;
+  new_default_group_id?: string | null;
+  created_new_group?: boolean;
+}
+
 export type SupabaseServerClient = SupabaseClient;
