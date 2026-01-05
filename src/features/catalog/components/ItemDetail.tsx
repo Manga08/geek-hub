@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { AttributionFooter } from "@/components/shared/AttributionFooter";
 import { EntryDialog } from "@/features/library/components";
 import { useLibraryEntry, STATUS_LABELS, STATUS_COLORS, type EntryStatus } from "@/features/library";
+import { AddToListButton } from "@/features/lists";
 import type { UnifiedCatalogItem } from "@/features/catalog/normalize/unified.types";
 
 export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
@@ -131,6 +132,13 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
                   Agregar a biblioteca
                 </Button>
               )}
+              <AddToListButton
+                itemType={item.type}
+                provider={item.provider}
+                externalId={item.externalId}
+                title={item.title}
+                posterUrl={item.posterUrl ?? null}
+              />
             </div>
           </div>
         </div>

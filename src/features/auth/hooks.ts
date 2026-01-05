@@ -1,42 +1,31 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { User } from "@supabase/supabase-js";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function useUser() {
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const handleUserChange = useCallback((newUser: User | null) => {
-    setUser(newUser);
-  }, []);
-
-  const handleLoadingChange = useCallback((loading: boolean) => {
-    setIsLoading(loading);
-  }, []);
+  const [isLoading, setIsLoading] = useState(!!supabase);
 
   useEffect(() => {
+    if (!supabase) return;
+
     let isMounted = true;
-    const supabase = createSupabaseBrowserClient();
-    
-    if (!supabase) {
-      handleLoadingChange(false);
-      return;
-    }
 
     // Get initial user
     const fetchUser = async () => {
       try {
         const { data } = await supabase.auth.getUser();
         if (isMounted) {
-          handleUserChange(data.user);
-          handleLoadingChange(false);
+          setUser(data.user);
+          setIsLoading(false);
         }
       } catch {
         if (isMounted) {
-          handleLoadingChange(false);
+          setIsLoading(false);
         }
       }
     };
@@ -46,7 +35,7 @@ export function useUser() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isMounted) {
-        handleUserChange(session?.user ?? null);
+        setUser(session?.user ?? null);
       }
     });
 
@@ -54,7 +43,7 @@ export function useUser() {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [handleUserChange, handleLoadingChange]);
+  }, [supabase]);
 
   return { data: user, isLoading };
 }
