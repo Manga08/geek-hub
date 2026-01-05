@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
   const entityType = searchParams.get("entity_type"); // Optional filter
 
   try {
+    // First, fetch activity events
     let query = supabase
       .from("activity_events")
       .select(`
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
         entity_id,
         metadata,
         created_at,
-        profiles:actor_id (
+        profiles!activity_events_actor_id_fkey (
           id,
           display_name,
           avatar_url

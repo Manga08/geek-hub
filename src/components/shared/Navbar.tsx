@@ -1,12 +1,20 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Activity, BarChart3, Bookmark, ListChecks, Search, User } from "lucide-react"
+import { Activity, BarChart3, Bookmark, ListChecks, Search, Settings } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { GroupSwitcher } from "@/features/groups"
+import { useProfile } from "@/features/profile"
 
 const links = [
   { href: "/search", label: "Search", icon: Search },
@@ -15,6 +23,55 @@ const links = [
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/stats", label: "Stats", icon: BarChart3 },
 ]
+
+function UserMenu() {
+  const { data: profile, isLoading } = useProfile();
+  
+  const initials = (profile?.display_name ?? profile?.email ?? "U")[0].toUpperCase();
+  const displayName = profile?.display_name ?? profile?.email?.split("@")[0] ?? "Usuario";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 pr-3 hover:bg-white/10 transition-colors">
+          {isLoading ? (
+            <div className="h-7 w-7 rounded-full bg-gray-700 animate-pulse" />
+          ) : profile?.avatar_url ? (
+            <Image
+              src={profile.avatar_url}
+              alt=""
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-full object-cover"
+            />
+          ) : (
+            <div className="h-7 w-7 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-300">
+              {initials}
+            </div>
+          )}
+          <span className="text-sm text-gray-300 hidden md:block max-w-24 truncate">
+            {displayName}
+          </span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-48">
+        <div className="px-2 py-1.5">
+          <p className="text-sm font-medium">{displayName}</p>
+          {profile?.email && (
+            <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
+          )}
+        </div>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/settings/profile" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Configuración
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -63,15 +120,7 @@ export function Navbar() {
               </Link>
             ))}
           </div>
-          <Button variant="ghost" size="icon-sm" className="border border-white/10 bg-white/5">
-            <Search className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon-sm" className="border border-white/10 bg-white/5">
-            <Bookmark className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon-sm" className="border border-white/10 bg-white/5">
-            <User className="h-4 w-4" />
-          </Button>
+          <UserMenu />
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" aria-hidden />

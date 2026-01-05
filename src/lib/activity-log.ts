@@ -33,31 +33,31 @@ export type EntityType = "group" | "list" | "list_item" | "library_entry" | "inv
 
 export interface ActivityMetadata {
   // List context
-  list_name?: string;
-  list_id?: string;
+  list_name?: string | null;
+  list_id?: string | null;
   // Item context
-  item_title?: string;
-  item_type?: string;
-  provider?: string;
-  external_id?: string;
+  item_title?: string | null;
+  item_type?: string | null;
+  provider?: string | null;
+  external_id?: string | null;
   // Member context
-  member_name?: string;
-  member_email?: string;
-  role?: string;
-  new_role?: string;
-  removed_user_id?: string;
-  target_user_id?: string;
+  member_name?: string | null;
+  member_email?: string | null;
+  role?: string | null;
+  new_role?: string | null;
+  removed_user_id?: string | null;
+  target_user_id?: string | null;
   // Status context
-  status?: string;
-  new_status?: string;
+  status?: string | null;
+  new_status?: string | null;
   // Invite context
-  invite_role?: string;
-  max_uses?: number;
+  invite_role?: string | null;
+  max_uses?: number | null;
   // Group context
-  group_name?: string;
+  group_name?: string | null;
   // Generic
-  name?: string;
-  description?: string;
+  name?: string | null;
+  description?: string | null;
 }
 
 export interface LogEventParams {
@@ -74,6 +74,31 @@ export interface LogEventParams {
 // =========================
 
 /**
+ * Sanitize metadata to remove null/undefined values
+ */
+function sanitizeMetadata(metadata?: ActivityMetadata): Record<string, unknown> {
+  if (!metadata) return {};
+  
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(metadata)) {
+    if (value !== null && value !== undefined) {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+/**
+ * Ensure profile exists for actor (required due to FK constraint)
+ */
+async function ensureProfileExists(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>, userId: string): Promise<void> {
+  // Upsert with onConflict do nothing - just ensures row exists
+  await supabase
+    .from("profiles")
+    .upsert({ id: userId }, { onConflict: "id", ignoreDuplicates: true });
+}
+
+/**
  * Log an activity event to the group's activity feed.
  * This is a fire-and-forget operation - errors are logged but don't throw.
  */
@@ -81,13 +106,16 @@ export async function logActivityEvent(params: LogEventParams): Promise<void> {
   try {
     const supabase = await createSupabaseServerClient();
 
+    // Ensure profile exists for FK constraint
+    await ensureProfileExists(supabase, params.actorId);
+
     const { error } = await supabase.from("activity_events").insert({
       group_id: params.groupId,
       actor_id: params.actorId,
       event_type: params.eventType,
       entity_type: params.entityType,
       entity_id: params.entityId ?? null,
-      metadata: params.metadata ?? {},
+      metadata: sanitizeMetadata(params.metadata),
     });
 
     if (error) {
