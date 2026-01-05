@@ -11,13 +11,6 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./tests/setup.ts"],
     exclude: ["node_modules/**", ".next/**", "e2e/**"],
-    deps: {
-      inline: [
-        /html-encoding-sniffer/,
-        /@exodus\/bytes/,
-        /jsdom/,
-      ],
-    },
     passWithNoTests: true,
   },
   resolve: {
