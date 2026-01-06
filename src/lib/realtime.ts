@@ -31,10 +31,10 @@ export function subscribeToActivity(
   onInsert: ActivityInsertCallback
 ): () => void {
   const supabase = createSupabaseBrowserClient();
-  
+
   if (!supabase) {
     console.warn("Supabase client not available for realtime");
-    return () => {};
+    return () => { };
   }
 
   const channel: RealtimeChannel = supabase

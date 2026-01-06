@@ -104,13 +104,13 @@ export function useActivityRealtime(options: { ignoreOwnEvents?: boolean } = {})
   const queryClient = useQueryClient();
   const { data: currentGroup } = useCurrentGroup();
   const groupId = currentGroup?.group?.id ?? null;
-  
+
   // Get current user ID
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
-    
+
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id ?? null);
     });
