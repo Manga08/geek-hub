@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireSessionUserId } from "@/lib/auth/request-context";
+import { requireApiContext } from "@/lib/auth/request-context";
 import { libraryRepo } from "@/features/library/repo";
 import { ok, fail, internal } from "@/lib/api/respond";
 import {
@@ -9,9 +9,11 @@ import {
 } from "@/lib/api/schemas";
 
 export async function GET(request: NextRequest) {
-  // Single auth call via getSession() (no extra roundtrip)
-  const result = await requireSessionUserId();
+  // Get full context (supabase + userId + groupId) - single profiles query
+  const result = await requireApiContext();
   if (!result.ok) return result.response;
+
+  const { supabase, userId, defaultGroupId } = result.ctx;
 
   // Validate query params with Zod
   const { searchParams } = new URL(request.url);
@@ -24,6 +26,9 @@ export async function GET(request: NextRequest) {
   const { scope, type, status, provider, favorite, unrated, q, sort, limit, offset } = parsed.data;
 
   try {
+    // Build context to pass to repo (avoids re-doing auth)
+    const ctx = { supabase, userId, groupId: defaultGroupId };
+
     const repoOptions = {
       type,
       status, // Already transformed to string[] by Zod
@@ -34,6 +39,7 @@ export async function GET(request: NextRequest) {
       sort,
       limit,
       offset,
+      ctx, // Pass context to avoid duplicate auth
     };
 
     const entries = scope === "group"

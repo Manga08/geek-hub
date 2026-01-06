@@ -17,10 +17,15 @@ export const activityKeys = {
 // =========================
 
 export async function fetchActivityFeed(
-  filters: ActivityFilters = {}
+  filters: ActivityFilters = {},
+  groupId?: string
 ): Promise<ActivityFeedResponse> {
   const params = new URLSearchParams();
 
+  // Pass group_id to avoid profiles query on server
+  if (groupId) {
+    params.set("group_id", groupId);
+  }
   if (filters.limit) {
     params.set("limit", String(filters.limit));
   }
@@ -36,10 +41,12 @@ export async function fetchActivityFeed(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error ?? "Error al cargar la actividad");
+    throw new Error(error.message ?? "Error al cargar la actividad");
   }
 
-  return response.json();
+  const json = await response.json();
+  // API returns { ok: true, data: { events, hasMore, nextCursor } }
+  return json.data ?? json;
 }
 
 // =========================
@@ -61,10 +68,12 @@ export async function fetchUnreadCount(groupId?: string): Promise<UnreadCountRes
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error ?? "Error al cargar notificaciones");
+    throw new Error(error.message ?? "Error al cargar notificaciones");
   }
 
-  return response.json();
+  const json = await response.json();
+  // API returns { ok: true, data: { count } }
+  return json.data ?? json;
 }
 
 export async function markActivityRead(groupId?: string): Promise<void> {
@@ -76,6 +85,6 @@ export async function markActivityRead(groupId?: string): Promise<void> {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error ?? "Error al marcar como leído");
+    throw new Error(error.message ?? "Error al marcar como leído");
   }
 }

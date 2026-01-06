@@ -1,35 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { NextRequest } from "next/server";
+import {
+  requireSessionUserId,
+  requireApiContext,
+} from "@/lib/auth/request-context";
+import {
+  ok,
+  badRequest,
+  internal,
+  validateQuery,
+  formatZodErrors,
+} from "@/lib/api";
+import { z } from "zod";
+
+// Schema for activity query params
+const activityQuerySchema = z.object({
+  group_id: z.string().uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  before: z.string().optional(), // ISO timestamp cursor
+  entity_type: z.enum(["group", "list", "list_item", "library_entry", "invite", "member"]).optional(),
+});
 
 export async function GET(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  // Get current group from profile
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("default_group_id")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.default_group_id) {
-    return NextResponse.json({ message: "No group context" }, { status: 400 });
-  }
-
-  const groupId = profile.default_group_id;
-
-  // Parse query params
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(parseInt(searchParams.get("limit") ?? "50", 10), 100);
-  const before = searchParams.get("before"); // ISO timestamp for cursor
-  const entityType = searchParams.get("entity_type"); // Optional filter
+  const parsed = validateQuery(activityQuerySchema, searchParams);
+
+  if (!parsed.success) {
+    return badRequest("Invalid query parameters", formatZodErrors(parsed.error));
+  }
+
+  const { group_id, limit, before, entity_type } = parsed.data;
+
+  let supabase;
+  let groupId: string;
+
+  // If group_id is provided, use lightweight auth (no profiles query)
+  if (group_id) {
+    const result = await requireSessionUserId();
+    if (!result.ok) return result.response;
+    supabase = result.supabase;
+    groupId = group_id;
+  } else {
+    // No group_id: get defaultGroupId from context (1 extra query)
+    const result = await requireApiContext();
+    if (!result.ok) return result.response;
+    supabase = result.ctx.supabase;
+    groupId = result.ctx.defaultGroupId;
+  }
 
   try {
-    // First, fetch activity events
     let query = supabase
       .from("activity_events")
       .select(`
@@ -57,34 +75,28 @@ export async function GET(request: NextRequest) {
     }
 
     // Optional filter by entity type
-    if (entityType && ["group", "list", "list_item", "library_entry", "invite", "member"].includes(entityType)) {
-      query = query.eq("entity_type", entityType);
+    if (entity_type) {
+      query = query.eq("entity_type", entity_type);
     }
 
     const { data, error } = await query;
 
     if (error) {
       console.error("GET /api/activity error:", error);
-      return NextResponse.json(
-        { message: "Error fetching activity" },
-        { status: 500 }
-      );
+      return internal("Error fetching activity");
     }
 
     // Determine if there are more results (for pagination)
     const hasMore = data?.length === limit;
     const nextCursor = hasMore && data?.length ? data[data.length - 1].created_at : null;
 
-    return NextResponse.json({
+    return ok({
       events: data ?? [],
       hasMore,
       nextCursor,
     });
   } catch (error) {
     console.error("GET /api/activity error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }

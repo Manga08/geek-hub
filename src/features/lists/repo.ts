@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, SupabaseServerClient } from "@/lib/supabase/server";
 import type {
   List,
   ListWithItemCount,
@@ -9,11 +9,18 @@ import type {
   UpdateListItemDTO,
 } from "./types";
 
+// Context interface for passing pre-authenticated supabase + IDs
+export interface ListsRepoContext {
+  supabase: SupabaseServerClient;
+  userId: string;
+  groupId: string;
+}
+
 async function getSupabase() {
   return createSupabaseServerClient();
 }
 
-async function getCurrentGroupId(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string> {
+async function getCurrentGroupId(supabase: SupabaseServerClient): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
@@ -34,9 +41,10 @@ async function getCurrentGroupId(supabase: Awaited<ReturnType<typeof getSupabase
 // Lists CRUD
 // =========================
 
-export async function listLists(groupId?: string): Promise<ListWithItemCount[]> {
-  const supabase = await getSupabase();
-  const gid = groupId ?? await getCurrentGroupId(supabase);
+export async function listLists(groupId?: string, ctx?: ListsRepoContext): Promise<ListWithItemCount[]> {
+  // Use context if provided (avoids re-doing auth)
+  const supabase = ctx?.supabase ?? await getSupabase();
+  const gid = groupId ?? ctx?.groupId ?? await getCurrentGroupId(supabase);
 
   // Get lists with item count via a subquery
   const { data, error } = await supabase
@@ -53,7 +61,16 @@ export async function listLists(groupId?: string): Promise<ListWithItemCount[]> 
   }
 
   // Transform the count from Supabase's format
-  return (data ?? []).map((list) => ({
+  return (data ?? []).map((list: {
+    id: string;
+    group_id: string;
+    name: string;
+    description: string | null;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+    list_items: { count: number }[];
+  }) => ({
     id: list.id,
     group_id: list.group_id,
     name: list.name,
@@ -82,9 +99,10 @@ export async function getList(listId: string): Promise<List | null> {
   return data as List;
 }
 
-export async function createList(dto: CreateListDTO): Promise<List> {
-  const supabase = await getSupabase();
-  const groupId = dto.group_id ?? await getCurrentGroupId(supabase);
+export async function createList(dto: CreateListDTO, ctx?: ListsRepoContext): Promise<List> {
+  // Use context if provided (avoids re-doing auth)
+  const supabase = ctx?.supabase ?? await getSupabase();
+  const groupId = dto.group_id ?? ctx?.groupId ?? await getCurrentGroupId(supabase);
 
   const { data, error } = await supabase
     .from("lists")

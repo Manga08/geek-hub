@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireSessionUserId } from "@/lib/auth/request-context";
+import { requireApiContext } from "@/lib/auth/request-context";
 import * as listsRepo from "@/features/lists/repo";
 import { logActivityEvent } from "@/lib/activity-log";
 import {
@@ -12,12 +12,16 @@ import {
 } from "@/lib/api";
 
 export async function GET() {
-  // Single auth call via getSession()
-  const result = await requireSessionUserId();
+  // Get full context (supabase + userId + groupId) - single profiles query
+  const result = await requireApiContext();
   if (!result.ok) return result.response;
 
+  const { supabase, userId, defaultGroupId } = result.ctx;
+
   try {
-    const lists = await listsRepo.listLists();
+    // Pass context to avoid re-doing auth
+    const ctx = { supabase, userId, groupId: defaultGroupId };
+    const lists = await listsRepo.listLists(undefined, ctx);
     return ok({ lists });
   } catch (error) {
     console.error("GET /api/lists error:", error);
@@ -26,11 +30,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  // Single auth call via getSession()
-  const result = await requireSessionUserId();
+  // Get full context (supabase + userId + groupId) - single profiles query
+  const result = await requireApiContext();
   if (!result.ok) return result.response;
 
-  const { userId } = result;
+  const { supabase, userId, defaultGroupId } = result.ctx;
 
   try {
     const body = await request.json();
@@ -40,7 +44,9 @@ export async function POST(request: NextRequest) {
       return badRequest("Invalid request body", formatZodErrors(parsed.error));
     }
 
-    const list = await listsRepo.createList(parsed.data);
+    // Pass context to avoid re-doing auth
+    const ctx = { supabase, userId, groupId: defaultGroupId };
+    const list = await listsRepo.createList(parsed.data, ctx);
 
     // Log activity event
     await logActivityEvent({

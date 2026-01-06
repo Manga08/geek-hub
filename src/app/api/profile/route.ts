@@ -13,11 +13,11 @@ import {
 // GET /api/profile - Get current user's profile
 // =========================
 export async function GET() {
-  // Single auth call via getSession()
+  // Single auth call via getSession() - includes email
   const result = await requireSessionUserId();
   if (!result.ok) return result.response;
 
-  const { supabase, userId } = result;
+  const { supabase, userId, email } = result;
 
   try {
     const { data: profile, error } = await supabase
@@ -29,23 +29,20 @@ export async function GET() {
     if (error) {
       // Profile might not exist yet
       if (error.code === "PGRST116") {
-        const { data: { user } } = await supabase.auth.getUser();
         return ok({
           id: userId,
           display_name: null,
           avatar_url: null,
-          email: user?.email,
+          email,
         });
       }
       throw error;
     }
 
-    // Get email from session user
-    const { data: { user } } = await supabase.auth.getUser();
-
+    // Email comes from session (no extra roundtrip)
     return ok({
       ...profile,
-      email: user?.email,
+      email,
     });
   } catch (error) {
     console.error("GET /api/profile error:", error);
@@ -57,11 +54,11 @@ export async function GET() {
 // PATCH /api/profile - Update display_name
 // =========================
 export async function PATCH(request: NextRequest) {
-  // Single auth call via getSession()
+  // Single auth call via getSession() - includes email
   const result = await requireSessionUserId();
   if (!result.ok) return result.response;
 
-  const { supabase, userId } = result;
+  const { supabase, userId, email } = result;
 
   try {
     const body = await request.json();
@@ -87,12 +84,10 @@ export async function PATCH(request: NextRequest) {
       throw error;
     }
 
-    // Get email from session user
-    const { data: { user } } = await supabase.auth.getUser();
-
+    // Email comes from session (no extra roundtrip)
     return ok({
       ...profile,
-      email: user?.email,
+      email,
     });
   } catch (error) {
     console.error("PATCH /api/profile error:", error);

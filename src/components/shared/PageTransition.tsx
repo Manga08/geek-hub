@@ -22,14 +22,14 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   const variants = prefersReducedMotion ? pageVariantsReduced : pageVariants;
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence initial={false}>
       <motion.div
         key={pathname}
         variants={variants}
         initial="initial"
         animate="animate"
         exit="exit"
-        transition={{ duration: 0.15, ease: "easeOut" }}
+        transition={{ duration: 0.12, ease: "easeOut" }}
       >
         {children}
       </motion.div>

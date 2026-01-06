@@ -26,11 +26,15 @@ export function useActivityFeed(options: UseActivityFeedOptions = {}) {
   return useInfiniteQuery<ActivityFeedResponse, Error, { pages: ActivityFeedResponse[] }, ReturnType<typeof activityKeys.feed>, string | null>({
     queryKey: activityKeys.feed(groupId),
     queryFn: async ({ pageParam }) => {
-      return fetchActivityFeed({
-        limit,
-        before: pageParam ?? undefined,
-        entityType,
-      });
+      // Pass groupId to avoid profiles query on server
+      return fetchActivityFeed(
+        {
+          limit,
+          before: pageParam ?? undefined,
+          entityType,
+        },
+        groupId ?? undefined
+      );
     },
     initialPageParam: null,
     getNextPageParam: (lastPage) => {
@@ -105,14 +109,15 @@ export function useActivityRealtime(options: { ignoreOwnEvents?: boolean } = {})
   const { data: currentGroup } = useCurrentGroup();
   const groupId = currentGroup?.group?.id ?? null;
 
-  // Get current user ID
+  // Get current user ID using getSession (cached, no roundtrip)
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
 
-    supabase.auth.getUser().then(({ data }) => {
-      setUserId(data.user?.id ?? null);
+    // Use getSession instead of getUser - it's cached locally
+    supabase.auth.getSession().then(({ data }) => {
+      setUserId(data.session?.user?.id ?? null);
     });
   }, []);
 

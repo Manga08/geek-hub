@@ -1,19 +1,24 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, SupabaseServerClient } from "@/lib/supabase/server";
 import type { LibraryEntry, CreateEntryDTO, UpdateEntryDTO } from "./types";
+
+// Context interface for passing pre-authenticated supabase + IDs
+export interface LibraryRepoContext {
+  supabase: SupabaseServerClient;
+  userId: string;
+  groupId: string;
+}
 
 async function getSupabase() {
   return createSupabaseServerClient();
 }
 
-async function getCurrentUserId(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string> {
+async function getCurrentUserId(supabase: SupabaseServerClient): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
   return user.id;
 }
 
-async function getCurrentGroupId(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string> {
-  const userId = await getCurrentUserId(supabase);
-
+async function getCurrentGroupId(supabase: SupabaseServerClient, userId: string): Promise<string> {
   const { data: profile } = await supabase
     .from("profiles")
     .select("default_group_id")
@@ -36,11 +41,13 @@ export class LibraryRepo {
     type: string,
     provider: string,
     externalId: string,
-    groupId?: string
+    groupId?: string,
+    ctx?: LibraryRepoContext
   ): Promise<LibraryEntry | null> {
-    const supabase = await getSupabase();
-    const userId = await getCurrentUserId(supabase);
-    const gid = groupId ?? await getCurrentGroupId(supabase);
+    // Use context if provided (avoids re-doing auth)
+    const supabase = ctx?.supabase ?? await getSupabase();
+    const userId = ctx?.userId ?? await getCurrentUserId(supabase);
+    const gid = groupId ?? ctx?.groupId ?? await getCurrentGroupId(supabase, userId);
 
     const { data, error } = await supabase
       .from("library_entries")
@@ -67,10 +74,12 @@ export class LibraryRepo {
     type: string,
     provider: string,
     externalId: string,
-    groupId?: string
+    groupId?: string,
+    ctx?: LibraryRepoContext
   ): Promise<LibraryEntry | null> {
-    const supabase = await getSupabase();
-    const gid = groupId ?? await getCurrentGroupId(supabase);
+    const supabase = ctx?.supabase ?? await getSupabase();
+    const userId = ctx?.userId ?? await getCurrentUserId(supabase);
+    const gid = groupId ?? ctx?.groupId ?? await getCurrentGroupId(supabase, userId);
 
     const { data, error } = await supabase
       .from("library_entries")
@@ -107,7 +116,7 @@ export class LibraryRepo {
   async create(dto: CreateEntryDTO): Promise<LibraryEntry> {
     const supabase = await getSupabase();
     const userId = await getCurrentUserId(supabase);
-    const groupId = dto.group_id ?? await getCurrentGroupId(supabase);
+    const groupId = dto.group_id ?? await getCurrentGroupId(supabase, userId);
 
     const { data, error } = await supabase
       .from("library_entries")
@@ -185,9 +194,12 @@ export class LibraryRepo {
     sort?: "recent" | "rating";
     limit?: number;
     offset?: number;
+    ctx?: LibraryRepoContext;
   }): Promise<LibraryEntry[]> {
-    const supabase = await getSupabase();
-    const groupId = options?.groupId ?? await getCurrentGroupId(supabase);
+    // Use context if provided (avoids re-doing auth)
+    const supabase = options?.ctx?.supabase ?? await getSupabase();
+    const userId = options?.ctx?.userId ?? await getCurrentUserId(supabase);
+    const groupId = options?.groupId ?? options?.ctx?.groupId ?? await getCurrentGroupId(supabase, userId);
 
     // Build query with sort option
     const sortColumn = options?.sort === "rating" ? "rating" : "updated_at";
@@ -250,10 +262,12 @@ export class LibraryRepo {
     sort?: "recent" | "rating";
     limit?: number;
     offset?: number;
+    ctx?: LibraryRepoContext;
   }): Promise<LibraryEntry[]> {
-    const supabase = await getSupabase();
-    const userId = await getCurrentUserId(supabase);
-    const groupId = options?.groupId ?? await getCurrentGroupId(supabase);
+    // Use context if provided (avoids re-doing auth)
+    const supabase = options?.ctx?.supabase ?? await getSupabase();
+    const userId = options?.ctx?.userId ?? await getCurrentUserId(supabase);
+    const groupId = options?.groupId ?? options?.ctx?.groupId ?? await getCurrentGroupId(supabase, userId);
 
     const sortColumn = options?.sort === "rating" ? "rating" : "updated_at";
     const ascending = false;

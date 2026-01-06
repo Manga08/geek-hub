@@ -1,40 +1,56 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { NextRequest } from "next/server";
+import {
+  requireSessionUserId,
+  requireApiContext,
+} from "@/lib/auth/request-context";
+import {
+  ok,
+  badRequest,
+  internal,
+} from "@/lib/api";
+import { z } from "zod";
+
+// Schema for read body
+const readBodySchema = z.object({
+  group_id: z.string().uuid().optional(),
+});
 
 // =========================
 // POST /api/activity/read - Mark activity as read
 // =========================
 export async function POST(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  let supabase;
+  let userId: string;
+  let groupId: string | undefined;
 
   try {
-    // Get group_id from body or user's default group
     const body = await request.json().catch(() => ({}));
-    let groupId = body.group_id as string | undefined;
+    const parsed = readBodySchema.safeParse(body);
 
-    if (!groupId) {
-      // Get current group from profile
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("default_group_id")
-        .eq("id", user.id)
-        .single();
+    if (!parsed.success) {
+      return badRequest("Invalid request body");
+    }
 
-      groupId = profile?.default_group_id ?? undefined;
+    const { group_id } = parsed.data;
+
+    // If group_id is provided, use lightweight auth (no profiles query)
+    if (group_id) {
+      const result = await requireSessionUserId();
+      if (!result.ok) return result.response;
+      supabase = result.supabase;
+      userId = result.userId;
+      groupId = group_id;
+    } else {
+      // No group_id: get defaultGroupId from context
+      const result = await requireApiContext();
+      if (!result.ok) return result.response;
+      supabase = result.ctx.supabase;
+      userId = result.ctx.userId;
+      groupId = result.ctx.defaultGroupId;
     }
 
     if (!groupId) {
-      return NextResponse.json(
-        { error: "No group context" },
-        { status: 400 }
-      );
+      return badRequest("No group context");
     }
 
     // Upsert the read record
@@ -42,7 +58,7 @@ export async function POST(request: NextRequest) {
       .from("activity_reads")
       .upsert(
         {
-          user_id: user.id,
+          user_id: userId,
           group_id: groupId,
           last_read_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -54,18 +70,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("POST /api/activity/read error:", error);
-      return NextResponse.json(
-        { error: "Error marking as read" },
-        { status: 500 }
-      );
+      return internal("Error marking as read");
     }
 
-    return NextResponse.json({ success: true });
+    return ok({ success: true });
   } catch (error) {
     console.error("POST /api/activity/read error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }

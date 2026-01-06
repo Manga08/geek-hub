@@ -71,11 +71,11 @@ export async function requireApiContext(): Promise<AuthResult> {
 }
 
 /**
- * Lightweight auth check - only userId, no group lookup.
+ * Lightweight auth check - only userId + email, no group lookup.
  * Use when defaultGroupId is not needed.
  */
 export type LightAuthResult =
-  | { ok: true; supabase: SupabaseClient; userId: string }
+  | { ok: true; supabase: SupabaseClient; userId: string; email: string | undefined }
   | { ok: false; response: Response };
 
 export async function requireSessionUserId(): Promise<LightAuthResult> {
@@ -97,6 +97,7 @@ export async function requireSessionUserId(): Promise<LightAuthResult> {
     ok: true,
     supabase,
     userId: session.user.id,
+    email: session.user.email,
   };
 }
 
