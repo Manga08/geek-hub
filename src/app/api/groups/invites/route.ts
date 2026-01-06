@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -7,10 +7,19 @@ import {
   createGroupInvite,
   listGroupInvites,
 } from "@/features/groups/repo";
-import type { GroupRole } from "@/features/groups/types";
 import { logActivityEvent } from "@/lib/activity-log";
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import {
+  ok,
+  badRequest,
+  unauthenticated,
+  forbidden,
+  notFound,
+  internal,
+  uuidSchema,
+  createInviteBodySchema,
+  validateBody,
+  formatZodErrors,
+} from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,44 +29,33 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthenticated();
     }
 
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get("group_id");
 
     if (!groupId) {
-      return NextResponse.json(
-        { error: "group_id is required" },
-        { status: 400 }
-      );
+      return badRequest("group_id is required");
     }
 
-    if (!UUID_REGEX.test(groupId)) {
-      return NextResponse.json(
-        { error: "Invalid group_id format" },
-        { status: 400 }
-      );
+    const uuidResult = uuidSchema.safeParse(groupId);
+    if (!uuidResult.success) {
+      return badRequest("Invalid group_id format");
     }
 
     // Check if user is admin of the group (only admins can see invites)
     const role = await getUserRoleInGroup(supabase, user.id, groupId);
     if (role !== "admin") {
-      return NextResponse.json(
-        { error: "Only group admins can view invites" },
-        { status: 403 }
-      );
+      return forbidden("Only group admins can view invites");
     }
 
     const invites = await listGroupInvites(supabase, groupId);
 
-    return NextResponse.json(invites);
+    return ok(invites);
   } catch (error) {
     console.error("Error fetching invites:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }
 
@@ -69,58 +67,28 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthenticated();
     }
 
     const body = await request.json();
-    const {
-      group_id,
-      expires_in_hours,
-      max_uses,
-      invite_role,
-    } = body as {
-      group_id?: string;
-      expires_in_hours?: number;
-      max_uses?: number;
-      invite_role?: GroupRole;
-    };
+    const parsed = validateBody(createInviteBodySchema, body);
 
-    // Validate group_id
-    if (!group_id || typeof group_id !== "string") {
-      return NextResponse.json(
-        { error: "group_id is required" },
-        { status: 400 }
-      );
+    if (!parsed.success) {
+      return badRequest("Invalid request body", formatZodErrors(parsed.error));
     }
 
-    if (!UUID_REGEX.test(group_id)) {
-      return NextResponse.json(
-        { error: "Invalid group_id format" },
-        { status: 400 }
-      );
-    }
-
-    // Validate invite_role if provided
-    if (invite_role && !["admin", "member"].includes(invite_role)) {
-      return NextResponse.json(
-        { error: "invite_role must be 'admin' or 'member'" },
-        { status: 400 }
-      );
-    }
+    const { group_id, expires_in_hours, max_uses, invite_role } = parsed.data;
 
     // Check if group exists
     const group = await getGroupById(supabase, group_id);
     if (!group) {
-      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+      return notFound("Group not found");
     }
 
     // Check if user is admin of the group
     const role = await getUserRoleInGroup(supabase, user.id, group_id);
     if (role !== "admin") {
-      return NextResponse.json(
-        { error: "Only group admins can create invites" },
-        { status: 403 }
-      );
+      return forbidden("Only group admins can create invites");
     }
 
     // Calculate expires_at
@@ -135,9 +103,9 @@ export async function POST(request: NextRequest) {
     const invite = await createGroupInvite(supabase, {
       groupId: group_id,
       createdBy: user.id,
-      inviteRole: invite_role ?? "member",
+      inviteRole: invite_role,
       expiresAt,
-      maxUses: max_uses ?? 1,
+      maxUses: max_uses,
     });
 
     // Build invite URL
@@ -154,22 +122,19 @@ export async function POST(request: NextRequest) {
       entityType: "invite",
       entityId: invite.token,
       metadata: {
-        invite_role: invite_role ?? "member",
-        max_uses: max_uses ?? 1,
+        invite_role,
+        max_uses,
       },
     });
 
-    return NextResponse.json({
+    return ok({
       token: invite.token,
       invite_url: inviteUrl,
       expires_at: invite.expires_at,
       max_uses: invite.max_uses,
-    });
+    }, { status: 201 });
   } catch (error) {
     console.error("Error creating invite:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }

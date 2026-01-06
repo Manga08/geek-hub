@@ -1,26 +1,31 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import * as listsRepo from "@/features/lists/repo";
-import type { CreateListDTO } from "@/features/lists/types";
 import { logActivityEvent } from "@/lib/activity-log";
+import {
+  ok,
+  badRequest,
+  unauthenticated,
+  internal,
+  createListBodySchema,
+  validateBody,
+  formatZodErrors,
+} from "@/lib/api";
 
 export async function GET() {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
   try {
     const lists = await listsRepo.listLists();
-    return NextResponse.json({ lists });
+    return ok({ lists });
   } catch (error) {
     console.error("GET /api/lists error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }
 
@@ -29,20 +34,18 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
   try {
-    const body: CreateListDTO = await request.json();
+    const body = await request.json();
+    const parsed = validateBody(createListBodySchema, body);
 
-    if (!body.name?.trim()) {
-      return NextResponse.json(
-        { message: "Name is required" },
-        { status: 400 }
-      );
+    if (!parsed.success) {
+      return badRequest("Invalid request body", formatZodErrors(parsed.error));
     }
 
-    const list = await listsRepo.createList(body);
+    const list = await listsRepo.createList(parsed.data);
 
     // Log activity event
     await logActivityEvent({
@@ -54,12 +57,9 @@ export async function POST(request: NextRequest) {
       metadata: { name: list.name, list_name: list.name },
     });
 
-    return NextResponse.json(list, { status: 201 });
+    return ok(list, { status: 201 });
   } catch (error) {
     console.error("POST /api/lists error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }

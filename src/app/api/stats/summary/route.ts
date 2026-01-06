@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { aggregateStatsSummary } from "@/features/stats/aggregate";
+import {
+  ok,
+  badRequest,
+  unauthenticated,
+  internal,
+  statsSummaryQuerySchema,
+  validateQuery,
+  formatZodErrors,
+} from "@/lib/api";
 import type { StatsScope, StatsType, LibraryEntryWithProfile } from "@/features/stats/types";
 
 const MAX_ROWS = 5000;
-const VALID_SCOPES = ["mine", "group"] as const;
-const VALID_TYPES = ["all", "movie", "tv", "anime", "game"] as const;
 
 // =========================
 // GET /api/stats/summary
@@ -18,42 +25,18 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
-  // Parse query params
+  // Parse and validate query params with Zod
   const { searchParams } = new URL(request.url);
-  const scopeParam = searchParams.get("scope") ?? "mine";
-  const yearParam = searchParams.get("year") ?? String(new Date().getFullYear());
-  const typeParam = searchParams.get("type") ?? "all";
+  const parsed = validateQuery(statsSummaryQuerySchema, searchParams);
 
-  // Validate scope
-  if (!VALID_SCOPES.includes(scopeParam as StatsScope)) {
-    return NextResponse.json(
-      { error: `Invalid scope. Must be one of: ${VALID_SCOPES.join(", ")}` },
-      { status: 400 }
-    );
+  if (!parsed.success) {
+    return badRequest("Invalid query parameters", formatZodErrors(parsed.error));
   }
 
-  // Validate type
-  if (!VALID_TYPES.includes(typeParam as StatsType)) {
-    return NextResponse.json(
-      { error: `Invalid type. Must be one of: ${VALID_TYPES.join(", ")}` },
-      { status: 400 }
-    );
-  }
-
-  // Validate year
-  const year = parseInt(yearParam, 10);
-  if (isNaN(year) || year < 2000 || year > 2100) {
-    return NextResponse.json(
-      { error: "Invalid year. Must be between 2000 and 2100" },
-      { status: 400 }
-    );
-  }
-
-  const scope = scopeParam as StatsScope;
-  const type = typeParam as StatsType;
+  const { scope, year, type } = parsed.data;
 
   try {
     // Get user's current group
@@ -64,10 +47,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!profile?.default_group_id) {
-      return NextResponse.json(
-        { error: "No group context. Please select a group first." },
-        { status: 400 }
-      );
+      return badRequest("No group context. Please select a group first.");
     }
 
     const groupId = profile.default_group_id;
@@ -123,10 +103,7 @@ export async function GET(request: NextRequest) {
 
     // Check for row limit exceeded
     if (rawEntries && rawEntries.length > MAX_ROWS) {
-      return NextResponse.json(
-        { error: `Too many entries (>${MAX_ROWS}). Please narrow your filters.` },
-        { status: 413 }
-      );
+      return badRequest(`Too many entries (>${MAX_ROWS}). Please narrow your filters.`);
     }
 
     // Transform to LibraryEntryWithProfile
@@ -154,12 +131,9 @@ export async function GET(request: NextRequest) {
     // Aggregate stats
     const summary = aggregateStatsSummary(entries, scope, year, type);
 
-    return NextResponse.json(summary);
+    return ok(summary);
   } catch (error) {
     console.error("GET /api/stats/summary error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }

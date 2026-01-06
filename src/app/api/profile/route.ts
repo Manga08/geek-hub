@@ -1,5 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  ok,
+  badRequest,
+  unauthenticated,
+  internal,
+  updateProfileBodySchema,
+  validateBody,
+  formatZodErrors,
+} from "@/lib/api";
 
 // =========================
 // GET /api/profile - Get current user's profile
@@ -9,7 +18,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
   try {
@@ -22,7 +31,7 @@ export async function GET() {
     if (error) {
       // Profile might not exist yet
       if (error.code === "PGRST116") {
-        return NextResponse.json({
+        return ok({
           id: user.id,
           display_name: null,
           avatar_url: null,
@@ -32,16 +41,13 @@ export async function GET() {
       throw error;
     }
 
-    return NextResponse.json({
+    return ok({
       ...profile,
       email: user.email,
     });
   } catch (error) {
     console.error("GET /api/profile error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }
 
@@ -53,28 +59,18 @@ export async function PATCH(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
   try {
     const body = await request.json();
-    const { display_name } = body as { display_name?: string };
+    const parsed = validateBody(updateProfileBodySchema, body);
 
-    // Validate display_name
-    if (display_name !== undefined) {
-      if (typeof display_name !== "string") {
-        return NextResponse.json(
-          { error: "display_name must be a string" },
-          { status: 400 }
-        );
-      }
-      if (display_name.length > 100) {
-        return NextResponse.json(
-          { error: "display_name must be 100 characters or less" },
-          { status: 400 }
-        );
-      }
+    if (!parsed.success) {
+      return badRequest("Invalid request body", formatZodErrors(parsed.error));
     }
+
+    const { display_name } = parsed.data;
 
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -90,15 +86,12 @@ export async function PATCH(request: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json({
+    return ok({
       ...profile,
       email: user.email,
     });
   } catch (error) {
     console.error("PATCH /api/profile error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }

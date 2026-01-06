@@ -1,8 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { libraryRepo } from "@/features/library/repo";
-import type { CreateEntryDTO, UpdateEntryDTO } from "@/features/library/types";
 import { logActivityEvent, getCurrentGroupId } from "@/lib/activity-log";
+import {
+  ok,
+  badRequest,
+  unauthenticated,
+  notFound,
+  conflict,
+  internal,
+  getLibraryEntryQuerySchema,
+  createLibraryEntryBodySchema,
+  updateLibraryEntryBodySchema,
+  uuidSchema,
+  validateQuery,
+  validateBody,
+  formatZodErrors,
+} from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
@@ -11,36 +25,30 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type");
-  const provider = searchParams.get("provider");
-  const externalId = searchParams.get("externalId");
+  const parsed = validateQuery(getLibraryEntryQuerySchema, searchParams);
 
-  if (!type || !provider || !externalId) {
-    return NextResponse.json(
-      { message: "Missing required params: type, provider, externalId" },
-      { status: 400 }
-    );
+  if (!parsed.success) {
+    return badRequest("Invalid query parameters", formatZodErrors(parsed.error));
   }
+
+  const { type, provider, externalId } = parsed.data;
 
   try {
     // Use user-scoped method to find MY entry
     const entry = await libraryRepo.findMyEntryByItem(type, provider, externalId);
 
     if (!entry) {
-      return NextResponse.json({ message: "Not found" }, { status: 404 });
+      return notFound("Library entry not found");
     }
 
-    return NextResponse.json(entry);
+    return ok(entry);
   } catch (error) {
     console.error("GET /api/library/entry error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }
 
@@ -51,36 +59,33 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
   try {
-    const body: CreateEntryDTO = await request.json();
+    const body = await request.json();
+    const parsed = validateBody(createLibraryEntryBodySchema, body);
 
-    if (!body.type || !body.provider || !body.external_id) {
-      return NextResponse.json(
-        { message: "Missing required fields: type, provider, external_id" },
-        { status: 400 }
-      );
+    if (!parsed.success) {
+      return badRequest("Invalid request body", formatZodErrors(parsed.error));
     }
+
+    const dto = parsed.data;
 
     // Check if MY entry already exists (user-scoped)
     const existing = await libraryRepo.findMyEntryByItem(
-      body.type,
-      body.provider,
-      body.external_id,
-      body.group_id
+      dto.type,
+      dto.provider,
+      dto.external_id,
+      dto.group_id
     );
 
     if (existing) {
-      return NextResponse.json(
-        { message: "Entry already exists", entry: existing },
-        { status: 409 }
-      );
+      return conflict("Entry already exists", { entry: existing });
     }
 
     // Create entry (group_id will be resolved from user's default if not provided)
-    const entry = await libraryRepo.create(body);
+    const entry = await libraryRepo.create(dto);
 
     // Log activity event
     await logActivityEvent({
@@ -90,18 +95,15 @@ export async function POST(request: NextRequest) {
       entityType: "library_entry",
       entityId: entry.id,
       metadata: {
-        item_title: entry.title ?? body.external_id,
-        item_type: body.type,
+        item_title: entry.title ?? dto.external_id,
+        item_type: dto.type,
       },
     });
 
-    return NextResponse.json(entry, { status: 201 });
+    return ok(entry, { status: 201 });
   } catch (error) {
     console.error("POST /api/library/entry error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }
 
@@ -112,24 +114,32 @@ export async function PATCH(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
   try {
     const body = await request.json();
-    const { id, ...dto }: { id: string } & UpdateEntryDTO = body;
+    const { id, ...updateData } = body as { id?: string; [key: string]: unknown };
 
+    // Validate id
     if (!id) {
-      return NextResponse.json(
-        { message: "Missing required field: id" },
-        { status: 400 }
-      );
+      return badRequest("Missing required field: id");
+    }
+    const idResult = uuidSchema.safeParse(id);
+    if (!idResult.success) {
+      return badRequest("Invalid id format");
     }
 
-    const entry = await libraryRepo.update(id, dto);
+    // Validate update body
+    const parsed = validateBody(updateLibraryEntryBodySchema, updateData);
+    if (!parsed.success) {
+      return badRequest("Invalid request body", formatZodErrors(parsed.error));
+    }
+
+    const entry = await libraryRepo.update(id, parsed.data);
 
     // Log activity event if status changed
-    if (dto.status) {
+    if (parsed.data.status) {
       await logActivityEvent({
         groupId: entry.group_id,
         actorId: user.id,
@@ -138,18 +148,15 @@ export async function PATCH(request: NextRequest) {
         entityId: entry.id,
         metadata: {
           item_title: entry.title ?? undefined,
-          new_status: dto.status,
+          new_status: parsed.data.status,
         },
       });
     }
 
-    return NextResponse.json(entry);
+    return ok(entry);
   } catch (error) {
     console.error("PATCH /api/library/entry error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }
 
@@ -160,18 +167,19 @@ export async function DELETE(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return unauthenticated();
   }
 
   try {
     const body = await request.json();
-    const { id } = body as { id: string };
+    const { id } = body as { id?: string };
 
     if (!id) {
-      return NextResponse.json(
-        { message: "Missing required field: id" },
-        { status: 400 }
-      );
+      return badRequest("Missing required field: id");
+    }
+    const idResult = uuidSchema.safeParse(id);
+    if (!idResult.success) {
+      return badRequest("Invalid id format");
     }
 
     // Get entry first for logging
@@ -191,12 +199,9 @@ export async function DELETE(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ message: "Deleted" });
+    return ok({ deleted: true });
   } catch (error) {
     console.error("DELETE /api/library/entry error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }
