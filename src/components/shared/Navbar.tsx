@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Activity, BarChart3, Bookmark, ListChecks, Search, Settings } from "lucide-react"
+import { Activity, BarChart3, Bell, Bookmark, ListChecks, Search, Settings } from "lucide-react"
 
 import {
   DropdownMenu,
@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils"
 import { GroupSwitcher } from "@/features/groups"
 import { useProfile } from "@/features/profile"
+import { useUnreadActivityCount } from "@/features/activity"
 
 const links = [
   { href: "/search", label: "Search", icon: Search },
@@ -23,6 +24,29 @@ const links = [
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/stats", label: "Stats", icon: BarChart3 },
 ]
+
+// =========================
+// Notification Badge
+// =========================
+function NotificationBadge() {
+  const { data: unreadData } = useUnreadActivityCount();
+  const count = unreadData?.count ?? 0;
+
+  return (
+    <Link
+      href="/activity"
+      className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+      title="Actividad"
+    >
+      <Bell className="h-4 w-4 text-muted-foreground" />
+      {count > 0 && (
+        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-lg">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 function UserMenu() {
   const { data: profile, isLoading } = useProfile();
@@ -120,6 +144,7 @@ export function Navbar() {
               </Link>
             ))}
           </div>
+          <NotificationBadge />
           <UserMenu />
         </div>
 

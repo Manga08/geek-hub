@@ -175,7 +175,7 @@ export async function DELETE(request: NextRequest) {
 
     // Get entry first for logging
     const groupId = await getCurrentGroupId();
-    
+
     await libraryRepo.delete(id);
 
     // Log activity event

@@ -17,8 +17,19 @@ export {
 } from "./types";
 
 // Queries
-export { activityKeys, fetchActivityFeed } from "./queries";
+export {
+  activityKeys,
+  fetchActivityFeed,
+  fetchUnreadCount,
+  markActivityRead,
+} from "./queries";
+export type { UnreadCountResponse } from "./queries";
 
 // Hooks
-export { useActivityFeed, flattenActivityEvents } from "./hooks";
+export {
+  useActivityFeed,
+  flattenActivityEvents,
+  useUnreadActivityCount,
+  useMarkActivityRead,
+} from "./hooks";
 export type { UseActivityFeedOptions } from "./hooks";

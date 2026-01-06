@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
       const filesToDelete = existingFiles
         .filter(f => f.name.startsWith("avatar."))
         .map(f => `${user.id}/${f.name}`);
-      
+
       if (filesToDelete.length > 0) {
         await supabase.storage.from("avatars").remove(filesToDelete);
       }

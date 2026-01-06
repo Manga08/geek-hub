@@ -1,8 +1,8 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCurrentGroup } from "@/features/groups/hooks";
-import { activityKeys, fetchActivityFeed } from "./queries";
+import { activityKeys, fetchActivityFeed, fetchUnreadCount, markActivityRead } from "./queries";
 import type { ActivityFilters, ActivityFeedResponse, ActivityEvent } from "./types";
 
 // =========================
@@ -48,4 +48,41 @@ export function flattenActivityEvents(
 ): ActivityEvent[] {
   if (!pages) return [];
   return pages.flatMap((page) => page.events);
+}
+
+// =========================
+// Unread Count Hook
+// =========================
+
+export function useUnreadActivityCount() {
+  const { data: currentGroup } = useCurrentGroup();
+  const groupId = currentGroup?.group?.id ?? null;
+
+  return useQuery({
+    queryKey: activityKeys.unread(groupId),
+    queryFn: () => fetchUnreadCount(groupId ?? undefined),
+    enabled: !!groupId,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000, // Auto-refresh every minute
+  });
+}
+
+// =========================
+// Mark Read Mutation
+// =========================
+
+export function useMarkActivityRead() {
+  const queryClient = useQueryClient();
+  const { data: currentGroup } = useCurrentGroup();
+  const groupId = currentGroup?.group?.id ?? null;
+
+  return useMutation({
+    mutationFn: () => markActivityRead(groupId ?? undefined),
+    onSuccess: () => {
+      // Invalidate unread count after marking as read
+      queryClient.invalidateQueries({
+        queryKey: activityKeys.unread(groupId),
+      });
+    },
+  });
 }

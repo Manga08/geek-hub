@@ -78,7 +78,7 @@ export interface LogEventParams {
  */
 function sanitizeMetadata(metadata?: ActivityMetadata): Record<string, unknown> {
   if (!metadata) return {};
-  
+
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(metadata)) {
     if (value !== null && value !== undefined) {
@@ -133,7 +133,7 @@ export async function getCurrentGroupId(): Promise<string | null> {
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) return null;
 
     const { data: profile } = await supabase
@@ -170,7 +170,7 @@ export async function logActivity(
     }
 
     const groupId = options?.groupId ?? await getCurrentGroupId();
-    
+
     if (!groupId) {
       console.warn("[ActivityLog] No group context, skipping log");
       return;

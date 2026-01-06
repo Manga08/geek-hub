@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Activity, RefreshCw, ChevronDown, User } from "lucide-react";
 import Image from "next/image";
 import {
@@ -7,6 +8,7 @@ import {
   flattenActivityEvents,
   getEventDescription,
   ENTITY_ICONS,
+  useMarkActivityRead,
   type ActivityEvent,
 } from "@/features/activity";
 
@@ -184,6 +186,13 @@ function ActivityFeed() {
 // =========================
 
 export default function ActivityPage() {
+  const { mutate: markRead } = useMarkActivityRead();
+
+  // Mark as read when the page is mounted
+  useEffect(() => {
+    markRead();
+  }, [markRead]);
+
   return (
     <div className="container mx-auto py-6 px-4 max-w-2xl">
       <header className="mb-6">
