@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireSessionUserId } from "@/lib/auth/request-context";
 import {
   getCurrentGroupForUser,
   isUserMemberOfGroup,
@@ -11,22 +11,19 @@ import {
 
 export async function GET() {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Single auth call via getSession()
+    const result = await requireSessionUserId();
+    if (!result.ok) return result.response;
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { supabase, userId } = result;
 
-    const result = await getCurrentGroupForUser(supabase, user.id);
+    const group = await getCurrentGroupForUser(supabase, userId);
 
-    if (!result) {
+    if (!group) {
       return NextResponse.json({ error: "No group found" }, { status: 404 });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json(group);
   } catch (error) {
     console.error("Error fetching current group:", error);
     return NextResponse.json(
@@ -38,14 +35,11 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    // Single auth call via getSession()
+    const result = await requireSessionUserId();
+    if (!result.ok) return result.response;
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const { supabase, userId } = result;
 
     const body = await request.json();
     const { group_id } = body as { group_id?: string };
@@ -73,7 +67,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Check if user is member of the group
-    const isMember = await isUserMemberOfGroup(supabase, user.id, group_id);
+    const isMember = await isUserMemberOfGroup(supabase, userId, group_id);
     if (!isMember) {
       return NextResponse.json(
         { error: "You are not a member of this group" },
@@ -82,10 +76,10 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update default group
-    await setDefaultGroupForUser(supabase, user.id, group_id);
+    await setDefaultGroupForUser(supabase, userId, group_id);
 
     // Get role for response
-    const role = await getUserRoleInGroup(supabase, user.id, group_id);
+    const role = await getUserRoleInGroup(supabase, userId, group_id);
 
     return NextResponse.json({
       group,

@@ -1,10 +1,9 @@
 import { NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireApiContext } from "@/lib/auth/request-context";
 import { aggregateStatsSummary } from "@/features/stats/aggregate";
 import {
   ok,
   badRequest,
-  unauthenticated,
   internal,
   statsSummaryQuerySchema,
   validateQuery,
@@ -19,14 +18,11 @@ const MAX_ROWS = 5000;
 // =========================
 
 export async function GET(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Single context call: session + default_group_id (1 roundtrip)
+  const result = await requireApiContext();
+  if (!result.ok) return result.response;
 
-  if (!user) {
-    return unauthenticated();
-  }
+  const { supabase, userId, defaultGroupId } = result.ctx;
 
   // Parse and validate query params with Zod
   const { searchParams } = new URL(request.url);
@@ -39,19 +35,6 @@ export async function GET(request: NextRequest) {
   const { scope, year, type } = parsed.data;
 
   try {
-    // Get user's current group
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("default_group_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.default_group_id) {
-      return badRequest("No group context. Please select a group first.");
-    }
-
-    const groupId = profile.default_group_id;
-
     // Build date range for the year
     const startDate = `${year}-01-01T00:00:00.000Z`;
     const endDate = `${year + 1}-01-01T00:00:00.000Z`;
@@ -76,14 +59,14 @@ export async function GET(request: NextRequest) {
         updated_at,
         profiles:profiles!library_entries_user_id_profiles_fkey(display_name, avatar_url)
       `)
-      .eq("group_id", groupId)
+      .eq("group_id", defaultGroupId)
       .gte("created_at", startDate)
       .lt("created_at", endDate)
       .limit(MAX_ROWS + 1); // Fetch one extra to detect overflow
 
     // Filter by user if scope=mine
     if (scope === "mine") {
-      query = query.eq("user_id", user.id);
+      query = query.eq("user_id", userId);
     }
 
     // Filter by type if not "all"

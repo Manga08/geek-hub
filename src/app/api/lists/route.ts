@@ -1,11 +1,10 @@
 import { NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireSessionUserId } from "@/lib/auth/request-context";
 import * as listsRepo from "@/features/lists/repo";
 import { logActivityEvent } from "@/lib/activity-log";
 import {
   ok,
   badRequest,
-  unauthenticated,
   internal,
   createListBodySchema,
   validateBody,
@@ -13,12 +12,9 @@ import {
 } from "@/lib/api";
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return unauthenticated();
-  }
+  // Single auth call via getSession()
+  const result = await requireSessionUserId();
+  if (!result.ok) return result.response;
 
   try {
     const lists = await listsRepo.listLists();
@@ -30,12 +26,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  // Single auth call via getSession()
+  const result = await requireSessionUserId();
+  if (!result.ok) return result.response;
 
-  if (!user) {
-    return unauthenticated();
-  }
+  const { userId } = result;
 
   try {
     const body = await request.json();
@@ -50,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Log activity event
     await logActivityEvent({
       groupId: list.group_id,
-      actorId: user.id,
+      actorId: userId,
       eventType: "list_created",
       entityType: "list",
       entityId: list.id,

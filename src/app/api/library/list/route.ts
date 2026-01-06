@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireSessionUserId } from "@/lib/auth/request-context";
 import { libraryRepo } from "@/features/library/repo";
-import { ok, fail, unauthenticated, internal } from "@/lib/api/respond";
+import { ok, fail, internal } from "@/lib/api/respond";
 import {
   libraryListQuerySchema,
   validateQuery,
@@ -9,14 +9,9 @@ import {
 } from "@/lib/api/schemas";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return unauthenticated("Authentication required");
-  }
+  // Single auth call via getSession() (no extra roundtrip)
+  const result = await requireSessionUserId();
+  if (!result.ok) return result.response;
 
   // Validate query params with Zod
   const { searchParams } = new URL(request.url);

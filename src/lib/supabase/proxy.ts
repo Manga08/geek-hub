@@ -2,6 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function updateSession(request: NextRequest): Promise<NextResponse> {
+  // Early-return for API routes - they handle auth via request-context
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
+
   const response = NextResponse.next({ request: { headers: request.headers } });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

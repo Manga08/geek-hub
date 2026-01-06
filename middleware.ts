@@ -7,6 +7,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+    /*
+     * Match all paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization)
+     * - favicon.ico, robots.txt, sitemap.xml (SEO)
+     * - api/* (API routes handle their own auth via request-context)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|api/).*)",
   ],
 };
