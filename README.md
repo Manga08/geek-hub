@@ -158,7 +158,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
   3. Ir a /search, agregar items a biblioteca
   4. Ir a /library para ver, filtrar y gestionar tus entradas
 
-## Changelog (Phases 3N–3X)
+## Changelog (Phases 3N–4A)
 
 - **Phase 3N–3O — Groups Multi-tenant + Invites:** Sistema de grupos con roles (admin/editor/viewer), switcher, gestión de miembros e invitaciones con tokens únicos. Páginas /groups, /groups/members, /invite/[token].
 - **Phase 3P–3Q — Lists Feature:** Listas personalizadas (game, movie, tv, anime, mixed) con hasta 100 ítems por lista. CRUD completo, drag-reorder y página de detalle.
@@ -172,6 +172,19 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
   - Panel "Nuestra puntuación" en detalle de item: muestra ratings/status de todos los miembros del grupo con promedio.
   - next.config.ts permite imágenes de Supabase Storage para avatares.
   - Migration 014: FKs a profiles para joins confiables en PostgREST.
+- **Phase 3Y — Stats/Insights (Mine vs Group):**
+  - Página /stats con filtros scope (mine/group), year, type.
+  - Agregaciones puras en aggregate.ts con tests.
+  - Gráfico mensual, top rated, leaderboard grupal.
+- **Phase 3Z — DB Hardening:**
+  - Migration 015: Limpieza de FKs duplicadas a auth.users.
+  - Fix v2: Detección correcta usando referential_constraints + key_column_usage.
+- **Phase 4A — Password Recovery:**
+  - Flujo completo de recuperación de contraseña con Supabase Auth (PKCE).
+  - Páginas /forgot-password y /reset-password con UI premium.
+  - Server actions: requestPasswordResetAction, updatePasswordAction.
+  - Link "¿Olvidaste tu contraseña?" en login.
+  - Mensaje de éxito post-reset en login.
 
 ## Supabase Migrations
 
@@ -193,11 +206,11 @@ Ejecutar en orden desde **Supabase Dashboard → SQL Editor**:
 | `012_activity_reads.sql`             | Tracking de lecturas de actividad                 |
 | `013_storage_avatars_policies.sql`   | Políticas storage (requiere owner/postgres)       |
 | `014_profiles_relationships.sql`     | FKs para joins en group_members y library_entries |
-| `015_cleanup_duplicate_fks.sql`      | Limpieza de FKs duplicadas (hardening DB)         |
+| `015_cleanup_duplicate_fks.sql`      | Limpieza de FKs duplicadas a auth.users (v2)      |
 
 **Nota:** La migración 013 requiere privilegios de owner. Si falla con "must be owner of relation objects", ejecutarla desde el SQL Editor con el rol postgres.
 
-**Nota:** La migración 015 elimina FKs duplicadas a auth.users si existen, dejando solo las FKs a profiles.id como referencia principal. Es idempotente y puede ejecutarse múltiples veces sin error.
+**Nota:** La migración 015 (v2) usa referential_constraints + key_column_usage para detectar correctamente FKs por columna local y tabla referenciada. Es idempotente.
 
 - Hotfix — group_members member_role + TMDb dispatch overload + getUser():
   - addMember inserta en group_members usando la columna member_role.

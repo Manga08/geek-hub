@@ -1,6 +1,8 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +21,16 @@ function SubmitButton() {
 
 export function LoginForm() {
   const [state, formAction] = useFormState(signInAction, initialState);
+  const searchParams = useSearchParams();
+  const resetSuccess = searchParams.get("reset") === "ok";
 
   return (
     <form action={formAction} className="space-y-4">
+      {resetSuccess ? (
+        <div className="rounded-md bg-green-500/10 border border-green-500/20 p-3 text-sm text-green-400">
+          Contraseña actualizada correctamente. Ya puedes iniciar sesión.
+        </div>
+      ) : null}
       <div className="space-y-2">
         <label className="block text-sm font-medium text-foreground">Email</label>
         <Input
@@ -32,7 +41,15 @@ export function LoginForm() {
         />
       </div>
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-foreground">Password</label>
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium text-foreground">Password</label>
+          <Link
+            href="/forgot-password"
+            className="text-xs text-muted-foreground hover:text-primary"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
         <Input
           name="password"
           type="password"
