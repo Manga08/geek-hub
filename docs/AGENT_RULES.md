@@ -23,6 +23,7 @@ Al finalizar cada tarea/fase, entregar:
 3. **Notas de validación manual** (2-3 bullets de qué se verificó).
 
 Ejemplo:
+
 ```
 | Archivo | Motivo |
 |---------|--------|
@@ -39,13 +40,13 @@ Comandos:
 
 ## 3. Prohibiciones
 
-| Prohibido | Por qué |
-|-----------|---------|
-| Agregar deps nuevas | Aumenta bundle, requiere revisión |
-| Refactors grandes | Riesgo de regresiones, difícil review |
-| Mover carpetas | Rompe imports, confunde historial |
+| Prohibido             | Por qué                                  |
+| --------------------- | ---------------------------------------- |
+| Agregar deps nuevas   | Aumenta bundle, requiere revisión        |
+| Refactors grandes     | Riesgo de regresiones, difícil review    |
+| Mover carpetas        | Rompe imports, confunde historial        |
 | Cambiar diseño global | Mantener estilo premium/oscuro existente |
-| Duplicar lógica/UI | DRY: una sola fuente de verdad |
+| Duplicar lógica/UI    | DRY: una sola fuente de verdad           |
 
 ---
 
@@ -63,20 +64,24 @@ Si una función, tipo o helper no existe y es necesario:
 ## 5. Estándares de Código
 
 ### TypeScript
+
 - **Strict-friendly:** No usar `any` salvo casos justificados.
 - **Preferir tipos explícitos** en exports públicos.
 - **Usar `type` para DTOs/interfaces**, `interface` para contratos extensibles.
 
 ### React/Next.js
+
 - **Server Components por defecto** en App Router.
 - **"use client"** solo donde sea necesario (hooks, eventos).
 - **No lógica compleja en componentes:** Mover a hooks o funciones en `features/*`.
 
 ### Funciones puras
+
 - **Helpers deben ser funciones puras** sin side effects.
 - **Colocar en archivos separados** (ej: `utils.ts`, `helpers.ts`).
 
 ### Imports
+
 - **Imports absolutos** con `@/` prefix.
 - **Orden:** externos → internos → relativos.
 
@@ -86,16 +91,17 @@ Si una función, tipo o helper no existe y es necesario:
 
 Formato: `tipo(area): descripción breve`
 
-| Tipo | Uso |
-|------|-----|
-| `feat` | Nueva funcionalidad |
-| `fix` | Corrección de bug |
-| `chore` | Tareas de mantenimiento |
-| `docs` | Documentación |
+| Tipo       | Uso                           |
+| ---------- | ----------------------------- |
+| `feat`     | Nueva funcionalidad           |
+| `fix`      | Corrección de bug             |
+| `chore`    | Tareas de mantenimiento       |
+| `docs`     | Documentación                 |
 | `refactor` | Refactor sin cambio funcional |
-| `test` | Tests |
+| `test`     | Tests                         |
 
 Ejemplos:
+
 - `feat(groups): add group name editor`
 - `fix(auth): handle expired token`
 - `chore(repo): add .gitattributes`

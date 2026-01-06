@@ -44,7 +44,7 @@ CREATE INDEX IF NOT EXISTS activity_events_group_created_desc_idx
 -- ===========================================
 
 -- Los siguientes constraints YA EXISTEN en migraciones previas:
--- 
+--
 -- library_entries.rating:
 --   CHECK (rating IS NULL OR (rating >= 1 AND rating <= 10))
 --   Definido en: 001_library_entries.sql
@@ -71,7 +71,7 @@ BEGIN
   WHERE schemaname = 'public'
     AND tablename = 'library_entries'
     AND indexname LIKE 'library_entries_group_%';
-  
+
   RAISE NOTICE 'library_entries tiene % índices de grupo', idx_count;
 END $$;
 
