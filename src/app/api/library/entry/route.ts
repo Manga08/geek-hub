@@ -119,7 +119,7 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { id, ...updateData } = body as { id?: string; [key: string]: unknown };
+    const { id, ...updateData } = body as { id?: string;[key: string]: unknown };
 
     // Validate id
     if (!id) {
