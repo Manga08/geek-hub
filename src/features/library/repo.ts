@@ -175,8 +175,11 @@ export class LibraryRepo {
   async listByGroup(options?: {
     groupId?: string;
     type?: string;
-    status?: string;
+    status?: string | string[];
+    provider?: string;
     isFavorite?: boolean;
+    unrated?: boolean;
+    q?: string;
     sort?: "recent" | "rating";
     limit?: number;
     offset?: number;
@@ -197,17 +200,28 @@ export class LibraryRepo {
     if (options?.type) {
       query = query.eq("type", options.type);
     }
+    // Multi-status support
     if (options?.status) {
-      query = query.eq("status", options.status);
+      const statuses = Array.isArray(options.status) ? options.status : [options.status];
+      query = query.in("status", statuses);
+    }
+    if (options?.provider) {
+      query = query.eq("provider", options.provider);
     }
     if (options?.isFavorite !== undefined) {
       query = query.eq("is_favorite", options.isFavorite);
+    }
+    if (options?.unrated) {
+      query = query.is("rating", null);
+    }
+    if (options?.q) {
+      query = query.ilike("title", `%${options.q}%`);
     }
     if (options?.limit) {
       query = query.limit(options.limit);
     }
     if (options?.offset) {
-      query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
+      query = query.range(options.offset, options.offset + (options.limit ?? 50) - 1);
     }
 
     const { data, error } = await query;
@@ -226,8 +240,11 @@ export class LibraryRepo {
   async listMyEntries(options?: {
     groupId?: string;
     type?: string;
-    status?: string;
+    status?: string | string[];
+    provider?: string;
     isFavorite?: boolean;
+    unrated?: boolean;
+    q?: string;
     sort?: "recent" | "rating";
     limit?: number;
     offset?: number;
@@ -249,17 +266,28 @@ export class LibraryRepo {
     if (options?.type) {
       query = query.eq("type", options.type);
     }
+    // Multi-status support
     if (options?.status) {
-      query = query.eq("status", options.status);
+      const statuses = Array.isArray(options.status) ? options.status : [options.status];
+      query = query.in("status", statuses);
+    }
+    if (options?.provider) {
+      query = query.eq("provider", options.provider);
     }
     if (options?.isFavorite !== undefined) {
       query = query.eq("is_favorite", options.isFavorite);
+    }
+    if (options?.unrated) {
+      query = query.is("rating", null);
+    }
+    if (options?.q) {
+      query = query.ilike("title", `%${options.q}%`);
     }
     if (options?.limit) {
       query = query.limit(options.limit);
     }
     if (options?.offset) {
-      query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
+      query = query.range(options.offset, options.offset + (options.limit ?? 50) - 1);
     }
 
     const { data, error } = await query;

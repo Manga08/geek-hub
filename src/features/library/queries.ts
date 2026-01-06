@@ -1,14 +1,19 @@
 import { readApiJson, ApiError } from "@/lib/api-client";
-import type { LibraryEntry, CreateEntryDTO, UpdateEntryDTO } from "./types";
+import type { LibraryEntry, CreateEntryDTO, UpdateEntryDTO, EntryStatus } from "./types";
 
 const API_BASE = "/api/library/entry";
 
 export interface LibraryListFilters {
   type?: string;
-  status?: string;
+  status?: string | string[]; // Multi-status support
+  provider?: string;
   favorite?: boolean;
+  unrated?: boolean;
+  q?: string;
   sort?: "recent" | "rating";
-  groupId?: string; // Optional for multi-tenant queries
+  scope?: "mine" | "group";
+  limit?: number;
+  offset?: number;
 }
 
 export const libraryKeys = {
@@ -25,12 +30,38 @@ export async function fetchLibraryList(
 ): Promise<LibraryEntry[]> {
   const params = new URLSearchParams();
   if (filters?.type) params.set("type", filters.type);
-  if (filters?.status) params.set("status", filters.status);
+  // Multi-status: join as CSV
+  if (filters?.status) {
+    const statusArr = Array.isArray(filters.status) ? filters.status : [filters.status];
+    params.set("status", statusArr.join(","));
+  }
+  if (filters?.provider) params.set("provider", filters.provider);
   if (filters?.favorite !== undefined) params.set("favorite", String(filters.favorite));
+  if (filters?.unrated) params.set("unrated", "true");
+  if (filters?.q) params.set("q", filters.q);
   if (filters?.sort) params.set("sort", filters.sort);
+  if (filters?.scope) params.set("scope", filters.scope);
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  if (filters?.offset) params.set("offset", String(filters.offset));
 
   const res = await fetch(`/api/library/list?${params}`);
   return readApiJson<LibraryEntry[]>(res);
+}
+
+// Bulk action types
+export interface BulkActionPayload {
+  ids: string[];
+  action: "set_status" | "set_favorite" | "delete";
+  value?: EntryStatus | boolean;
+}
+
+export async function bulkUpdateEntries(payload: BulkActionPayload): Promise<{ success: number; failed: number }> {
+  const res = await fetch("/api/library/entry/bulk", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return readApiJson<{ success: number; failed: number }>(res);
 }
 
 export async function fetchEntryByItem(

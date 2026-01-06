@@ -1,6 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { libraryRepo } from "@/features/library/repo";
+import { ok, fail, unauthenticated, internal } from "@/lib/api/respond";
+import {
+  libraryListQuerySchema,
+  validateQuery,
+  formatZodErrors,
+} from "@/lib/api/schemas";
 
 export async function GET(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
@@ -9,41 +15,39 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return unauthenticated("Authentication required");
   }
 
+  // Validate query params with Zod
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type") || undefined;
-  const status = searchParams.get("status") || undefined;
-  const favorite = searchParams.get("favorite");
-  const sort = searchParams.get("sort") as "recent" | "rating" | undefined;
-  const scope = searchParams.get("scope") || "mine"; // default to user-scoped
+  const parsed = validateQuery(libraryListQuerySchema, searchParams);
+
+  if (!parsed.success) {
+    return fail("BAD_REQUEST", "Invalid query parameters", 400, formatZodErrors(parsed.error));
+  }
+
+  const { scope, type, status, provider, favorite, unrated, q, sort, limit, offset } = parsed.data;
 
   try {
-    // Use user-scoped method by default (scope=mine)
-    // Use group-scoped only when explicitly requested (scope=group)
-    const entries = scope === "group"
-      ? await libraryRepo.listByGroup({
-        type,
-        status,
-        isFavorite: favorite === "true" ? true : favorite === "false" ? false : undefined,
-        sort: sort || "recent",
-        limit: 100,
-      })
-      : await libraryRepo.listMyEntries({
-        type,
-        status,
-        isFavorite: favorite === "true" ? true : favorite === "false" ? false : undefined,
-        sort: sort || "recent",
-        limit: 100,
-      });
+    const repoOptions = {
+      type,
+      status, // Already transformed to string[] by Zod
+      provider,
+      isFavorite: favorite,
+      unrated,
+      q,
+      sort,
+      limit,
+      offset,
+    };
 
-    return NextResponse.json(entries);
+    const entries = scope === "group"
+      ? await libraryRepo.listByGroup(repoOptions)
+      : await libraryRepo.listMyEntries(repoOptions);
+
+    return ok(entries);
   } catch (error) {
     console.error("GET /api/library/list error:", error);
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    );
+    return internal("Failed to fetch library entries");
   }
 }

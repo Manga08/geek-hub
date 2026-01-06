@@ -144,11 +144,10 @@ export type ReorderListItemsBody = z.infer<typeof reorderListItemsBodySchema>;
 // ============ Library ============
 
 export const libraryEntryStatusSchema = z.enum([
-  "want",
+  "planned",
   "in_progress",
   "completed",
   "dropped",
-  "on_hold",
 ]);
 
 export const libraryProviderSchema = z.enum(["tmdb", "rawg"]);
@@ -169,7 +168,7 @@ export const createLibraryEntryBodySchema = z.object({
   provider: libraryProviderSchema,
   external_id: z.string().min(1),
   title: z.string().max(500).optional(),
-  poster_path: z.string().max(500).optional(),
+  poster_url: z.string().max(500).optional(),
   status: libraryEntryStatusSchema.optional(),
   rating: z.number().int().min(0).max(10).optional(),
   notes: z.string().max(2000).optional(),
@@ -189,15 +188,45 @@ export const updateLibraryEntryBodySchema = z.object({
 
 export type UpdateLibraryEntryBody = z.infer<typeof updateLibraryEntryBodySchema>;
 
-/** Library list query */
+/** Library list query (advanced filters) */
 export const libraryListQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).default(50),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).default(0),
-  status: libraryEntryStatusSchema.optional(),
+  // Multi-status support: comma-separated or single value
+  status: z.string().optional().transform((val) => {
+    if (!val) return undefined;
+    const statuses = val.split(",").map(s => s.trim()).filter(Boolean);
+    return statuses.length > 0 ? statuses : undefined;
+  }),
   type: libraryTypeSchema.optional(),
+  provider: libraryProviderSchema.optional(),
+  scope: z.enum(["mine", "group"]).default("mine"),
+  favorite: z.enum(["true", "false"]).optional().transform(v => v === "true" ? true : v === "false" ? false : undefined),
+  unrated: z.enum(["true"]).optional().transform(v => v === "true"),
+  q: z.string().max(200).optional(),
+  sort: z.enum(["recent", "rating"]).default("recent"),
 });
 
 export type LibraryListQuery = z.infer<typeof libraryListQuerySchema>;
+
+/** Bulk action body for library entries */
+export const bulkActionBodySchema = z.object({
+  ids: z.array(uuidSchema).min(1, "At least one ID required").max(100, "Maximum 100 items per batch"),
+  action: z.enum(["set_status", "set_favorite", "delete"]),
+  value: z.union([
+    libraryEntryStatusSchema, // for set_status
+    z.boolean(), // for set_favorite
+  ]).optional(),
+}).refine(
+  (data) => {
+    if (data.action === "set_status") return data.value !== undefined && typeof data.value === "string";
+    if (data.action === "set_favorite") return data.value !== undefined && typeof data.value === "boolean";
+    return true; // delete doesn't require value
+  },
+  { message: "Value required for set_status (status string) or set_favorite (boolean)" }
+);
+
+export type BulkActionBody = z.infer<typeof bulkActionBodySchema>;
 
 // ============ Catalog ============
 
