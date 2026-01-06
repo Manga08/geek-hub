@@ -261,7 +261,7 @@ export function searchParamsToObject(params: URLSearchParams): Record<string, st
 export function validateQuery<T extends z.ZodTypeAny>(
   schema: T,
   params: URLSearchParams
-): z.SafeParseReturnType<z.input<T>, z.output<T>> {
+) {
   return schema.safeParse(searchParamsToObject(params));
 }
 
@@ -271,7 +271,7 @@ export function validateQuery<T extends z.ZodTypeAny>(
 export function validateBody<T extends z.ZodTypeAny>(
   schema: T,
   body: unknown
-): z.SafeParseReturnType<z.input<T>, z.output<T>> {
+) {
   return schema.safeParse(body);
 }
 

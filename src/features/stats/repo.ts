@@ -1,3 +1,4 @@
+import { readApiJson } from "@/lib/api-client";
 import type { StatsSummary, StatsFilters } from "./types";
 
 // =========================
@@ -12,11 +13,5 @@ export async function fetchStatsSummary(filters: StatsFilters): Promise<StatsSum
   });
 
   const response = await fetch(`/api/stats/summary?${params}`);
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error ?? "Error al cargar estadísticas");
-  }
-
-  return response.json();
+  return readApiJson<StatsSummary>(response);
 }

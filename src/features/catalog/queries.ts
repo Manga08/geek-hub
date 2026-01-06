@@ -1,3 +1,4 @@
+import { readApiJson } from "@/lib/api-client";
 import type { Provider, UnifiedCatalogItem, UnifiedItemType } from "@/features/catalog/normalize/unified.types";
 
 export const catalogSearchKey = ({ type, q, page }: { type: UnifiedItemType; q: string; page: number }) => ["catalog", "search", type, q, page] as const;
@@ -32,12 +33,7 @@ export async function fetchCatalogSearch({
 }): Promise<SearchResponse> {
   const params = new URLSearchParams({ type, q: query, page: String(page) });
   const res = await fetch(`/api/catalog/search?${params.toString()}`);
-  if (!res.ok) {
-    const message = await res.text();
-    throw new Error(message || "Search failed");
-  }
-  const data = (await res.json()) as SearchResponse;
-  return data;
+  return readApiJson<SearchResponse>(res);
 }
 
 export async function fetchCatalogItem({
@@ -50,10 +46,5 @@ export async function fetchCatalogItem({
   const { provider, externalId } = parseKey(key);
   const params = new URLSearchParams({ type, provider, externalId });
   const res = await fetch(`/api/catalog/item?${params.toString()}`);
-  if (!res.ok) {
-    const message = await res.text();
-    throw new Error(message || "Item fetch failed");
-  }
-  const data = (await res.json()) as UnifiedCatalogItem;
-  return data;
+  return readApiJson<UnifiedCatalogItem>(res);
 }

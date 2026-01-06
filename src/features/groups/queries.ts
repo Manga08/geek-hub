@@ -1,3 +1,4 @@
+import { readApiJson } from "@/lib/api-client";
 import type {
   GroupRow,
   CurrentGroupResponse,
@@ -26,24 +27,14 @@ export const groupKeys = {
 
 export async function fetchCurrentGroup(): Promise<CurrentGroupResponse | null> {
   const res = await fetch("/api/groups/current");
-
-  if (!res.ok) {
-    if (res.status === 401) return null;
-    throw new Error("Error fetching current group");
-  }
-
-  return res.json();
+  if (res.status === 401) return null;
+  return readApiJson<CurrentGroupResponse>(res);
 }
 
 export async function fetchGroupsList(): Promise<GroupRow[]> {
   const res = await fetch("/api/groups/list");
-
-  if (!res.ok) {
-    if (res.status === 401) return [];
-    throw new Error("Error fetching groups list");
-  }
-
-  return res.json();
+  if (res.status === 401) return [];
+  return readApiJson<GroupRow[]>(res);
 }
 
 export async function setCurrentGroup(
@@ -54,25 +45,14 @@ export async function setCurrentGroup(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ group_id: groupId }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Error setting current group");
-  }
-
-  return res.json();
+  return readApiJson<CurrentGroupResponse>(res);
 }
 
 export async function fetchGroupMembers(
   groupId: string
 ): Promise<GroupMemberWithProfile[]> {
   const res = await fetch(`/api/groups/members?group_id=${groupId}`);
-
-  if (!res.ok) {
-    throw new Error("Error fetching group members");
-  }
-
-  return res.json();
+  return readApiJson<GroupMemberWithProfile[]>(res);
 }
 
 export async function createInvite(
@@ -88,13 +68,7 @@ export async function createInvite(
       invite_role: params.inviteRole,
     }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.error || "Error creating invite");
-  }
-
-  return res.json();
+  return readApiJson<CreateInviteResponse>(res);
 }
 
 export async function redeemInvite(
@@ -105,13 +79,7 @@ export async function redeemInvite(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.message || error.error || "Error redeeming invite");
-  }
-
-  return res.json();
+  return readApiJson<RedeemInviteResponse>(res);
 }
 
 // ================================
@@ -130,13 +98,7 @@ export async function setMemberRole(
       role: params.role,
     }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.message || error.error || "Error changing role");
-  }
-
-  return res.json();
+  return readApiJson<RpcResult>(res);
 }
 
 export async function removeMember(
@@ -150,13 +112,7 @@ export async function removeMember(
       user_id: params.userId,
     }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.message || error.error || "Error removing member");
-  }
-
-  return res.json();
+  return readApiJson<RpcResult>(res);
 }
 
 export async function leaveGroup(
@@ -167,25 +123,14 @@ export async function leaveGroup(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ group_id: params.groupId }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.message || error.error || "Error leaving group");
-  }
-
-  return res.json();
+  return readApiJson<LeaveGroupResponse>(res);
 }
 
 export async function fetchGroupInvites(
   groupId: string
 ): Promise<GroupInviteRow[]> {
   const res = await fetch(`/api/groups/invites?group_id=${groupId}`);
-
-  if (!res.ok) {
-    throw new Error("Error fetching invites");
-  }
-
-  return res.json();
+  return readApiJson<GroupInviteRow[]>(res);
 }
 
 export async function revokeInvite(
@@ -196,13 +141,7 @@ export async function revokeInvite(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ invite_id: params.inviteId }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.message || error.error || "Error revoking invite");
-  }
-
-  return res.json();
+  return readApiJson<RpcResult>(res);
 }
 
 // ================================
@@ -220,11 +159,5 @@ export async function updateGroupName(
       name: params.name,
     }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new Error(error.message || error.error || "Error updating group name");
-  }
-
-  return res.json();
+  return readApiJson<GroupRow>(res);
 }

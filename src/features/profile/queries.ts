@@ -1,3 +1,4 @@
+import { readApiJson } from "@/lib/api-client";
 import type { UserProfile, UpdateProfileDTO } from "./types";
 
 // =========================
@@ -15,13 +16,7 @@ export const profileKeys = {
 
 export async function fetchProfile(): Promise<UserProfile> {
   const response = await fetch("/api/profile");
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error ?? "Error al cargar perfil");
-  }
-
-  return response.json();
+  return readApiJson<UserProfile>(response);
 }
 
 export async function updateProfile(dto: UpdateProfileDTO): Promise<UserProfile> {
@@ -30,13 +25,7 @@ export async function updateProfile(dto: UpdateProfileDTO): Promise<UserProfile>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dto),
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error ?? "Error al actualizar perfil");
-  }
-
-  return response.json();
+  return readApiJson<UserProfile>(response);
 }
 
 export async function uploadAvatar(file: File): Promise<UserProfile> {
@@ -47,24 +36,12 @@ export async function uploadAvatar(file: File): Promise<UserProfile> {
     method: "POST",
     body: formData,
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error ?? "Error al subir avatar");
-  }
-
-  return response.json();
+  return readApiJson<UserProfile>(response);
 }
 
 export async function deleteAvatar(): Promise<UserProfile> {
   const response = await fetch("/api/profile/avatar", {
     method: "DELETE",
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error ?? "Error al eliminar avatar");
-  }
-
-  return response.json();
+  return readApiJson<UserProfile>(response);
 }

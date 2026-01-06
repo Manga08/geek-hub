@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Activity, BarChart3, Bell, Bookmark, Check, ListChecks, Search, Settings, User, Users } from "lucide-react"
+import { Activity, BarChart3, Bell, Bookmark, Check, Home, ListChecks, Search, Settings, User, Users } from "lucide-react"
 
 import {
   DropdownMenu,
@@ -26,6 +26,7 @@ import {
 } from "@/features/activity"
 
 const links = [
+  { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/library", label: "Library", icon: Bookmark },
   { href: "/lists", label: "Lists", icon: ListChecks },

@@ -1,3 +1,4 @@
+import { readApiJson } from "@/lib/api-client";
 import type {
   ListWithItemCount,
   List,
@@ -28,26 +29,13 @@ export const listKeys = {
 
 export async function fetchLists(): Promise<ListWithItemCount[]> {
   const res = await fetch(API_BASE);
-
-  if (!res.ok) {
-    throw new Error("Error fetching lists");
-  }
-
-  const data: ListsResponse = await res.json();
+  const data = await readApiJson<ListsResponse>(res);
   return data.lists;
 }
 
 export async function fetchListDetail(listId: string): Promise<ListDetailResponse> {
   const res = await fetch(`${API_BASE}/${listId}`);
-
-  if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error("List not found");
-    }
-    throw new Error("Error fetching list");
-  }
-
-  return res.json();
+  return readApiJson<ListDetailResponse>(res);
 }
 
 export async function createList(dto: CreateListDTO): Promise<List> {
@@ -56,13 +44,7 @@ export async function createList(dto: CreateListDTO): Promise<List> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dto),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error creating list" }));
-    throw new Error(error.message || "Error creating list");
-  }
-
-  return res.json();
+  return readApiJson<List>(res);
 }
 
 export async function updateList(listId: string, dto: UpdateListDTO): Promise<List> {
@@ -71,24 +53,14 @@ export async function updateList(listId: string, dto: UpdateListDTO): Promise<Li
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dto),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error updating list" }));
-    throw new Error(error.message || "Error updating list");
-  }
-
-  return res.json();
+  return readApiJson<List>(res);
 }
 
 export async function deleteList(listId: string): Promise<void> {
   const res = await fetch(`${API_BASE}/${listId}`, {
     method: "DELETE",
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error deleting list" }));
-    throw new Error(error.message || "Error deleting list");
-  }
+  await readApiJson<{ deleted: boolean }>(res);
 }
 
 // =========================
@@ -97,12 +69,7 @@ export async function deleteList(listId: string): Promise<void> {
 
 export async function fetchListItems(listId: string): Promise<ListItem[]> {
   const res = await fetch(`${API_BASE}/${listId}/items`);
-
-  if (!res.ok) {
-    throw new Error("Error fetching list items");
-  }
-
-  const data = await res.json();
+  const data = await readApiJson<{ items: ListItem[] }>(res);
   return data.items;
 }
 
@@ -112,13 +79,7 @@ export async function addListItem(listId: string, dto: AddListItemDTO): Promise<
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dto),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error adding item" }));
-    throw new Error(error.message || "Error adding item");
-  }
-
-  return res.json();
+  return readApiJson<ListItem>(res);
 }
 
 export async function updateListItem(
@@ -138,13 +99,7 @@ export async function updateListItem(
       ...dto,
     }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error updating item" }));
-    throw new Error(error.message || "Error updating item");
-  }
-
-  return res.json();
+  return readApiJson<ListItem>(res);
 }
 
 export async function removeListItem(
@@ -162,9 +117,5 @@ export async function removeListItem(
       external_id: externalId,
     }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error removing item" }));
-    throw new Error(error.message || "Error removing item");
-  }
+  await readApiJson<{ deleted: boolean }>(res);
 }

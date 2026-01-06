@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { aggregateStatsSummary } from "@/features/stats/aggregate";
 import {
@@ -10,7 +10,7 @@ import {
   validateQuery,
   formatZodErrors,
 } from "@/lib/api";
-import type { StatsScope, StatsType, LibraryEntryWithProfile } from "@/features/stats/types";
+import type { LibraryEntryWithProfile } from "@/features/stats/types";
 
 const MAX_ROWS = 5000;
 
@@ -95,10 +95,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("GET /api/stats/summary error:", error);
-      return NextResponse.json(
-        { error: "Error fetching library entries" },
-        { status: 500 }
-      );
+      return internal("Error fetching library entries");
     }
 
     // Check for row limit exceeded

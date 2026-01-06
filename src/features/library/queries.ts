@@ -1,3 +1,4 @@
+import { readApiJson, ApiError } from "@/lib/api-client";
 import type { LibraryEntry, CreateEntryDTO, UpdateEntryDTO } from "./types";
 
 const API_BASE = "/api/library/entry";
@@ -29,12 +30,7 @@ export async function fetchLibraryList(
   if (filters?.sort) params.set("sort", filters.sort);
 
   const res = await fetch(`/api/library/list?${params}`);
-
-  if (!res.ok) {
-    throw new Error("Error fetching library list");
-  }
-
-  return res.json();
+  return readApiJson<LibraryEntry[]>(res);
 }
 
 export async function fetchEntryByItem(
@@ -45,12 +41,15 @@ export async function fetchEntryByItem(
   const params = new URLSearchParams({ type, provider, externalId });
   const res = await fetch(`${API_BASE}?${params}`);
 
-  if (!res.ok) {
-    if (res.status === 404) return null;
-    throw new Error("Error fetching library entry");
+  try {
+    return await readApiJson<LibraryEntry>(res);
+  } catch (err) {
+    // Return null for 404 (not found)
+    if (err instanceof ApiError && err.status === 404) {
+      return null;
+    }
+    throw err;
   }
-
-  return res.json();
 }
 
 export async function createEntry(dto: CreateEntryDTO): Promise<LibraryEntry> {
@@ -59,13 +58,7 @@ export async function createEntry(dto: CreateEntryDTO): Promise<LibraryEntry> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(dto),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error creating entry" }));
-    throw new Error(error.message || "Error creating entry");
-  }
-
-  return res.json();
+  return readApiJson<LibraryEntry>(res);
 }
 
 export async function updateEntry(
@@ -77,13 +70,7 @@ export async function updateEntry(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, ...dto }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error updating entry" }));
-    throw new Error(error.message || "Error updating entry");
-  }
-
-  return res.json();
+  return readApiJson<LibraryEntry>(res);
 }
 
 export async function deleteEntry(id: string): Promise<void> {
@@ -92,11 +79,7 @@ export async function deleteEntry(id: string): Promise<void> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error deleting entry" }));
-    throw new Error(error.message || "Error deleting entry");
-  }
+  await readApiJson<{ deleted: boolean }>(res);
 }
 
 export async function toggleFavorite(id: string): Promise<LibraryEntry> {
@@ -105,11 +88,5 @@ export async function toggleFavorite(id: string): Promise<LibraryEntry> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id }),
   });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: "Error toggling favorite" }));
-    throw new Error(error.message || "Error toggling favorite");
-  }
-
-  return res.json();
+  return readApiJson<LibraryEntry>(res);
 }
