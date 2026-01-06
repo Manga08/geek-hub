@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCurrentGroup } from "@/features/groups/hooks";
 import { activityKeys, fetchActivityFeed, fetchUnreadCount, markActivityRead } from "./queries";
+import { subscribeToActivity } from "@/lib/realtime";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ActivityFilters, ActivityFeedResponse, ActivityEvent } from "./types";
 
 // =========================
@@ -36,7 +39,7 @@ export function useActivityFeed(options: UseActivityFeedOptions = {}) {
     },
     enabled: enabled && !!groupId,
     staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Auto-refresh every minute
+    // Realtime replaces polling - see useActivityRealtime
   });
 }
 
@@ -63,7 +66,7 @@ export function useUnreadActivityCount() {
     queryFn: () => fetchUnreadCount(groupId ?? undefined),
     enabled: !!groupId,
     staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Auto-refresh every minute
+    // Realtime replaces polling - see useActivityRealtime
   });
 }
 
@@ -85,4 +88,52 @@ export function useMarkActivityRead() {
       });
     },
   });
+}
+
+// =========================
+// Activity Realtime Hook
+// =========================
+
+/**
+ * Subscribe to realtime activity events for the current group.
+ * Automatically invalidates unread count and feed when new events arrive.
+ * Ignores events from the current user (optional).
+ */
+export function useActivityRealtime(options: { ignoreOwnEvents?: boolean } = {}) {
+  const { ignoreOwnEvents = true } = options;
+  const queryClient = useQueryClient();
+  const { data: currentGroup } = useCurrentGroup();
+  const groupId = currentGroup?.group?.id ?? null;
+  
+  // Get current user ID
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+    
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!groupId) return;
+
+    const unsubscribe = subscribeToActivity(groupId, (event) => {
+      // Optionally ignore own events
+      if (ignoreOwnEvents && event.actor_id === userId) {
+        return;
+      }
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({
+        queryKey: activityKeys.unread(groupId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: activityKeys.feed(groupId),
+      });
+    });
+
+    return unsubscribe;
+  }, [groupId, userId, ignoreOwnEvents, queryClient]);
 }

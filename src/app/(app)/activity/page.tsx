@@ -9,6 +9,7 @@ import {
   getEventDescription,
   ENTITY_ICONS,
   useMarkActivityRead,
+  useActivityRealtime,
   type ActivityEvent,
 } from "@/features/activity";
 
@@ -187,6 +188,9 @@ function ActivityFeed() {
 
 export default function ActivityPage() {
   const { mutate: markRead } = useMarkActivityRead();
+
+  // Subscribe to realtime updates
+  useActivityRealtime();
 
   // Mark as read when the page is mounted
   useEffect(() => {

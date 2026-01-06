@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Activity, BarChart3, Bell, Bookmark, ListChecks, Search, Settings } from "lucide-react"
+import { Activity, BarChart3, Bell, Bookmark, Check, ListChecks, Search, Settings, User } from "lucide-react"
 
 import {
   DropdownMenu,
@@ -15,7 +15,15 @@ import {
 import { cn } from "@/lib/utils"
 import { GroupSwitcher } from "@/features/groups"
 import { useProfile } from "@/features/profile"
-import { useUnreadActivityCount } from "@/features/activity"
+import {
+  useUnreadActivityCount,
+  useMarkActivityRead,
+  useActivityFeed,
+  useActivityRealtime,
+  flattenActivityEvents,
+  getEventDescription,
+  ENTITY_ICONS,
+} from "@/features/activity"
 
 const links = [
   { href: "/search", label: "Search", icon: Search },
@@ -26,25 +34,126 @@ const links = [
 ]
 
 // =========================
-// Notification Badge
+// Relative Time Helper
 // =========================
-function NotificationBadge() {
+function getRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return "ahora";
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  if (diffDays < 7) return `${diffDays}d`;
+  return date.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+}
+
+// =========================
+// Notifications Panel
+// =========================
+function NotificationsPanel() {
   const { data: unreadData } = useUnreadActivityCount();
+  const { data: feedData, isLoading } = useActivityFeed({ limit: 8, enabled: true });
+  const { mutate: markRead, isPending: isMarking } = useMarkActivityRead();
+  
+  // Subscribe to realtime updates
+  useActivityRealtime();
+
   const count = unreadData?.count ?? 0;
+  const events = flattenActivityEvents(feedData?.pages);
 
   return (
-    <Link
-      href="/activity"
-      className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
-      title="Actividad"
-    >
-      <Bell className="h-4 w-4 text-muted-foreground" />
-      {count > 0 && (
-        <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-lg">
-          {count > 99 ? "99+" : count}
-        </span>
-      )}
-    </Link>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+          title="Notificaciones"
+        >
+          <Bell className="h-4 w-4 text-muted-foreground" />
+          {count > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-lg">
+              {count > 99 ? "99+" : count}
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-80 max-h-[70vh] overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+          <span className="text-sm font-semibold">Notificaciones</span>
+          {count > 0 && (
+            <button
+              onClick={() => markRead()}
+              disabled={isMarking}
+              className="text-xs text-primary hover:underline disabled:opacity-50 flex items-center gap-1"
+            >
+              <Check className="h-3 w-3" />
+              Marcar como leído
+            </button>
+          )}
+        </div>
+
+        <div className="max-h-80 overflow-y-auto">
+          {isLoading ? (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Cargando...
+            </div>
+          ) : events.length === 0 ? (
+            <div className="py-8 text-center">
+              <User className="h-8 w-8 mx-auto text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground mt-2">Sin actividad reciente</p>
+            </div>
+          ) : (
+            events.map((event) => (
+              <div
+                key={event.id}
+                className="flex items-start gap-3 px-3 py-2.5 hover:bg-white/5 border-b border-white/5 last:border-0"
+              >
+                {event.profiles?.avatar_url ? (
+                  <Image
+                    src={event.profiles.avatar_url}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="rounded-full shrink-0"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-medium text-gray-300 shrink-0">
+                    {(event.profiles?.display_name ?? "U")[0].toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm" aria-hidden>
+                      {ENTITY_ICONS[event.entity_type]}
+                    </span>
+                    <p className="text-xs text-gray-300 line-clamp-2">
+                      {getEventDescription(event)}
+                    </p>
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-0.5">
+                    {getRelativeTime(event.created_at)}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link
+            href="/activity"
+            className="flex items-center justify-center gap-2 text-sm text-primary"
+          >
+            <Activity className="h-4 w-4" />
+            Ver toda la actividad
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -144,7 +253,7 @@ export function Navbar() {
               </Link>
             ))}
           </div>
-          <NotificationBadge />
+          <NotificationsPanel />
           <UserMenu />
         </div>
 

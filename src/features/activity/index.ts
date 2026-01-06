@@ -31,5 +31,6 @@ export {
   flattenActivityEvents,
   useUnreadActivityCount,
   useMarkActivityRead,
+  useActivityRealtime,
 } from "./hooks";
 export type { UseActivityFeedOptions } from "./hooks";
