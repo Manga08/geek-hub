@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
         ? [{ protocol: "https" as const, hostname: supabaseHostname, pathname: "/storage/v1/object/public/**" }]
         : []),
     ],
+    // Reduce image quality warnings
+    qualities: [75, 80, 85],
   },
   // Silencia el warning de Turbopack cuando usamos webpack
   turbopack: {},

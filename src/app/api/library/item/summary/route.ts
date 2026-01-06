@@ -131,19 +131,25 @@ export async function GET(request: NextRequest) {
     }
 
     if (membersResult.error) {
-      console.error("Error fetching members:", membersResult.error);
+      console.error("Error fetching members:", {
+        code: membersResult.error.code,
+        message: membersResult.error.message,
+      });
       return internal("Error fetching group members");
     }
 
     if (entriesResult.error) {
-      console.error("Error fetching entries:", entriesResult.error);
+      console.error("Error fetching entries:", {
+        code: entriesResult.error.code,
+        message: entriesResult.error.message,
+      });
       return internal("Error fetching library entries");
     }
 
     const group = groupResult.data;
-    // Cast through unknown for PostgREST's dynamic return types
-    const membersData = membersResult.data as unknown as GroupMemberRow[];
-    const entriesData = entriesResult.data as unknown as EntryRow[];
+    // Null-safe cast for PostgREST's dynamic return types
+    const membersData = (membersResult.data ?? []) as unknown as GroupMemberRow[];
+    const entriesData = (entriesResult.data ?? []) as unknown as EntryRow[];
 
     // Create a map of entries by user_id
     const entriesMap = new Map<string, {

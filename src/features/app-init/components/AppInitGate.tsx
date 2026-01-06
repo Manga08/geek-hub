@@ -72,11 +72,12 @@ interface AppInitGateProps {
 export function AppInitGate({ children }: AppInitGateProps) {
   const queryClient = useQueryClient();
   const { data, isLoading, isError, refetch } = useAppInit();
-  const [seeded, setSeeded] = React.useState(false);
+  const seededRef = React.useRef(false);
+  const [ready, setReady] = React.useState(false);
 
-  // Seed cache when data arrives
+  // Seed cache when data arrives (only once)
   React.useEffect(() => {
-    if (!data || seeded) return;
+    if (!data || seededRef.current) return;
 
     const groupId = data.currentGroup?.group.id ?? null;
 
@@ -105,8 +106,9 @@ export function AppInitGate({ children }: AppInitGateProps) {
       });
     }
 
-    setSeeded(true);
-  }, [data, seeded, queryClient]);
+    seededRef.current = true;
+    setReady(true);
+  }, [data, queryClient]);
 
   // Show loading skeleton
   if (isLoading) {
@@ -119,7 +121,7 @@ export function AppInitGate({ children }: AppInitGateProps) {
   }
 
   // Wait for cache to be seeded before rendering children
-  if (!seeded) {
+  if (!ready) {
     return <InitSkeleton />;
   }
 

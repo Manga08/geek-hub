@@ -190,7 +190,8 @@ export type UpdateLibraryEntryBody = z.infer<typeof updateLibraryEntryBodySchema
 
 /** Library list query (advanced filters) */
 export const libraryListQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(200).default(50),
+  // Default limit=50, max=100 to prevent accidental full-table scans
+  limit: z.coerce.number().int().min(1).max(100).default(50),
   offset: z.coerce.number().int().min(0).default(0),
   // Multi-status support: comma-separated or single value
   status: z.string().optional().transform((val) => {

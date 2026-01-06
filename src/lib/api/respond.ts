@@ -15,6 +15,7 @@
  * ```
  */
 import { NextResponse } from "next/server";
+import { generateErrorId, pushServerLog } from "@/lib/debug/server-log";
 
 /** Standard error codes */
 export type ErrorCode =
@@ -37,6 +38,7 @@ export interface FailResponse {
   code: ErrorCode;
   message: string;
   details?: unknown;
+  errorId?: string;
 }
 
 /**
@@ -56,13 +58,23 @@ export function fail(
   code: ErrorCode,
   message: string,
   status: number,
-  details?: unknown
+  details?: unknown,
+  errorId?: string
 ): NextResponse<FailResponse> {
   const body: FailResponse = { ok: false, code, message };
   if (details !== undefined) {
     body.details = details;
   }
-  return NextResponse.json(body, { status });
+  if (errorId) {
+    body.errorId = errorId;
+  }
+
+  const headers: HeadersInit = {};
+  if (errorId) {
+    headers["x-gh-error-id"] = errorId;
+  }
+
+  return NextResponse.json(body, { status, headers });
 }
 
 // ---------- Shorthand helpers ----------
@@ -92,7 +104,26 @@ export function conflict(message: string, details?: unknown) {
   return fail("CONFLICT", message, 409, details);
 }
 
-/** 500 Internal Server Error */
-export function internal(message = "Internal server error") {
-  return fail("INTERNAL", message, 500);
+/** 500 Internal Server Error with error tracking */
+export function internal(message = "Internal server error", error?: unknown) {
+  const errorId = generateErrorId();
+
+  // Log to server buffer in dev
+  if (error) {
+    const err = error as { message?: string; stack?: string; code?: string };
+    pushServerLog({
+      level: "error",
+      message: err.message ?? message,
+      stack: err.stack,
+      errorId,
+    });
+  } else {
+    pushServerLog({
+      level: "error",
+      message,
+      errorId,
+    });
+  }
+
+  return fail("INTERNAL", message, 500, undefined, errorId);
 }

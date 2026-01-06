@@ -1,9 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+// Force Node.js runtime for file uploads
+export const runtime = "nodejs";
+
 // Allowed image types
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+// Helper: include details only in dev
+function errorResponse(
+  error: string,
+  status: number,
+  details?: unknown
+) {
+  const body: { error: string; details?: unknown } = { error };
+  if (process.env.NODE_ENV === "development" && details) {
+    body.details = details;
+  }
+  return NextResponse.json(body, { status });
+}
 
 // =========================
 // POST /api/profile/avatar - Upload avatar
@@ -47,10 +63,14 @@ export async function POST(request: NextRequest) {
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `${user.id}/avatar.${ext}`;
 
-    // Delete old avatar if exists (different extension)
-    const { data: existingFiles } = await supabase.storage
+    // Delete old avatar if exists (best-effort, don't fail on error)
+    const { data: existingFiles, error: listError } = await supabase.storage
       .from("avatars")
       .list(user.id);
+
+    if (listError) {
+      console.warn("Avatar list warning (non-fatal):", listError);
+    }
 
     if (existingFiles?.length) {
       const filesToDelete = existingFiles
@@ -58,7 +78,10 @@ export async function POST(request: NextRequest) {
         .map((f: { name: string }) => `${user.id}/${f.name}`);
 
       if (filesToDelete.length > 0) {
-        await supabase.storage.from("avatars").remove(filesToDelete);
+        const { error: removeError } = await supabase.storage.from("avatars").remove(filesToDelete);
+        if (removeError) {
+          console.warn("Avatar remove warning (non-fatal):", removeError);
+        }
       }
     }
 
@@ -72,10 +95,10 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error("Upload error:", uploadError);
-      return NextResponse.json(
-        { error: "Failed to upload avatar" },
-        { status: 500 }
-      );
+      return errorResponse("Failed to upload avatar", 500, {
+        code: uploadError.message,
+        name: uploadError.name,
+      });
     }
 
     // Get public URL
@@ -106,10 +129,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("POST /api/profile/avatar error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    const err = error as { message?: string; code?: string };
+    return errorResponse("Internal server error", 500, {
+      message: err.message,
+      code: err.code,
+    });
   }
 }
 
@@ -125,14 +149,21 @@ export async function DELETE() {
   }
 
   try {
-    // List and delete all avatar files for user
-    const { data: existingFiles } = await supabase.storage
+    // List and delete all avatar files for user (best-effort)
+    const { data: existingFiles, error: listError } = await supabase.storage
       .from("avatars")
       .list(user.id);
 
+    if (listError) {
+      console.warn("Avatar list warning (non-fatal):", listError);
+    }
+
     if (existingFiles?.length) {
       const filesToDelete = existingFiles.map((f: { name: string }) => `${user.id}/${f.name}`);
-      await supabase.storage.from("avatars").remove(filesToDelete);
+      const { error: removeError } = await supabase.storage.from("avatars").remove(filesToDelete);
+      if (removeError) {
+        console.warn("Avatar remove warning (non-fatal):", removeError);
+      }
     }
 
     // Update profile to remove avatar URL
@@ -156,9 +187,10 @@ export async function DELETE() {
     });
   } catch (error) {
     console.error("DELETE /api/profile/avatar error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    const err = error as { message?: string; code?: string };
+    return errorResponse("Internal server error", 500, {
+      message: err.message,
+      code: err.code,
+    });
   }
 }
