@@ -135,22 +135,27 @@ export function EntryDialog({
 
   const handleSubmit = useCallback(() => {
     if (isEditMode && existingEntry) {
+      // UPDATE: nulls allowed for clearing values
       updateMutation.mutate({
         id: existingEntry.id,
         dto: { status, rating, notes: notes || null, is_favorite: isFavorite },
       });
     } else {
-      createMutation.mutate({
+      // CREATE: build payload without nulls (optional fields only when set)
+      const createPayload: Parameters<typeof createEntry>[0] = {
         type: itemType,
         provider,
         external_id: externalId,
-        title,
-        poster_url: posterUrl,
         status,
-        rating,
-        notes: notes || null,
         is_favorite: isFavorite,
-      });
+      };
+      if (title) createPayload.title = title;
+      if (posterUrl) createPayload.poster_url = posterUrl;
+      if (rating != null) createPayload.rating = rating;
+      const trimmedNotes = notes.trim();
+      if (trimmedNotes) createPayload.notes = trimmedNotes;
+
+      createMutation.mutate(createPayload);
     }
   }, [
     createMutation,

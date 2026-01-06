@@ -106,11 +106,13 @@ export class LibraryRepo {
 
   async create(dto: CreateEntryDTO): Promise<LibraryEntry> {
     const supabase = await getSupabase();
+    const userId = await getCurrentUserId(supabase);
     const groupId = dto.group_id ?? await getCurrentGroupId(supabase);
 
     const { data, error } = await supabase
       .from("library_entries")
       .insert({
+        user_id: userId,
         group_id: groupId,
         type: dto.type,
         provider: dto.provider,

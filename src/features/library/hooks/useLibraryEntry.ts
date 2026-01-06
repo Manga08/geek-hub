@@ -45,16 +45,19 @@ export function useLibraryEntry({
 
   // Quick add with default status
   const addMutation = useMutation({
-    mutationFn: (dto?: Partial<CreateEntryDTO>) =>
-      createEntry({
+    mutationFn: (dto?: Partial<CreateEntryDTO>) => {
+      // Build payload without nulls (only set optional fields if they have values)
+      const payload: Parameters<typeof createEntry>[0] = {
         type,
         provider,
         external_id: externalId,
-        title: title ?? null,
-        poster_url: posterUrl ?? null,
         status: "planned",
         ...dto,
-      }),
+      };
+      if (title) payload.title = title;
+      if (posterUrl) payload.poster_url = posterUrl;
+      return createEntry(payload);
+    },
     onMutate: async (dto) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<LibraryEntry | null>(queryKey);

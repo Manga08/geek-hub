@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, X, Save, Loader2 } from "lucide-react";
 
@@ -23,16 +23,10 @@ interface NotesModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Note: Parent should use key={entry?.id} to force remount when entry changes
 export function NotesModal({ entry, open, onOpenChange }: NotesModalProps) {
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(() => entry?.notes ?? "");
   const queryClient = useQueryClient();
-
-  // Sync state when entry changes
-  useEffect(() => {
-    if (entry) {
-      setNotes(entry.notes ?? "");
-    }
-  }, [entry]);
 
   const mutation = useMutation({
     mutationFn: async (newNotes: string) => {

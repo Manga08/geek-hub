@@ -33,7 +33,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { LibraryCard, NotesModal } from "@/features/library/components";
 import {
@@ -722,8 +721,9 @@ export default function LibraryPage() {
         />
       </AnimatePresence>
 
-      {/* Notes modal */}
+      {/* Notes modal - key forces remount when entry changes */}
       <NotesModal
+        key={notesEntry?.id ?? "none"}
         entry={notesEntry}
         open={notesOpen}
         onOpenChange={setNotesOpen}

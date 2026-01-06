@@ -24,11 +24,11 @@ export interface CreateEntryDTO {
   provider: Provider;
   external_id: string;
   group_id?: string; // Optional - will use default group if not provided
-  title?: string | null;
-  poster_url?: string | null;
+  title?: string;    // Optional, don't send null
+  poster_url?: string;
   status?: EntryStatus;
-  rating?: number | null;
-  notes?: string | null;
+  rating?: number;   // Optional, don't send null
+  notes?: string;
   is_favorite?: boolean;
 }
 
