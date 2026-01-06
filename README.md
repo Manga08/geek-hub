@@ -150,13 +150,51 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 - LibraryCard con botones: favorito, editar, eliminar (con confirmación).
 - Dialog premium (glass) para crear/editar entradas con todos los campos.
 - Supabase RLS asegura que cada usuario solo ve/edita sus propias entradas.
-- **Setup DB:** ejecutar `supabase/migrations/001_library_entries.sql` en tu proyecto Supabase (Dashboard → SQL Editor).
+- **Setup DB:** ejecutar migraciones en `supabase/migrations/` en tu proyecto Supabase (Dashboard → SQL Editor).
 - **Variables de entorno requeridas:** las mismas de Auth (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).
 - **Cómo probar:**
-  1. Ejecutar la migración SQL en Supabase
+  1. Ejecutar las migraciones SQL en Supabase (ver sección Supabase Migrations)
   2. Iniciar sesión en la app
   3. Ir a /search, agregar items a biblioteca
   4. Ir a /library para ver, filtrar y gestionar tus entradas
+
+## Changelog (Phases 3N–3X)
+
+- **Phase 3N–3O — Groups Multi-tenant + Invites:** Sistema de grupos con roles (admin/editor/viewer), switcher, gestión de miembros e invitaciones con tokens únicos. Páginas /groups, /groups/members, /invite/[token].
+- **Phase 3P–3Q — Lists Feature:** Listas personalizadas (game, movie, tv, anime, mixed) con hasta 100 ítems por lista. CRUD completo, drag-reorder y página de detalle.
+- **Phase 3R–3S — Stats Dashboard:** Página /stats con estadísticas del grupo: totales, distribución por tipo/estado, favoritos, ratings y actividad reciente.
+- **Phase 3T — Activity Log:** Feed de actividad del grupo con eventos de library, lists y membership. Timeline en /activity con avatares y timestamps.
+- **Phase 3U — Profile Settings + Avatar Upload:** Página /settings/profile para editar display_name y subir avatar. Storage bucket 'avatars' en Supabase.
+- **Phase 3V — Activity Unread Notifications:** Badge de notificaciones en Navbar, tracking de lecturas por usuario/grupo, auto-mark read al visitar /activity.
+- **Phase 3W — Realtime Notifications + Panel:** Suscripción Supabase Realtime (sin polling), panel dropdown en Navbar con últimos eventos, políticas de storage idempotentes.
+- **Phase 3X — Our Ratings Panel + Library User-Scoped + Supabase Image Host:**
+  - Fix multi-tenant: library entries ahora son user-scoped (cada miembro puede tener su propia entrada del mismo item).
+  - Panel "Nuestra puntuación" en detalle de item: muestra ratings/status de todos los miembros del grupo con promedio.
+  - next.config.ts permite imágenes de Supabase Storage para avatares.
+  - Migration 014: FKs a profiles para joins confiables en PostgREST.
+
+## Supabase Migrations
+
+Ejecutar en orden desde **Supabase Dashboard → SQL Editor**:
+
+| Archivo | Descripción |
+|---------|-------------|
+| `001_library_entries.sql` | Tabla library_entries con RLS |
+| `002_groups_schema.sql` | Grupos, miembros e invitaciones |
+| `003_groups_rls_policies.sql` | Políticas RLS para grupos |
+| `004_lists_schema.sql` | Listas y list_items |
+| `005_library_group_id.sql` | Añade group_id a library_entries |
+| `006_lists_group_id.sql` | Añade group_id a lists |
+| `007_library_list_unique.sql` | Constraint único en library_entries |
+| `008_stats_helpers.sql` | Helper RPC para estadísticas |
+| `009_activity_log.sql` | Tabla activity_events con RLS |
+| `010_activity_fk_profiles.sql` | FK a profiles + bucket avatars |
+| `011_hardening_activity_avatars.sql` | Backfill profiles + hardening |
+| `012_activity_reads.sql` | Tracking de lecturas de actividad |
+| `013_storage_avatars_policies.sql` | Políticas storage (requiere owner/postgres) |
+| `014_profiles_relationships.sql` | FKs para joins en group_members y library_entries |
+
+**Nota:** La migración 013 requiere privilegios de owner. Si falla con "must be owner of relation objects", ejecutarla desde el SQL Editor con el rol postgres.
 
 - Hotfix — group_members member_role + TMDb dispatch overload + getUser():
   - addMember inserta en group_members usando la columna member_role.

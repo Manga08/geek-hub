@@ -17,15 +17,26 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status") || undefined;
   const favorite = searchParams.get("favorite");
   const sort = searchParams.get("sort") as "recent" | "rating" | undefined;
+  const scope = searchParams.get("scope") || "mine"; // default to user-scoped
 
   try {
-    const entries = await libraryRepo.listByUser({
-      type,
-      status,
-      isFavorite: favorite === "true" ? true : favorite === "false" ? false : undefined,
-      sort: sort || "recent",
-      limit: 100,
-    });
+    // Use user-scoped method by default (scope=mine)
+    // Use group-scoped only when explicitly requested (scope=group)
+    const entries = scope === "group"
+      ? await libraryRepo.listByGroup({
+          type,
+          status,
+          isFavorite: favorite === "true" ? true : favorite === "false" ? false : undefined,
+          sort: sort || "recent",
+          limit: 100,
+        })
+      : await libraryRepo.listMyEntries({
+          type,
+          status,
+          isFavorite: favorite === "true" ? true : favorite === "false" ? false : undefined,
+          sort: sort || "recent",
+          limit: 100,
+        });
 
     return NextResponse.json(entries);
   } catch (error) {

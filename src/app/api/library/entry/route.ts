@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const entry = await libraryRepo.findByItem(type, provider, externalId);
+    // Use user-scoped method to find MY entry
+    const entry = await libraryRepo.findMyEntryByItem(type, provider, externalId);
 
     if (!entry) {
       return NextResponse.json({ message: "Not found" }, { status: 404 });
@@ -63,12 +64,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if entry already exists in the current group
-    const existing = await libraryRepo.findByItem(
+    // Check if MY entry already exists (user-scoped)
+    const existing = await libraryRepo.findMyEntryByItem(
       body.type,
       body.provider,
       body.external_id,
-      body.group_id // Pass group_id if provided
+      body.group_id
     );
 
     if (existing) {

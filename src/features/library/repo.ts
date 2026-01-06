@@ -5,14 +5,19 @@ async function getSupabase() {
   return createSupabaseServerClient();
 }
 
-async function getCurrentGroupId(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string> {
+async function getCurrentUserId(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
+  return user.id;
+}
+
+async function getCurrentGroupId(supabase: Awaited<ReturnType<typeof getSupabase>>): Promise<string> {
+  const userId = await getCurrentUserId(supabase);
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("default_group_id")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
   if (!profile?.default_group_id) {
@@ -23,6 +28,41 @@ async function getCurrentGroupId(supabase: Awaited<ReturnType<typeof getSupabase
 }
 
 export class LibraryRepo {
+  /**
+   * Find MY entry for a specific item (user-scoped)
+   * This is the correct method for checking "do I have this item?"
+   */
+  async findMyEntryByItem(
+    type: string,
+    provider: string,
+    externalId: string,
+    groupId?: string
+  ): Promise<LibraryEntry | null> {
+    const supabase = await getSupabase();
+    const userId = await getCurrentUserId(supabase);
+    const gid = groupId ?? await getCurrentGroupId(supabase);
+
+    const { data, error } = await supabase
+      .from("library_entries")
+      .select("*")
+      .eq("group_id", gid)
+      .eq("user_id", userId)
+      .eq("type", type)
+      .eq("provider", provider)
+      .eq("external_id", externalId)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      throw new Error(`Error fetching library entry: ${error.message}`);
+    }
+
+    return data as LibraryEntry | null;
+  }
+
+  /**
+   * Find ANY entry in the group for an item (group-scoped, for summaries)
+   * @deprecated Use findMyEntryByItem for user-specific checks
+   */
   async findByItem(
     type: string,
     provider: string,
@@ -39,7 +79,8 @@ export class LibraryRepo {
       .eq("type", type)
       .eq("provider", provider)
       .eq("external_id", externalId)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (error && error.code !== "PGRST116") {
       throw new Error(`Error fetching library entry: ${error.message}`);
@@ -178,7 +219,61 @@ export class LibraryRepo {
     return data as LibraryEntry[];
   }
 
-  // Alias for backwards compatibility
+  /**
+   * List MY entries in the current group (user-scoped)
+   * This is the correct method for "My Library"
+   */
+  async listMyEntries(options?: {
+    groupId?: string;
+    type?: string;
+    status?: string;
+    isFavorite?: boolean;
+    sort?: "recent" | "rating";
+    limit?: number;
+    offset?: number;
+  }): Promise<LibraryEntry[]> {
+    const supabase = await getSupabase();
+    const userId = await getCurrentUserId(supabase);
+    const groupId = options?.groupId ?? await getCurrentGroupId(supabase);
+
+    const sortColumn = options?.sort === "rating" ? "rating" : "updated_at";
+    const ascending = false;
+
+    let query = supabase
+      .from("library_entries")
+      .select("*")
+      .eq("group_id", groupId)
+      .eq("user_id", userId)
+      .order(sortColumn, { ascending, nullsFirst: false });
+
+    if (options?.type) {
+      query = query.eq("type", options.type);
+    }
+    if (options?.status) {
+      query = query.eq("status", options.status);
+    }
+    if (options?.isFavorite !== undefined) {
+      query = query.eq("is_favorite", options.isFavorite);
+    }
+    if (options?.limit) {
+      query = query.limit(options.limit);
+    }
+    if (options?.offset) {
+      query = query.range(options.offset, options.offset + (options.limit ?? 20) - 1);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw new Error(`Error listing my library entries: ${error.message}`);
+    }
+
+    return data as LibraryEntry[];
+  }
+
+  /**
+   * @deprecated Use listMyEntries for user's library
+   */
   async listByUser(options?: {
     type?: string;
     status?: string;
@@ -187,7 +282,7 @@ export class LibraryRepo {
     limit?: number;
     offset?: number;
   }): Promise<LibraryEntry[]> {
-    return this.listByGroup(options);
+    return this.listMyEntries(options);
   }
 }
 
