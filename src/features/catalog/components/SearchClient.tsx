@@ -9,7 +9,6 @@ import { MediaGrid } from "@/components/shared/MediaGrid";
 import { MediaCard } from "@/components/shared/MediaCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MediaGridSkeleton } from "@/components/shared/Skeletons";
-import { AttributionFooter } from "@/components/shared/AttributionFooter";
 import { GlassCard } from "@/components/shared/GlassCard";
 import type { UnifiedItemType } from "@/features/catalog/normalize/unified.types";
 import { fetchCatalogSearch } from "@/features/catalog/queries";
@@ -115,8 +114,6 @@ function SearchInner() {
           ) : null}
         </div>
       ) : null}
-
-      <AttributionFooter />
     </div>
   );
 }

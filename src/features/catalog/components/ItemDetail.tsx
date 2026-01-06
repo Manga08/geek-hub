@@ -5,7 +5,6 @@ import Image from "next/image";
 import { Heart, Plus, Loader2, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AttributionFooter } from "@/components/shared/AttributionFooter";
 import { EntryDialog, OurRatingsPanel } from "@/features/library/components";
 import { useLibraryEntry, STATUS_LABELS, STATUS_COLORS, type EntryStatus } from "@/features/library";
 import { AddToListButton } from "@/features/lists";
@@ -160,8 +159,6 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
         provider={item.provider}
         externalId={item.externalId}
       />
-
-      <AttributionFooter />
     </div>
   );
 }
