@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Activity, BarChart3, Bell, Bookmark, Check, ListChecks, Search, Settings, User } from "lucide-react"
+import { Activity, BarChart3, Bell, Bookmark, Check, ListChecks, Search, Settings, User, Users } from "lucide-react"
 
 import {
   DropdownMenu,
@@ -199,6 +199,12 @@ function UserMenu() {
           <Link href="/settings/profile" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Configuración
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/settings/group" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Gestión de grupo
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>

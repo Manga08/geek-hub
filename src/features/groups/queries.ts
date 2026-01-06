@@ -10,6 +10,7 @@ import type {
   LeaveGroupParams,
   LeaveGroupResponse,
   RevokeInviteParams,
+  UpdateGroupNameParams,
   RpcResult,
   GroupInviteRow,
 } from "./types";
@@ -199,6 +200,30 @@ export async function revokeInvite(
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: "Unknown error" }));
     throw new Error(error.message || error.error || "Error revoking invite");
+  }
+
+  return res.json();
+}
+
+// ================================
+// Phase 4B: Update Group Name
+// ================================
+
+export async function updateGroupName(
+  params: UpdateGroupNameParams
+): Promise<GroupRow> {
+  const res = await fetch("/api/groups/name", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      group_id: params.groupId,
+      name: params.name,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: "Unknown error" }));
+    throw new Error(error.message || error.error || "Error updating group name");
   }
 
   return res.json();

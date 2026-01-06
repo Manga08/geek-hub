@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validatePassword } from "@/features/auth/actions";
+import { validatePassword } from "@/features/auth/validation";
 
 describe("validatePassword", () => {
   it("returns error when password is empty", () => {

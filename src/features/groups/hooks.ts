@@ -15,6 +15,7 @@ import {
   leaveGroup,
   fetchGroupInvites,
   revokeInvite,
+  updateGroupName,
 } from "./queries";
 import type {
   CurrentGroupResponse,
@@ -28,6 +29,7 @@ import type {
   LeaveGroupParams,
   LeaveGroupResponse,
   RevokeInviteParams,
+  UpdateGroupNameParams,
   RpcResult,
   GroupInviteRow,
 } from "./types";
@@ -155,6 +157,24 @@ export function useRevokeInvite() {
     onSuccess: (_, variables) => {
       // Invalidate invites list for this group
       queryClient.invalidateQueries({ queryKey: groupKeys.invites(variables.groupId) });
+    },
+  });
+}
+
+// ================================
+// Phase 4B: Update Group Name
+// ================================
+
+export function useUpdateGroupName() {
+  const queryClient = useQueryClient();
+
+  return useMutation<GroupRow, Error, UpdateGroupNameParams>({
+    mutationFn: updateGroupName,
+    onSuccess: (_, variables) => {
+      // Invalidate current group and list to reflect new name
+      queryClient.invalidateQueries({ queryKey: groupKeys.current() });
+      queryClient.invalidateQueries({ queryKey: groupKeys.list() });
+      queryClient.invalidateQueries({ queryKey: groupKeys.detail(variables.groupId) });
     },
   });
 }

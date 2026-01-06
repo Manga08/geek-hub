@@ -90,6 +90,11 @@ export interface RevokeInviteParams {
   inviteId: string;
 }
 
+export interface UpdateGroupNameParams {
+  groupId: string;
+  name: string;
+}
+
 export interface RpcResult {
   success?: boolean;
   error?: string;

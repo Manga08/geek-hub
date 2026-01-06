@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { sanitizeNextPath } from "@/lib/auth/redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ensureProfileAndDefaultGroup } from "@/features/groups/service";
+import { validatePassword } from "./validation";
 
 type ActionState = {
   error?: string;
@@ -25,20 +26,6 @@ async function getOrigin(): Promise<string> {
   const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "localhost:3000";
   const proto = hdrs.get("x-forwarded-proto") ?? "http";
   return `${proto}://${host}`;
-}
-
-// =========================
-// Password Validation Helper
-// =========================
-
-export function validatePassword(password: string, confirmPassword: string): string | null {
-  if (!password || password.length < 6) {
-    return "La contraseña debe tener al menos 6 caracteres";
-  }
-  if (password !== confirmPassword) {
-    return "Las contraseñas no coinciden";
-  }
-  return null;
 }
 
 export async function signInAction(_: ActionState, formData: FormData): Promise<ActionState> {
