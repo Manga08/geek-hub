@@ -92,7 +92,7 @@ export function aggregateMonthly(entries: LibraryEntryWithProfile[]): MonthlySta
 
   for (const entry of entries) {
     const date = new Date(entry.created_at);
-    const month = date.getMonth(); // 0-11
+    const month = date.getUTCMonth(); // 0-11 (UTC para consistencia con fechas ISO)
 
     if (entry.status === "completed") {
       monthly[month].completedCount++;

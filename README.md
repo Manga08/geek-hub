@@ -193,8 +193,11 @@ Ejecutar en orden desde **Supabase Dashboard → SQL Editor**:
 | `012_activity_reads.sql`             | Tracking de lecturas de actividad                 |
 | `013_storage_avatars_policies.sql`   | Políticas storage (requiere owner/postgres)       |
 | `014_profiles_relationships.sql`     | FKs para joins en group_members y library_entries |
+| `015_cleanup_duplicate_fks.sql`      | Limpieza de FKs duplicadas (hardening DB)         |
 
 **Nota:** La migración 013 requiere privilegios de owner. Si falla con "must be owner of relation objects", ejecutarla desde el SQL Editor con el rol postgres.
+
+**Nota:** La migración 015 elimina FKs duplicadas a auth.users si existen, dejando solo las FKs a profiles.id como referencia principal. Es idempotente y puede ejecutarse múltiples veces sin error.
 
 - Hotfix — group_members member_role + TMDb dispatch overload + getUser():
   - addMember inserta en group_members usando la columna member_role.
