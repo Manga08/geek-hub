@@ -41,12 +41,27 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ### Before committing
 
-Run the following checks and ensure all pass:
+Run the verification script to ensure all checks pass:
+
+```bash
+pnpm verify   # Runs: lint + test + build
+```
+
+Or run individually:
 
 ```bash
 pnpm lint      # No lint errors
 pnpm test      # All tests pass
 pnpm build     # Production build succeeds
+```
+
+### Line Endings (CRLF → LF)
+
+This project uses LF line endings. If you see CRLF warnings from Git, run:
+
+```bash
+git add --renormalize .
+git commit -m "chore: normalize line endings"
 ```
 
 ### Guidelines
@@ -57,6 +72,12 @@ pnpm build     # Production build succeeds
 - **Keep the dark premium style** — no design overhauls.
 
 See [docs/AGENT_RULES.md](docs/AGENT_RULES.md) for full rules.
+
+### QA & Release
+
+Before merging to main or releasing, follow the full checklist:
+
+📋 **[docs/QA_RELEASE_CHECKLIST.md](docs/QA_RELEASE_CHECKLIST.md)**
 
 ## Progress / Changelog
 
