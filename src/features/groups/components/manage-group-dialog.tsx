@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * @deprecated This component is deprecated in favor of /settings/group page.
+ * All group management functionality should be accessed via the settings page.
+ * This file is kept for reference but should not be used.
+ * See: src/app/(app)/settings/group/page.tsx
+ */
+
 import { useState } from "react";
 import {
   Check,

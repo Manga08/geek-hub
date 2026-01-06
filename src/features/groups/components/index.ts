@@ -1,2 +1,2 @@
 export { GroupSwitcher } from "./group-switcher";
-export { ManageGroupDialog } from "./manage-group-dialog";
+// ManageGroupDialog is deprecated - use /settings/group page instead

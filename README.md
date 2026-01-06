@@ -37,6 +37,27 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+## Contributing
+
+### Before committing
+
+Run the following checks and ensure all pass:
+
+```bash
+pnpm lint      # No lint errors
+pnpm test      # All tests pass
+pnpm build     # Production build succeeds
+```
+
+### Guidelines
+
+- **No new dependencies** without explicit approval.
+- **Small, incremental changes** — one feature/fix per PR.
+- **Follow commit convention:** `feat(area): ...`, `fix(area): ...`, `chore(area): ...`
+- **Keep the dark premium style** — no design overhauls.
+
+See [docs/AGENT_RULES.md](docs/AGENT_RULES.md) for full rules.
+
 ## Progress / Changelog
 
 - Migrated project structure to `/src` (app, components, lib) and updated configs/aliases accordingly.

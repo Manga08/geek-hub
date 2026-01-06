@@ -5,11 +5,13 @@ Esta carpeta contiene los logos de los proveedores de datos usados en GeekHub.
 ## Logos requeridos
 
 ### TMDb (The Movie Database)
+
 - **Archivo:** `tmdb.svg`
 - **Descarga:** https://www.themoviedb.org/about/logos-attribution
 - **Uso:** Atribución obligatoria para datos de películas y series
 
 ### RAWG (Video Games Database)
+
 - **Archivo:** `rawg.svg`
 - **Descarga:** https://rawg.io/apidocs (ver sección branding)
 - **Uso:** Atribución obligatoria para datos de videojuegos

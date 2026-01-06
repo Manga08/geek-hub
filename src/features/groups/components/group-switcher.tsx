@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, ChevronDown, Users } from "lucide-react";
+import Link from "next/link";
+import { Check, ChevronDown, Settings, Users } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -12,7 +13,6 @@ import {
 import { cn } from "@/lib/utils";
 
 import { useCurrentGroup, useGroupsList, useSetCurrentGroup } from "../hooks";
-import { ManageGroupDialog } from "./manage-group-dialog";
 
 export function GroupSwitcher() {
   const { data: currentGroupData, isLoading: isCurrentLoading } = useCurrentGroup();
@@ -46,7 +46,12 @@ export function GroupSwitcher() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-45">
-          <ManageGroupDialog />
+          <DropdownMenuItem asChild>
+            <Link href="/settings/group" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Gestionar grupo
+            </Link>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     );
@@ -86,7 +91,12 @@ export function GroupSwitcher() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <ManageGroupDialog />
+        <DropdownMenuItem asChild>
+          <Link href="/settings/group" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Gestionar grupo
+          </Link>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
