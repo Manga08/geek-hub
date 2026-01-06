@@ -1,9 +1,30 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { NextRequest } from "next/server";
+import {
+  requireSessionUserId,
+  requireApiContext,
+} from "@/lib/auth/request-context";
+import { ok, badRequest, notFound, internal } from "@/lib/api/respond";
+import { z } from "zod";
 
 // =========================
 // Types
 // =========================
+
+// PostgREST response types
+type ProfileMini = { display_name: string | null; avatar_url: string | null };
+// PostgREST may return single relation as object or array depending on FK
+type GroupMemberRow = {
+  user_id: string;
+  role: string;
+  profiles: ProfileMini | ProfileMini[] | null;
+};
+type EntryRow = {
+  user_id: string;
+  status: "planned" | "in_progress" | "completed" | "dropped";
+  rating: number | null;
+  is_favorite: boolean;
+  updated_at: string;
+};
 
 interface MemberWithEntry {
   user_id: string;
@@ -27,104 +48,102 @@ interface ItemSummaryResponse {
   average_rating: number | null;
   counts: {
     planned: number;
-    watching: number;
+    in_progress: number;
     completed: number;
     dropped: number;
   };
 }
+
+// Query params schema
+const summaryQuerySchema = z.object({
+  type: z.string().min(1),
+  provider: z.string().min(1),
+  externalId: z.string().min(1),
+  group_id: z.string().uuid().optional(),
+});
 
 // =========================
 // GET /api/library/item/summary
 // =========================
 
 export async function GET(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { searchParams } = new URL(request.url);
+  const parsed = summaryQuerySchema.safeParse({
+    type: searchParams.get("type"),
+    provider: searchParams.get("provider"),
+    externalId: searchParams.get("externalId"),
+    group_id: searchParams.get("group_id") ?? undefined,
+  });
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!parsed.success) {
+    return badRequest("Missing required params: type, provider, externalId");
   }
 
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get("type");
-  const provider = searchParams.get("provider");
-  const externalId = searchParams.get("externalId");
+  const { type, provider, externalId, group_id } = parsed.data;
 
-  if (!type || !provider || !externalId) {
-    return NextResponse.json(
-      { error: "Missing required params: type, provider, externalId" },
-      { status: 400 }
-    );
+  let supabase;
+  let groupId: string;
+
+  // If group_id provided, use lightweight auth (no profiles query)
+  if (group_id) {
+    const result = await requireSessionUserId();
+    if (!result.ok) return result.response;
+    supabase = result.supabase;
+    groupId = group_id;
+  } else {
+    // No group_id: get defaultGroupId from context
+    const result = await requireApiContext();
+    if (!result.ok) return result.response;
+    supabase = result.ctx.supabase;
+    groupId = result.ctx.defaultGroupId;
   }
 
   try {
-    // Get user's current group
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("default_group_id")
-      .eq("id", user.id)
-      .single();
+    // Execute queries in parallel for performance
+    const [groupResult, membersResult, entriesResult] = await Promise.all([
+      // Get group info
+      supabase
+        .from("groups")
+        .select("id, name")
+        .eq("id", groupId)
+        .single(),
+      // Get group members with profiles
+      supabase
+        .from("group_members")
+        .select(`
+          user_id,
+          role,
+          profiles:profiles!group_members_user_id_profiles_fkey(display_name, avatar_url)
+        `)
+        .eq("group_id", groupId),
+      // Get library entries for this item
+      supabase
+        .from("library_entries")
+        .select("user_id, status, rating, is_favorite, updated_at")
+        .eq("group_id", groupId)
+        .eq("type", type)
+        .eq("provider", provider)
+        .eq("external_id", externalId),
+    ]);
 
-    if (!profile?.default_group_id) {
-      return NextResponse.json({ error: "No group context" }, { status: 404 });
+    if (groupResult.error || !groupResult.data) {
+      return notFound("Group not found");
     }
 
-    const groupId = profile.default_group_id;
-
-    // Get group info
-    const { data: group, error: groupError } = await supabase
-      .from("groups")
-      .select("id, name")
-      .eq("id", groupId)
-      .single();
-
-    if (groupError || !group) {
-      return NextResponse.json({ error: "Group not found" }, { status: 404 });
+    if (membersResult.error) {
+      console.error("Error fetching members:", membersResult.error);
+      return internal("Error fetching group members");
     }
 
-    // Get group members with profiles using explicit FK
-    const { data: membersData, error: membersError } = await supabase
-      .from("group_members")
-      .select(`
-        user_id,
-        role,
-        profiles:profiles!group_members_user_id_profiles_fkey(display_name, avatar_url)
-      `)
-      .eq("group_id", groupId);
-
-    if (membersError) {
-      console.error("Error fetching members:", membersError);
-      return NextResponse.json(
-        { error: "Error fetching group members" },
-        { status: 500 }
-      );
+    if (entriesResult.error) {
+      console.error("Error fetching entries:", entriesResult.error);
+      return internal("Error fetching library entries");
     }
 
-    // Get all library entries for this item in this group using explicit FK
-    const { data: entriesData, error: entriesError } = await supabase
-      .from("library_entries")
-      .select(`
-        user_id,
-        rating,
-        status,
-        is_favorite,
-        updated_at,
-        profiles:profiles!library_entries_user_id_profiles_fkey(display_name, avatar_url)
-      `)
-      .eq("group_id", groupId)
-      .eq("type", type)
-      .eq("provider", provider)
-      .eq("external_id", externalId);
-
-    if (entriesError) {
-      console.error("Error fetching entries:", entriesError);
-      return NextResponse.json(
-        { error: "Error fetching library entries" },
-        { status: 500 }
-      );
-    }
+    const group = groupResult.data;
+    // Cast through unknown for PostgREST's dynamic return types
+    const membersData = membersResult.data as unknown as GroupMemberRow[];
+    const entriesData = entriesResult.data as unknown as EntryRow[];
 
     // Create a map of entries by user_id
     const entriesMap = new Map<string, {
@@ -134,7 +153,7 @@ export async function GET(request: NextRequest) {
       updated_at: string;
     }>();
 
-    for (const entry of entriesData ?? []) {
+    for (const entry of entriesData) {
       entriesMap.set(entry.user_id, {
         rating: entry.rating,
         status: entry.status,
@@ -144,14 +163,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Build members array with their entries
-    const members: MemberWithEntry[] = (membersData ?? []).map((member) => {
-      // PostgREST returns single relation as object, not array
-      const profiles = member.profiles as unknown as { display_name: string | null; avatar_url: string | null } | null;
+    const members: MemberWithEntry[] = membersData.map((member: GroupMemberRow) => {
+      // PostgREST may return single relation as object or array
+      const profileData = member.profiles;
+      const profile = Array.isArray(profileData) ? profileData[0] : profileData;
       return {
         user_id: member.user_id,
         member_role: member.role,
-        display_name: profiles?.display_name ?? null,
-        avatar_url: profiles?.avatar_url ?? null,
+        display_name: profile?.display_name ?? null,
+        avatar_url: profile?.avatar_url ?? null,
         entry: entriesMap.get(member.user_id) ?? null,
       };
     });
@@ -168,7 +188,7 @@ export async function GET(request: NextRequest) {
     // Count statuses
     const counts = {
       planned: 0,
-      watching: 0,
+      in_progress: 0,
       completed: 0,
       dropped: 0,
     };
@@ -186,12 +206,9 @@ export async function GET(request: NextRequest) {
       counts,
     };
 
-    return NextResponse.json(response);
+    return ok(response);
   } catch (error) {
     console.error("GET /api/library/item/summary error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return internal();
   }
 }

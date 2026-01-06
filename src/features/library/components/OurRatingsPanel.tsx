@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { Users, Star, Clock, Play, CheckCircle, XCircle, User } from "lucide-react";
+import { useCurrentGroup } from "@/features/groups/hooks";
 
 // =========================
 // Types
@@ -30,7 +31,7 @@ interface ItemSummaryResponse {
   average_rating: number | null;
   counts: {
     planned: number;
-    watching: number;
+    in_progress: number;
     completed: number;
     dropped: number;
   };
@@ -43,16 +44,23 @@ interface ItemSummaryResponse {
 async function fetchItemSummary(
   type: string,
   provider: string,
-  externalId: string
+  externalId: string,
+  groupId?: string
 ): Promise<ItemSummaryResponse> {
   const params = new URLSearchParams({ type, provider, externalId });
+  // Pass group_id to skip profile lookup on server
+  if (groupId) {
+    params.set("group_id", groupId);
+  }
   const response = await fetch(`/api/library/item/summary?${params}`);
 
   if (!response.ok) {
     throw new Error("Error al cargar el resumen del grupo");
   }
 
-  return response.json();
+  const json = await response.json();
+  // API returns { ok: true, data: ... }
+  return json.data ?? json;
 }
 
 // =========================
@@ -61,7 +69,7 @@ async function fetchItemSummary(
 
 const STATUS_CONFIG = {
   planned: { label: "Planeado", icon: Clock, color: "text-yellow-400" },
-  watching: { label: "Viendo", icon: Play, color: "text-blue-400" },
+  in_progress: { label: "En progreso", icon: Play, color: "text-blue-400" },
   completed: { label: "Completado", icon: CheckCircle, color: "text-green-400" },
   dropped: { label: "Abandonado", icon: XCircle, color: "text-red-400" },
 } as const;
@@ -90,10 +98,15 @@ interface OurRatingsPanelProps {
 }
 
 export function OurRatingsPanel({ type, provider, externalId }: OurRatingsPanelProps) {
+  // Get groupId from cache (Navbar already fetched it)
+  const { data: currentGroup } = useCurrentGroup();
+  const groupId = currentGroup?.group?.id;
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["item-summary", type, provider, externalId],
-    queryFn: () => fetchItemSummary(type, provider, externalId),
-    staleTime: 30 * 1000,
+    queryKey: ["item-summary", type, provider, externalId, groupId],
+    queryFn: () => fetchItemSummary(type, provider, externalId, groupId),
+    enabled: !!groupId,
+    // Inherit global staleTime (5 min)
   });
 
   if (isLoading) {

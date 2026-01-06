@@ -42,8 +42,7 @@ export function useActivityFeed(options: UseActivityFeedOptions = {}) {
       return lastPage.nextCursor;
     },
     enabled: enabled && !!groupId,
-    staleTime: 30 * 1000, // 30 seconds
-    // Realtime replaces polling - see useActivityRealtime
+    // Realtime invalidates queries - see useActivityRealtime
   });
 }
 
@@ -69,8 +68,7 @@ export function useUnreadActivityCount() {
     queryKey: activityKeys.unread(groupId),
     queryFn: () => fetchUnreadCount(groupId ?? undefined),
     enabled: !!groupId,
-    staleTime: 30 * 1000, // 30 seconds
-    // Realtime replaces polling - see useActivityRealtime
+    // Realtime invalidates queries - see useActivityRealtime
   });
 }
 

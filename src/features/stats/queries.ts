@@ -22,6 +22,6 @@ export function useStatsSummary(filters: StatsFilters) {
   return useQuery<StatsSummary, Error>({
     queryKey: statsKeys.summary(filters),
     queryFn: () => fetchStatsSummary(filters),
-    staleTime: 60 * 1000, // 1 minute
+    // Inherits global staleTime (5 min)
   });
 }

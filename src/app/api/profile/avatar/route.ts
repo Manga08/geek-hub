@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
 
     if (existingFiles?.length) {
       const filesToDelete = existingFiles
-        .filter(f => f.name.startsWith("avatar."))
-        .map(f => `${user.id}/${f.name}`);
+        .filter((f: { name: string }) => f.name.startsWith("avatar."))
+        .map((f: { name: string }) => `${user.id}/${f.name}`);
 
       if (filesToDelete.length > 0) {
         await supabase.storage.from("avatars").remove(filesToDelete);
@@ -131,7 +131,7 @@ export async function DELETE() {
       .list(user.id);
 
     if (existingFiles?.length) {
-      const filesToDelete = existingFiles.map(f => `${user.id}/${f.name}`);
+      const filesToDelete = existingFiles.map((f: { name: string }) => `${user.id}/${f.name}`);
       await supabase.storage.from("avatars").remove(filesToDelete);
     }
 
