@@ -355,7 +355,7 @@ describe("aggregateMemberStats (group leaderboard)", () => {
       }),
     ];
     const members = aggregateMemberStats(entries);
-    
+
     // Both have 1 completed, so sort by avgRating desc (null = -1 in sort)
     expect(members[0].user_id).toBe("user-y");
     expect(members[0].avgRating).toBe(5);

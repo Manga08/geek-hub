@@ -117,7 +117,7 @@ export async function updatePasswordAction(_: ActionState, formData: FormData): 
   }
 
   const supabase = await createSupabaseServerClient();
-  
+
   // Verificar que hay sesión activa
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
