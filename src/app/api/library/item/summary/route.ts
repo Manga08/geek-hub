@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
     const ratings = Array.from(entriesMap.values())
       .map((e) => e.rating)
       .filter((r): r is number => r !== null);
-    
+
     const averageRating = ratings.length > 0
       ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
       : null;

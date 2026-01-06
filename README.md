@@ -177,22 +177,22 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 Ejecutar en orden desde **Supabase Dashboard → SQL Editor**:
 
-| Archivo | Descripción |
-|---------|-------------|
-| `001_library_entries.sql` | Tabla library_entries con RLS |
-| `002_groups_schema.sql` | Grupos, miembros e invitaciones |
-| `003_groups_rls_policies.sql` | Políticas RLS para grupos |
-| `004_lists_schema.sql` | Listas y list_items |
-| `005_library_group_id.sql` | Añade group_id a library_entries |
-| `006_lists_group_id.sql` | Añade group_id a lists |
-| `007_library_list_unique.sql` | Constraint único en library_entries |
-| `008_stats_helpers.sql` | Helper RPC para estadísticas |
-| `009_activity_log.sql` | Tabla activity_events con RLS |
-| `010_activity_fk_profiles.sql` | FK a profiles + bucket avatars |
-| `011_hardening_activity_avatars.sql` | Backfill profiles + hardening |
-| `012_activity_reads.sql` | Tracking de lecturas de actividad |
-| `013_storage_avatars_policies.sql` | Políticas storage (requiere owner/postgres) |
-| `014_profiles_relationships.sql` | FKs para joins en group_members y library_entries |
+| Archivo                              | Descripción                                       |
+| ------------------------------------ | ------------------------------------------------- |
+| `001_library_entries.sql`            | Tabla library_entries con RLS                     |
+| `002_groups_schema.sql`              | Grupos, miembros e invitaciones                   |
+| `003_groups_rls_policies.sql`        | Políticas RLS para grupos                         |
+| `004_lists_schema.sql`               | Listas y list_items                               |
+| `005_library_group_id.sql`           | Añade group_id a library_entries                  |
+| `006_lists_group_id.sql`             | Añade group_id a lists                            |
+| `007_library_list_unique.sql`        | Constraint único en library_entries               |
+| `008_stats_helpers.sql`              | Helper RPC para estadísticas                      |
+| `009_activity_log.sql`               | Tabla activity_events con RLS                     |
+| `010_activity_fk_profiles.sql`       | FK a profiles + bucket avatars                    |
+| `011_hardening_activity_avatars.sql` | Backfill profiles + hardening                     |
+| `012_activity_reads.sql`             | Tracking de lecturas de actividad                 |
+| `013_storage_avatars_policies.sql`   | Políticas storage (requiere owner/postgres)       |
+| `014_profiles_relationships.sql`     | FKs para joins en group_members y library_entries |
 
 **Nota:** La migración 013 requiere privilegios de owner. Si falla con "must be owner of relation objects", ejecutarla desde el SQL Editor con el rol postgres.
 
