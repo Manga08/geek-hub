@@ -142,9 +142,9 @@ export async function deleteApi<T>(
     method: "DELETE",
     headers: body
       ? {
-          "Content-Type": "application/json",
-          ...init?.headers,
-        }
+        "Content-Type": "application/json",
+        ...init?.headers,
+      }
       : init?.headers,
     body: body ? JSON.stringify(body) : undefined,
     ...init,

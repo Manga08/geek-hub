@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { 
-  Home, 
-  Search, 
-  ListChecks, 
-  Users, 
-  Star, 
+import {
+  Home,
+  Search,
+  ListChecks,
+  Users,
+  Star,
   Trophy,
   TrendingUp,
   Clock,
@@ -55,7 +55,7 @@ function StatsSummaryCard() {
     year: currentYear,
     type: "all",
   });
-  
+
   const { data: groupStats, isLoading: loadingGroup } = useStatsSummary({
     scope: "group",
     year: currentYear,
@@ -78,7 +78,7 @@ function StatsSummaryCard() {
             <TabsTrigger value="mine">Míos</TabsTrigger>
             <TabsTrigger value="group">Grupo</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="mine" className="mt-4">
             {isLoading ? (
               <StatsSkeletons />
@@ -88,7 +88,7 @@ function StatsSummaryCard() {
               <p className="text-sm text-muted-foreground">Sin datos</p>
             )}
           </TabsContent>
-          
+
           <TabsContent value="group" className="mt-4">
             {isLoading ? (
               <StatsSkeletons />
@@ -148,7 +148,7 @@ function TopRatedCard() {
     year: currentYear,
     type: "all",
   });
-  
+
   const { data: groupStats, isLoading: loadingGroup } = useStatsSummary({
     scope: "group",
     year: currentYear,
@@ -171,7 +171,7 @@ function TopRatedCard() {
             <TabsTrigger value="mine">Míos</TabsTrigger>
             <TabsTrigger value="group">Grupo</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="mine" className="mt-4">
             {isLoading ? (
               <TopRatedSkeletons />
@@ -183,7 +183,7 @@ function TopRatedCard() {
               </p>
             )}
           </TabsContent>
-          
+
           <TabsContent value="group" className="mt-4">
             {isLoading ? (
               <TopRatedSkeletons />
@@ -392,7 +392,7 @@ export default function DashboardPage() {
   const { data: profile } = useProfile();
   const { data: currentGroup } = useCurrentGroup();
   const groupId = currentGroup?.group?.id;
-  
+
   // For onboarding checklist
   const { data: members } = useGroupMembers(groupId);
   const { data: lists } = useQuery({

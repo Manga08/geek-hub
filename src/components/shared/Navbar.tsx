@@ -59,7 +59,7 @@ function NotificationsPanel() {
   const { data: unreadData } = useUnreadActivityCount();
   const { data: feedData, isLoading } = useActivityFeed({ limit: 8, enabled: true });
   const { mutate: markRead, isPending: isMarking } = useMarkActivityRead();
-  
+
   // Subscribe to realtime updates
   useActivityRealtime();
 
@@ -160,7 +160,7 @@ function NotificationsPanel() {
 
 function UserMenu() {
   const { data: profile, isLoading } = useProfile();
-  
+
   const initials = (profile?.display_name ?? profile?.email ?? "U")[0].toUpperCase();
   const displayName = profile?.display_name ?? profile?.email?.split("@")[0] ?? "Usuario";
 
