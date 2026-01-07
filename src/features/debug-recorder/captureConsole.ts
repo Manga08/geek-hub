@@ -7,7 +7,13 @@ import type { ConsoleEvent } from "./types";
 
 let originalError: typeof console.error | null = null;
 let originalWarn: typeof console.warn | null = null;
+let originalLog: typeof console.log | null = null;
+let originalInfo: typeof console.info | null = null;
 let isInstalled = false;
+
+// Configuration for what to capture
+let captureLog = false;
+let captureInfo = false;
 
 // =========================
 // Format Arguments to String
@@ -48,11 +54,23 @@ function extractStack(args: unknown[]): string | undefined {
 // Install Console Wrappers
 // =========================
 
-export function installConsoleCapture(): void {
+export interface ConsoleCaputeOptions {
+  /** Capture console.log (default: false - can be noisy) */
+  captureLog?: boolean;
+  /** Capture console.info (default: false - can be noisy) */
+  captureInfo?: boolean;
+}
+
+export function installConsoleCapture(options?: ConsoleCaputeOptions): void {
   if (typeof window === "undefined" || isInstalled) return;
+
+  captureLog = options?.captureLog ?? false;
+  captureInfo = options?.captureInfo ?? false;
 
   originalError = console.error;
   originalWarn = console.warn;
+  originalLog = console.log;
+  originalInfo = console.info;
   isInstalled = true;
 
   console.error = function capturedError(...args: unknown[]): void {
@@ -76,6 +94,32 @@ export function installConsoleCapture(): void {
     // Call original
     originalWarn?.apply(console, args);
   };
+
+  // Optional: capture console.log
+  if (captureLog) {
+    console.log = function capturedLog(...args: unknown[]): void {
+      pushEvent({
+        type: "log",
+        message: formatArgs(args),
+      } satisfies Omit<ConsoleEvent, "id" | "timestamp">);
+
+      // Call original
+      originalLog?.apply(console, args);
+    };
+  }
+
+  // Optional: capture console.info
+  if (captureInfo) {
+    console.info = function capturedInfo(...args: unknown[]): void {
+      pushEvent({
+        type: "info",
+        message: formatArgs(args),
+      } satisfies Omit<ConsoleEvent, "id" | "timestamp">);
+
+      // Call original
+      originalInfo?.apply(console, args);
+    };
+  }
 }
 
 // =========================
@@ -95,5 +139,17 @@ export function uninstallConsoleCapture(): void {
     originalWarn = null;
   }
 
+  if (originalLog) {
+    console.log = originalLog;
+    originalLog = null;
+  }
+
+  if (originalInfo) {
+    console.info = originalInfo;
+    originalInfo = null;
+  }
+
   isInstalled = false;
+  captureLog = false;
+  captureInfo = false;
 }

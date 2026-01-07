@@ -1,6 +1,7 @@
 import { readApiJson } from "@/lib/api-client";
 import type {
   GroupRow,
+  GroupWithRole,
   CurrentGroupResponse,
   GroupMemberWithProfile,
   CreateInviteParams,
@@ -31,10 +32,10 @@ export async function fetchCurrentGroup(): Promise<CurrentGroupResponse | null> 
   return readApiJson<CurrentGroupResponse>(res);
 }
 
-export async function fetchGroupsList(): Promise<GroupRow[]> {
+export async function fetchGroupsList(): Promise<GroupWithRole[]> {
   const res = await fetch("/api/groups/list");
   if (res.status === 401) return [];
-  return readApiJson<GroupRow[]>(res);
+  return readApiJson<GroupWithRole[]>(res);
 }
 
 export async function setCurrentGroup(

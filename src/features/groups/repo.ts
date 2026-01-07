@@ -1,4 +1,4 @@
-import type { SupabaseServerClient, GroupRole, GroupRow, GroupMemberWithProfile, GroupInviteRow, RpcResult } from "./types";
+import type { SupabaseServerClient, GroupRole, GroupRow, GroupWithRole, GroupMemberWithProfile, GroupInviteRow, RpcResult } from "./types";
 
 export async function getFirstGroupIdForUser(
   supabase: SupabaseServerClient,
@@ -22,6 +22,47 @@ export async function getCurrentGroupForUser(
   supabase: SupabaseServerClient,
   userId: string,
 ): Promise<{ group: GroupRow; role: GroupRole } | null> {
+  // 1. Check if user has a default_group_id set
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("default_group_id")
+    .eq("id", userId)
+    .maybeSingle();
+
+  const defaultGroupId = profile?.default_group_id;
+
+  // 2. If default_group_id exists, verify membership and return that group
+  if (defaultGroupId) {
+    const { data: membership } = await supabase
+      .from("group_members")
+      .select(`
+        member_role,
+        groups (
+          id,
+          name,
+          created_by,
+          created_at
+        )
+      `)
+      .eq("user_id", userId)
+      .eq("group_id", defaultGroupId)
+      .maybeSingle();
+
+    if (membership?.groups) {
+      const groupData = membership.groups as unknown as GroupRow;
+      return {
+        group: {
+          id: groupData.id,
+          name: groupData.name,
+          created_by: groupData.created_by,
+          created_at: groupData.created_at ?? null,
+        },
+        role: membership.member_role as GroupRole,
+      };
+    }
+  }
+
+  // 3. Fallback: get first group by joined_at (for new users or invalid default)
   const { data, error } = await supabase
     .from("group_members")
     .select(`
@@ -36,10 +77,9 @@ export async function getCurrentGroupForUser(
     .eq("user_id", userId)
     .order("joined_at", { ascending: true })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (error) {
-    if (error.code === "PGRST116") return null; // No rows
     throw new Error(`Error fetching current group: ${error.message}`);
   }
 
@@ -61,10 +101,11 @@ export async function getCurrentGroupForUser(
 export async function listGroupsForUser(
   supabase: SupabaseServerClient,
   userId: string,
-): Promise<GroupRow[]> {
+): Promise<GroupWithRole[]> {
   const { data, error } = await supabase
     .from("group_members")
     .select(`
+      member_role,
       groups (
         id,
         name,
@@ -80,8 +121,15 @@ export async function listGroupsForUser(
   }
 
   return (data ?? [])
-    .map((row) => row.groups as unknown as GroupRow)
-    .filter(Boolean);
+    .map((row) => {
+      const group = row.groups as unknown as GroupRow;
+      if (!group) return null;
+      return {
+        ...group,
+        role: row.member_role as GroupRole,
+      };
+    })
+    .filter((g): g is GroupWithRole => g !== null);
 }
 
 export async function createGroup(

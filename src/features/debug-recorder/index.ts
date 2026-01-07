@@ -16,7 +16,24 @@ export type {
   RouteRenderEvent,
   RenderEvent,
   ServerLogEvent,
+  CLSSource,
+  RQQueryState,
+  AuthSnapshot,
+  StorageSnapshot,
 } from "./types";
 export { DEBUG_STORAGE_KEY, DEBUG_EVENTS_KEY, MAX_EVENTS, MAX_RENDER_EVENTS } from "./types";
 
 export { pushEvent, clearEvents, getAllEvents, exportEventsAsJSON } from "./store";
+
+// CLS per-route tracking
+export { onRouteChange, getCurrentCLSRoute } from "./captureWebVitals";
+
+// Inspectors
+export {
+  getRQSnapshot,
+  formatRQSnapshot,
+  getAuthSnapshot,
+  formatAuthSnapshot,
+  getStorageSnapshot,
+  formatStorageSnapshot,
+} from "./inspectors";

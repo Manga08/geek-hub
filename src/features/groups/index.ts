@@ -1,6 +1,7 @@
 // Types
 export type {
   GroupRow,
+  GroupWithRole,
   GroupMemberRow,
   GroupRole,
   CurrentGroupResponse,

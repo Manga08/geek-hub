@@ -2,6 +2,10 @@ import type { TmdbMovie, TmdbSearchResponse, TmdbTv } from "@/features/catalog/p
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 const DEFAULT_TIMEOUT_MS = 10000;
 
+// Cache durations (seconds)
+const CACHE_DETAIL = 60 * 60 * 24; // 24 hours for detail
+const CACHE_SEARCH = 60 * 10; // 10 minutes for search
+
 function getTmdbAuth(): { headers?: Record<string, string>; queryParam?: string } {
   const token = process.env.TMDB_ACCESS_TOKEN;
   const apiKey = process.env.TMDB_API_KEY;
@@ -14,7 +18,11 @@ function getTmdbAuth(): { headers?: Record<string, string>; queryParam?: string 
   throw new Error("TMDB_ACCESS_TOKEN or TMDB_API_KEY is required on the server");
 }
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+async function fetchWithTimeout(
+  url: string, 
+  options: RequestInit = {}, 
+  timeoutMs = DEFAULT_TIMEOUT_MS
+) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -57,7 +65,7 @@ export async function tmdbSearch({
   const { url, headers } = buildUrl(`/search/${type}`, { query, page });
   const response = await fetchWithTimeout(url, {
     headers,
-    next: { revalidate: 60 * 10 },
+    next: { revalidate: CACHE_SEARCH },
   });
   if (!response.ok) {
     throw new Error(`TMDb search failed with status ${response.status}`);
@@ -76,7 +84,7 @@ export async function tmdbGetDetail({
   const { url, headers } = buildUrl(`/${type}/${id}`, {});
   const response = await fetchWithTimeout(url, {
     headers,
-    next: { revalidate: 60 * 60 * 24 },
+    next: { revalidate: CACHE_DETAIL },
   });
   if (!response.ok) {
     throw new Error(`TMDb detail failed with status ${response.status}`);

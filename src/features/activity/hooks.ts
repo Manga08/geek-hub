@@ -68,7 +68,8 @@ export function useUnreadActivityCount() {
     queryKey: activityKeys.unread(groupId),
     queryFn: () => fetchUnreadCount(groupId ?? undefined),
     enabled: !!groupId,
-    // Realtime invalidates queries - see useActivityRealtime
+    staleTime: 30 * 1000, // 30s - avoid excessive refetches
+    refetchOnWindowFocus: false, // Realtime handles updates
   });
 }
 

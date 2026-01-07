@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
       .select("last_read_at")
       .eq("user_id", userId)
       .eq("group_id", groupId)
-      .single();
+      .maybeSingle();
 
     // If no read record exists, use epoch (count all events)
     const lastReadAt = readRecord?.last_read_at ?? new Date(0).toISOString();

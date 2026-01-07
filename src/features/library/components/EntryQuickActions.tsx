@@ -10,6 +10,7 @@ import type {
   UnifiedItemType,
   Provider,
 } from "@/features/catalog/normalize/unified.types";
+import type { LibraryEntryLookup } from "../queries";
 
 interface EntryQuickActionsProps {
   itemType: UnifiedItemType;
@@ -18,6 +19,14 @@ interface EntryQuickActionsProps {
   title: string;
   posterUrl?: string | null;
   className?: string;
+  /**
+   * Pre-fetched entry from batch lookup.
+   * If defined (including null for "not in library"), skips individual fetch.
+   * If undefined, falls back to useLibraryEntry individual fetch.
+   */
+  prefetchedEntry?: LibraryEntryLookup | null;
+  /** Loading state from batch lookup (only used when prefetchedEntry is provided) */
+  prefetchedLoading?: boolean;
 }
 
 export function EntryQuickActions({
@@ -27,24 +36,42 @@ export function EntryQuickActions({
   title,
   posterUrl,
   className,
+  prefetchedEntry,
+  prefetchedLoading = false,
 }: EntryQuickActionsProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Only fetch individually if prefetchedEntry is undefined (not provided at all)
+  const usePrefetched = prefetchedEntry !== undefined;
+
   const {
-    isInLibrary,
-    isFavorite,
+    isInLibrary: hookIsInLibrary,
+    isFavorite: hookIsFavorite,
     add,
     isAdding,
     toggleFavorite,
     isTogglingFavorite,
+    isLoading: hookIsLoading,
   } = useLibraryEntry({
     type: itemType,
     provider,
     externalId,
     title,
     posterUrl,
-    enabled: true,
+    // Disable individual fetch when using prefetched data
+    enabled: !usePrefetched,
   });
+
+  // Derive state from prefetched or hook
+  const isInLibrary = usePrefetched
+    ? prefetchedEntry !== null
+    : hookIsInLibrary;
+  
+  const isFavorite = usePrefetched
+    ? prefetchedEntry?.is_favorite ?? false
+    : hookIsFavorite;
+  
+  const isLoading = usePrefetched ? prefetchedLoading : hookIsLoading;
 
   const handleFavoriteClick = useCallback(
     (e: React.MouseEvent) => {
@@ -83,9 +110,9 @@ export function EntryQuickActions({
               : "border-white/20 bg-black/50 text-white/80 hover:bg-black/70 hover:text-white"
           }`}
           onClick={handleFavoriteClick}
-          disabled={isTogglingFavorite || isAdding}
+          disabled={isTogglingFavorite || isAdding || isLoading}
         >
-          {isTogglingFavorite || (isAdding && !dialogOpen) ? (
+          {isTogglingFavorite || (isAdding && !dialogOpen) || isLoading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
             <Heart
@@ -104,8 +131,11 @@ export function EntryQuickActions({
               : "border-white/20 bg-black/50 text-white/80 hover:bg-black/70 hover:text-white"
           }`}
           onClick={handleAddClick}
+          disabled={isLoading}
         >
-          {isInLibrary ? (
+          {isLoading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : isInLibrary ? (
             <Check className="h-3.5 w-3.5" />
           ) : (
             <Plus className="h-3.5 w-3.5" />

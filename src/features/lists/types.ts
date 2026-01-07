@@ -35,6 +35,7 @@ export interface UpdateListDTO {
 
 export interface ListItem {
   list_id: string;
+  item_id: string;
   item_type: UnifiedItemType;
   provider: Provider;
   external_id: string;
@@ -62,9 +63,7 @@ export interface UpdateListItemDTO {
 
 export interface ReorderListItemsDTO {
   items: Array<{
-    item_type: UnifiedItemType;
-    provider: Provider;
-    external_id: string;
+    item_id: string;
     position: number;
   }>;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { MediaGridSkeleton } from "@/components/shared/Skeletons";
 import { GlassCard } from "@/components/shared/GlassCard";
 import type { UnifiedItemType } from "@/features/catalog/normalize/unified.types";
 import { fetchCatalogSearch } from "@/features/catalog/queries";
+import { useLibraryEntriesLookup, type LookupItem } from "@/features/library";
 
 type SearchPageResult = Awaited<ReturnType<typeof fetchCatalogSearch>>;
 
@@ -40,8 +41,26 @@ function SearchInner() {
     staleTime: 1000 * 30,
   });
 
-  const results = data?.pages.flatMap((page) => page.items) ?? [];
+  const results = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data]
+  );
   const isInitialLoading = isLoading && enabled;
+
+  // Build lookup items for batch library check
+  const lookupItems = useMemo<LookupItem[]>(() => {
+    return results.map((item) => ({
+      type: item.type,
+      provider: item.provider,
+      external_id: item.externalId,
+    }));
+  }, [results]);
+
+  // Batch lookup for all results (1 call instead of N)
+  const { isLoading: isLookupLoading, getEntry } = useLibraryEntriesLookup(
+    lookupItems,
+    { enabled: results.length > 0 }
+  );
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -101,9 +120,18 @@ function SearchInner() {
       {results.length > 0 ? (
         <div className="space-y-4">
           <MediaGrid>
-            {results.map((item) => (
-              <MediaCard key={item.key} item={item} />
-            ))}
+            {results.map((item) => {
+              // Get prefetched entry (null if not in library, or the entry if found)
+              const prefetchedEntry = getEntry(item.type, item.provider, item.externalId) ?? null;
+              return (
+                <MediaCard
+                  key={item.key}
+                  item={item}
+                  prefetchedEntry={prefetchedEntry}
+                  prefetchedLoading={isLookupLoading}
+                />
+              );
+            })}
           </MediaGrid>
           {hasNextPage ? (
             <div className="flex justify-center">

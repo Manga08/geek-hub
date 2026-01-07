@@ -15,7 +15,7 @@ export function MediaCardSkeleton() {
 
 export function MediaGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid min-h-[400px] gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {Array.from({ length: count }).map((_, idx) => (
         <MediaCardSkeleton key={idx} />
       ))}

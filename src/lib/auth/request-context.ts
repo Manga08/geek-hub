@@ -19,7 +19,7 @@ export type AuthResult =
 
 /**
  * Get authenticated API context with userId and defaultGroupId.
- * Single roundtrip: getSession() + profiles query.
+ * Single roundtrip: getUser() + profiles query.
  *
  * Usage:
  * ```ts
@@ -31,20 +31,20 @@ export type AuthResult =
 export async function requireApiContext(): Promise<AuthResult> {
   const supabase = await createSupabaseServerClient();
 
-  // getSession() is faster than getUser() - no extra auth server call
+  // getUser() validates the JWT with auth server (secure)
   const {
-    data: { session },
-    error: sessionError,
-  } = await supabase.auth.getSession();
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-  if (sessionError || !session?.user) {
+  if (userError || !user) {
     return {
       ok: false,
       response: unauthenticated("Authentication required"),
     };
   }
 
-  const userId = session.user.id;
+  const userId = user.id;
 
   // Fetch profile with default_group_id
   const { data: profile, error: profileError } = await supabase
@@ -81,12 +81,13 @@ export type LightAuthResult =
 export async function requireSessionUserId(): Promise<LightAuthResult> {
   const supabase = await createSupabaseServerClient();
 
+  // getUser() validates the JWT with auth server (secure)
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession();
+  } = await supabase.auth.getUser();
 
-  if (error || !session?.user) {
+  if (error || !user) {
     return {
       ok: false,
       response: unauthenticated("Authentication required"),
@@ -96,8 +97,8 @@ export async function requireSessionUserId(): Promise<LightAuthResult> {
   return {
     ok: true,
     supabase,
-    userId: session.user.id,
-    email: session.user.email,
+    userId: user.id,
+    email: user.email,
   };
 }
 

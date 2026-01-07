@@ -10,14 +10,9 @@ import { z } from "zod";
 // Types
 // =========================
 
-// PostgREST response types
+// Profile mini type
 type ProfileMini = { display_name: string | null; avatar_url: string | null };
-// PostgREST may return single relation as object or array depending on FK
-type GroupMemberRow = {
-  user_id: string;
-  role: string;
-  profiles: ProfileMini | ProfileMini[] | null;
-};
+
 type EntryRow = {
   user_id: string;
   status: "planned" | "in_progress" | "completed" | "dropped";
@@ -107,14 +102,10 @@ export async function GET(request: NextRequest) {
         .select("id, name")
         .eq("id", groupId)
         .single(),
-      // Get group members with profiles
+      // Get group members (without FK join - separate query for profiles)
       supabase
         .from("group_members")
-        .select(`
-          user_id,
-          role,
-          profiles:profiles!group_members_user_id_profiles_fkey(display_name, avatar_url)
-        `)
+        .select("user_id, member_role")
         .eq("group_id", groupId),
       // Get library entries for this item
       supabase
@@ -147,9 +138,25 @@ export async function GET(request: NextRequest) {
     }
 
     const group = groupResult.data;
-    // Null-safe cast for PostgREST's dynamic return types
-    const membersData = (membersResult.data ?? []) as unknown as GroupMemberRow[];
+    const membersData = (membersResult.data ?? []) as { user_id: string; member_role: string }[];
     const entriesData = (entriesResult.data ?? []) as unknown as EntryRow[];
+
+    // Fetch profiles separately to avoid FK relationship issues
+    const memberIds = membersData.map((m) => m.user_id);
+    const profilesMap = new Map<string, ProfileMini>();
+
+    if (memberIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url")
+        .in("id", memberIds);
+
+      if (profilesData) {
+        for (const p of profilesData) {
+          profilesMap.set(p.id, { display_name: p.display_name, avatar_url: p.avatar_url });
+        }
+      }
+    }
 
     // Create a map of entries by user_id
     const entriesMap = new Map<string, {
@@ -168,14 +175,12 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Build members array with their entries
-    const members: MemberWithEntry[] = membersData.map((member: GroupMemberRow) => {
-      // PostgREST may return single relation as object or array
-      const profileData = member.profiles;
-      const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+    // Build members array with their entries (using profilesMap)
+    const members: MemberWithEntry[] = membersData.map((member) => {
+      const profile = profilesMap.get(member.user_id);
       return {
         user_id: member.user_id,
-        member_role: member.role,
+        member_role: member.member_role,
         display_name: profile?.display_name ?? null,
         avatar_url: profile?.avatar_url ?? null,
         entry: entriesMap.get(member.user_id) ?? null,

@@ -2,6 +2,10 @@ import type { RawgGameLike, RawgSearchResponse } from "@/features/catalog/provid
 const RAWG_BASE_URL = "https://api.rawg.io/api";
 const DEFAULT_TIMEOUT_MS = 10000;
 
+// Cache durations (seconds)
+const CACHE_DETAIL = 60 * 60 * 24; // 24 hours for detail
+const CACHE_SEARCH = 60 * 10; // 10 minutes for search
+
 function getRawgApiKey(): string {
   const key = process.env.RAWG_API_KEY;
   if (!key) {
@@ -10,7 +14,11 @@ function getRawgApiKey(): string {
   return key;
 }
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+async function fetchWithTimeout(
+  url: string, 
+  options: RequestInit = {}, 
+  timeoutMs = DEFAULT_TIMEOUT_MS
+) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -36,7 +44,9 @@ export async function rawgSearchGames({
   url.searchParams.set("search", query);
   url.searchParams.set("page", String(page));
 
-  const response = await fetchWithTimeout(url.toString());
+  const response = await fetchWithTimeout(url.toString(), {
+    next: { revalidate: CACHE_SEARCH },
+  });
   if (!response.ok) {
     throw new Error(`RAWG search failed with status ${response.status}`);
   }
@@ -49,7 +59,9 @@ export async function rawgGetGameDetail({ id }: { id: string | number }): Promis
   const url = new URL(`${RAWG_BASE_URL}/games/${id}`);
   url.searchParams.set("key", key);
 
-  const response = await fetchWithTimeout(url.toString());
+  const response = await fetchWithTimeout(url.toString(), {
+    next: { revalidate: CACHE_DETAIL },
+  });
   if (!response.ok) {
     throw new Error(`RAWG detail failed with status ${response.status}`);
   }

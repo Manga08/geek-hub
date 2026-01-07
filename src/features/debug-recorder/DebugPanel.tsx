@@ -23,12 +23,21 @@ import {
   clearEvents,
   subscribe,
 } from "./store";
+import {
+  getRQSnapshot,
+  formatRQSnapshot,
+  getAuthSnapshot,
+  formatAuthSnapshot,
+  getStorageSnapshot,
+  formatStorageSnapshot,
+} from "./inspectors";
+import { useQueryClient } from "@tanstack/react-query";
 
 // =========================
 // Tab Types
 // =========================
 
-type TabType = "all" | "events" | "render" | "server";
+type TabType = "all" | "events" | "render" | "server" | "inspect";
 
 // =========================
 // Filter Buttons for Events tab
@@ -112,6 +121,24 @@ function WebVitalRow({ event }: { event: WebVitalEvent }) {
           <span className="text-muted-foreground text-[10px]">{event.rating}</span>
         )}
       </div>
+      {/* CLS Sources - show what elements shifted */}
+      {event.name === "CLS" && event.sources && event.sources.length > 0 && (
+        <div className="mt-1.5 pl-2 border-l-2 border-cyan-500/30">
+          <div className="text-[10px] text-muted-foreground mb-1">Shifted elements:</div>
+          {event.sources.map((src, i) => (
+            <div key={i} className="text-[10px] text-cyan-300/80 mb-0.5">
+              <span className="text-cyan-400">&lt;{src.tagName}</span>
+              {src.id && <span className="text-orange-400">#{src.id}</span>}
+              {src.className && <span className="text-yellow-400">.{src.className.split(" ")[0]}</span>}
+              <span className="text-cyan-400">&gt;</span>
+              <span className="text-muted-foreground ml-2">
+                y: {src.prevRect.y}→{src.currentRect.y} 
+                {" "}(Δ{src.currentRect.y - src.prevRect.y}px)
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -263,11 +290,36 @@ export function DebugPanel() {
   const [fetchingServer, setFetchingServer] = React.useState(false);
   const [serverLogs, setServerLogs] = React.useState<ServerLogEvent[]>([]);
 
+  // Inspector state
+  const [inspectView, setInspectView] = React.useState<"rq" | "auth" | "storage">("rq");
+  const [inspectData, setInspectData] = React.useState<string>("");
+  const queryClient = useQueryClient();
+
   // Subscribe to store updates
   React.useEffect(() => {
     setEvents(getAllEvents());
     return subscribe(() => setEvents(getAllEvents()));
   }, []);
+
+  // Refresh inspector data when tab changes to "inspect"
+  React.useEffect(() => {
+    if (tab !== "inspect") return;
+
+    const refreshInspect = async () => {
+      if (inspectView === "rq") {
+        const snapshot = getRQSnapshot(queryClient);
+        setInspectData(formatRQSnapshot(snapshot));
+      } else if (inspectView === "auth") {
+        const snapshot = await getAuthSnapshot();
+        setInspectData(formatAuthSnapshot(snapshot));
+      } else if (inspectView === "storage") {
+        const snapshot = getStorageSnapshot();
+        setInspectData(formatStorageSnapshot(snapshot));
+      }
+    };
+
+    refreshInspect();
+  }, [tab, inspectView, queryClient]);
 
   // Merge store events with fetched server logs (deduplicated)
   const allEventsWithServer = React.useMemo(() => {
@@ -388,6 +440,68 @@ export function DebugPanel() {
     }
   }, []);
 
+  // Download handler - fetches server logs and downloads as JSON file
+  const handleDownload = React.useCallback(async () => {
+    setFetchingServer(true);
+    try {
+      // Always fetch server logs before downloading
+      const freshServerLogs = await fetchServerLogsFromAPI();
+
+      // Merge and deduplicate
+      const storeEvents = getAllEvents();
+      const seen = new Set<string>();
+      const allEvents: DebugEvent[] = [];
+
+      for (const e of storeEvents) {
+        const key = e.type === "server-log" && e.errorId
+          ? `server-${e.errorId}`
+          : e.id;
+        if (!seen.has(key)) {
+          seen.add(key);
+          allEvents.push(e);
+        }
+      }
+
+      for (const log of freshServerLogs) {
+        const key = log.errorId ? `server-${log.errorId}` : log.id;
+        if (!seen.has(key)) {
+          seen.add(key);
+          allEvents.push(log);
+        }
+      }
+
+      // Sort by timestamp
+      allEvents.sort((a, b) => a.timestamp - b.timestamp);
+
+      // Build export object
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        totalEvents: allEvents.length,
+        clientEvents: storeEvents.length,
+        serverLogs: freshServerLogs.length,
+        events: allEvents,
+      };
+
+      // Generate filename with timestamp
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      const filename = `geekhub-debug-${timestamp}.json`;
+
+      // Create blob and download
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setFetchingServer(false);
+    }
+  }, []);
+
   // Clear handler
   const handleClear = React.useCallback(() => {
     clearEvents();
@@ -411,16 +525,17 @@ export function DebugPanel() {
 
   return (
     <>
-      {/* Floating Debug Button */}
+      {/* Floating Debug Button - fixed size to avoid CLS, positioned above other FABs */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-100 flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-xs font-medium text-white shadow-lg hover:bg-purple-500 transition-colors"
+        className="fixed bottom-20 right-4 z-[9999] flex h-9 w-9 items-center justify-center rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-500 transition-colors"
+        aria-label={`Debug (${counts.all} events)`}
+        title={`Debug (${counts.all} events)`}
       >
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-300 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-purple-200" />
         </span>
-        Debug ({counts.all})
       </button>
 
       {/* Debug Sheet */}
@@ -435,7 +550,7 @@ export function DebugPanel() {
 
           {/* Tabs */}
           <div className="flex items-center gap-1 px-4 border-b border-white/10 pb-2">
-            {(["all", "events", "render", "server"] as TabType[]).map((t) => (
+            {(["all", "events", "render", "server", "inspect"] as TabType[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -449,6 +564,7 @@ export function DebugPanel() {
                 {t === "events" && `Events (${counts.events})`}
                 {t === "render" && `Render (${counts.render})`}
                 {t === "server" && `Server (${counts.server})`}
+                {t === "inspect" && "Inspect"}
               </button>
             ))}
           </div>
@@ -485,6 +601,51 @@ export function DebugPanel() {
             </div>
           )}
 
+          {/* Inspector View Selector */}
+          {tab === "inspect" && (
+            <div className="px-4 py-2 space-y-2">
+              <div className="flex items-center gap-2">
+                {(["rq", "auth", "storage"] as const).map((view) => (
+                  <button
+                    key={view}
+                    onClick={() => setInspectView(view)}
+                    className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                      inspectView === view
+                        ? "bg-cyan-600 text-white"
+                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    }`}
+                  >
+                    {view === "rq" && "React Query"}
+                    {view === "auth" && "Auth"}
+                    {view === "storage" && "Storage"}
+                  </button>
+                ))}
+                <button
+                  onClick={async () => {
+                    if (inspectView === "rq") {
+                      const snapshot = getRQSnapshot(queryClient);
+                      setInspectData(formatRQSnapshot(snapshot));
+                    } else if (inspectView === "auth") {
+                      const snapshot = await getAuthSnapshot();
+                      setInspectData(formatAuthSnapshot(snapshot));
+                    } else if (inspectView === "storage") {
+                      const snapshot = getStorageSnapshot();
+                      setInspectData(formatStorageSnapshot(snapshot));
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded text-xs font-medium bg-green-600 text-white hover:bg-green-500 transition-colors"
+                >
+                  Refresh
+                </button>
+              </div>
+              <div className="bg-black/30 rounded-lg p-3 max-h-[60vh] overflow-y-auto">
+                <pre className="text-xs font-mono text-foreground whitespace-pre-wrap">
+                  {inspectData || "Loading..."}
+                </pre>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex items-center gap-2 px-4 py-2">
             <button
@@ -492,7 +653,14 @@ export function DebugPanel() {
               disabled={fetchingServer}
               className="flex-1 rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500 transition-colors disabled:opacity-50"
             >
-              {fetchingServer ? "Fetching..." : copied ? "✓ Copied!" : "Copy All (+ Server)"}
+              {fetchingServer ? "..." : copied ? "✓ Copied!" : "Copy"}
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={fetchingServer}
+              className="flex-1 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500 transition-colors disabled:opacity-50"
+            >
+              {fetchingServer ? "..." : "Download"}
             </button>
             <button
               onClick={handleClear}
@@ -502,20 +670,22 @@ export function DebugPanel() {
             </button>
           </div>
 
-          {/* Events List */}
-          <div className="flex-1 overflow-y-auto bg-black/20 rounded-lg mx-4 mb-4">
-            {filteredEvents.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                {tab === "server"
-                  ? "No server logs. Click 'Fetch Server Logs' to load."
-                  : "No events yet"}
-              </div>
-            ) : (
-              [...filteredEvents].reverse().map((event) => (
-                <EventRow key={event.id} event={event} />
-              ))
-            )}
-          </div>
+          {/* Events List (hidden on inspect tab) */}
+          {tab !== "inspect" && (
+            <div className="flex-1 overflow-y-auto bg-black/20 rounded-lg mx-4 mb-4">
+              {filteredEvents.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                  {tab === "server"
+                    ? "No server logs. Click 'Fetch Server Logs' to load."
+                    : "No events yet"}
+                </div>
+              ) : (
+                [...filteredEvents].reverse().map((event) => (
+                  <EventRow key={event.id} event={event} />
+                ))
+              )}
+            </div>
+          )}
         </SheetContent>
       </Sheet>
     </>

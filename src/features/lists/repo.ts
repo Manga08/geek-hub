@@ -103,11 +103,20 @@ export async function createList(dto: CreateListDTO, ctx?: ListsRepoContext): Pr
   // Use context if provided (avoids re-doing auth)
   const supabase = ctx?.supabase ?? await getSupabase();
   const groupId = dto.group_id ?? ctx?.groupId ?? await getCurrentGroupId(supabase);
+  
+  // Get userId from context or auth
+  let userId = ctx?.userId;
+  if (!userId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Not authenticated");
+    userId = user.id;
+  }
 
   const { data, error } = await supabase
     .from("lists")
     .insert({
       group_id: groupId,
+      created_by: userId,
       name: dto.name,
       description: dto.description ?? null,
     })
@@ -115,7 +124,16 @@ export async function createList(dto: CreateListDTO, ctx?: ListsRepoContext): Pr
     .single();
 
   if (error) {
-    throw new Error(`Error creating list: ${error.message}`);
+    // Preserve Supabase error properties for proper mapping
+    const err = new Error(`Error creating list: ${error.message}`) as Error & {
+      code?: string;
+      details?: string;
+      hint?: string;
+    };
+    err.code = error.code;
+    err.details = error.details;
+    err.hint = error.hint;
+    throw err;
   }
 
   return data as List;
@@ -163,7 +181,20 @@ export async function listItems(listId: string): Promise<ListItem[]> {
 
   const { data, error } = await supabase
     .from("list_items")
-    .select("*")
+    .select(`
+      list_id,
+      item_id,
+      added_by,
+      position,
+      added_at,
+      items (
+        type,
+        provider,
+        external_id,
+        title,
+        poster_url
+      )
+    `)
     .eq("list_id", listId)
     .order("position", { ascending: true });
 
@@ -171,82 +202,196 @@ export async function listItems(listId: string): Promise<ListItem[]> {
     throw new Error(`Error fetching list items: ${error.message}`);
   }
 
-  return data as ListItem[];
+  type ItemData = { type: string; provider: string; external_id: string; title: string | null; poster_url: string | null };
+
+  // Transform to ListItem shape
+  return (data ?? []).map((row) => {
+    // Supabase returns single object for 1-to-1 FK joins
+    const item = row.items as unknown as ItemData | null;
+    return {
+      list_id: row.list_id,
+      item_id: row.item_id,
+      item_type: item?.type ?? "unknown",
+      provider: item?.provider ?? "unknown",
+      external_id: item?.external_id ?? "",
+      added_by: row.added_by,
+      title: item?.title ?? null,
+      poster_url: item?.poster_url ?? null,
+      note: null,
+      position: row.position,
+      created_at: row.added_at,
+    } as ListItem;
+  });
 }
 
-export async function addListItem(listId: string, dto: AddListItemDTO): Promise<ListItem> {
-  const supabase = await getSupabase();
+export async function addListItem(listId: string, dto: AddListItemDTO, ctx?: ListsRepoContext): Promise<ListItem> {
+  const supabase = ctx?.supabase ?? await getSupabase();
 
-  // Get max position for new item
+  // Get userId from context or auth
+  let userId = ctx?.userId;
+  if (!userId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Not authenticated");
+    userId = user.id;
+  }
+
+  // 1. Find or create the item in the items catalog
+  // NOTE: Must filter by type + provider + external_id to avoid collisions
+  // (external_id can repeat across different types/providers)
+  const { data: existingItem } = await supabase
+    .from("items")
+    .select("id")
+    .eq("type", dto.item_type)
+    .eq("provider", dto.provider)
+    .eq("external_id", dto.external_id)
+    .maybeSingle();
+
+  let itemId: string;
+
+  if (existingItem) {
+    itemId = existingItem.id;
+  } else {
+    // Create item in catalog
+    const { data: newItem, error: itemError } = await supabase
+      .from("items")
+      .insert({
+        type: dto.item_type,
+        provider: dto.provider,
+        external_id: dto.external_id,
+        title: dto.title ?? "Unknown",
+        poster_url: dto.poster_url ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (itemError || !newItem) {
+      throw new Error(`Error creating item: ${itemError?.message ?? "unknown"}`);
+    }
+    itemId = newItem.id;
+  }
+
+  // 2. Get max position for new item
   const { data: maxPosData } = await supabase
     .from("list_items")
     .select("position")
     .eq("list_id", listId)
     .order("position", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   const nextPosition = (maxPosData?.position ?? -1) + 1;
 
+  // 3. Insert into list_items
   const { data, error } = await supabase
     .from("list_items")
     .insert({
       list_id: listId,
-      item_type: dto.item_type,
-      provider: dto.provider,
-      external_id: dto.external_id,
-      title: dto.title ?? null,
-      poster_url: dto.poster_url ?? null,
-      note: dto.note ?? null,
+      item_id: itemId,
+      added_by: userId,
       position: nextPosition,
     })
-    .select()
+    .select(`
+      list_id,
+      item_id,
+      added_by,
+      position,
+      added_at,
+      items (
+        type,
+        provider,
+        external_id,
+        title,
+        poster_url
+      )
+    `)
     .single();
 
   if (error) {
     throw new Error(`Error adding item to list: ${error.message}`);
   }
 
-  // Update list's updated_at
+  // 4. Update list's updated_at
   await supabase
     .from("lists")
     .update({ updated_at: new Date().toISOString() })
     .eq("id", listId);
 
-  return data as ListItem;
+  // Transform to ListItem shape
+  type ItemData = { type: string; provider: string; external_id: string; title: string | null; poster_url: string | null };
+  const item = data.items as unknown as ItemData;
+  return {
+    list_id: data.list_id,
+    item_id: data.item_id,
+    item_type: item.type,
+    provider: item.provider,
+    external_id: item.external_id,
+    added_by: data.added_by,
+    title: item.title,
+    poster_url: item.poster_url,
+    note: null, // Not in schema - if needed, add column
+    position: data.position,
+    created_at: data.added_at,
+  } as ListItem;
 }
 
 export async function updateListItem(
   listId: string,
-  itemType: string,
-  provider: string,
-  externalId: string,
+  itemId: string,
   dto: UpdateListItemDTO
 ): Promise<ListItem> {
   const supabase = await getSupabase();
 
+  // Only position can be updated (note is not in schema)
+  const updateData: { position?: number } = {};
+  if (dto.position !== undefined) {
+    updateData.position = dto.position;
+  }
+
   const { data, error } = await supabase
     .from("list_items")
-    .update(dto)
+    .update(updateData)
     .eq("list_id", listId)
-    .eq("item_type", itemType)
-    .eq("provider", provider)
-    .eq("external_id", externalId)
-    .select()
+    .eq("item_id", itemId)
+    .select(`
+      list_id,
+      item_id,
+      added_by,
+      position,
+      added_at,
+      items (
+        type,
+        provider,
+        external_id,
+        title,
+        poster_url
+      )
+    `)
     .single();
 
   if (error) {
     throw new Error(`Error updating list item: ${error.message}`);
   }
 
-  return data as ListItem;
+  type ItemData = { type: string; provider: string; external_id: string; title: string | null; poster_url: string | null };
+  const item = data.items as unknown as ItemData;
+  return {
+    list_id: data.list_id,
+    item_id: data.item_id,
+    item_type: item.type,
+    provider: item.provider,
+    external_id: item.external_id,
+    added_by: data.added_by,
+    title: item.title,
+    poster_url: item.poster_url,
+    note: null,
+    position: data.position,
+    created_at: data.added_at,
+  } as ListItem;
 }
 
 export async function removeListItem(
   listId: string,
-  itemType: string,
-  provider: string,
-  externalId: string
+  itemId: string
 ): Promise<void> {
   const supabase = await getSupabase();
 
@@ -254,9 +399,7 @@ export async function removeListItem(
     .from("list_items")
     .delete()
     .eq("list_id", listId)
-    .eq("item_type", itemType)
-    .eq("provider", provider)
-    .eq("external_id", externalId);
+    .eq("item_id", itemId);
 
   if (error) {
     throw new Error(`Error removing item from list: ${error.message}`);
@@ -271,7 +414,7 @@ export async function removeListItem(
 
 export async function reorderListItems(
   listId: string,
-  items: Array<{ item_type: string; provider: string; external_id: string; position: number }>
+  items: Array<{ item_id: string; position: number }>
 ): Promise<void> {
   const supabase = await getSupabase();
 
@@ -281,9 +424,7 @@ export async function reorderListItems(
       .from("list_items")
       .update({ position: item.position })
       .eq("list_id", listId)
-      .eq("item_type", item.item_type)
-      .eq("provider", item.provider)
-      .eq("external_id", item.external_id);
+      .eq("item_id", item.item_id);
 
     if (error) {
       throw new Error(`Error reordering list items: ${error.message}`);

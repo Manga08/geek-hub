@@ -57,9 +57,9 @@ export class LibraryRepo {
       .eq("type", type)
       .eq("provider", provider)
       .eq("external_id", externalId)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== "PGRST116") {
+    if (error) {
       throw new Error(`Error fetching library entry: ${error.message}`);
     }
 
@@ -104,19 +104,19 @@ export class LibraryRepo {
       .from("library_entries")
       .select("*")
       .eq("id", id)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== "PGRST116") {
+    if (error) {
       throw new Error(`Error fetching library entry: ${error.message}`);
     }
 
     return data as LibraryEntry | null;
   }
 
-  async create(dto: CreateEntryDTO): Promise<LibraryEntry> {
-    const supabase = await getSupabase();
-    const userId = await getCurrentUserId(supabase);
-    const groupId = dto.group_id ?? await getCurrentGroupId(supabase, userId);
+  async create(dto: CreateEntryDTO, ctx?: LibraryRepoContext): Promise<LibraryEntry> {
+    const supabase = ctx?.supabase ?? await getSupabase();
+    const userId = ctx?.userId ?? await getCurrentUserId(supabase);
+    const groupId = dto.group_id ?? ctx?.groupId ?? await getCurrentGroupId(supabase, userId);
 
     const { data, error } = await supabase
       .from("library_entries")

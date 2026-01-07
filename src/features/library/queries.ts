@@ -1,7 +1,29 @@
 import { readApiJson, ApiError } from "@/lib/api-client";
 import type { LibraryEntry, CreateEntryDTO, UpdateEntryDTO, EntryStatus } from "./types";
+import type { UnifiedItemType, Provider } from "@/features/catalog/normalize/unified.types";
 
 const API_BASE = "/api/library/entry";
+
+// =========================
+// Lookup Types (batch)
+// =========================
+
+export interface LookupItem {
+  type: UnifiedItemType;
+  provider: Provider;
+  external_id: string;
+}
+
+/** Minimal entry data returned by batch lookup */
+export interface LibraryEntryLookup {
+  type: string;
+  provider: string;
+  external_id: string;
+  entry_id: string;
+  status: EntryStatus;
+  rating: number | null;
+  is_favorite: boolean;
+}
 
 export interface LibraryListFilters {
   type?: string;
@@ -23,6 +45,8 @@ export const libraryKeys = {
   byId: (id: string) => [...libraryKeys.all, "id", id] as const,
   list: (filters?: LibraryListFilters) =>
     [...libraryKeys.all, "list", filters ?? {}] as const,
+  lookup: (items: LookupItem[]) =>
+    [...libraryKeys.all, "lookup", items] as const,
 };
 
 export async function fetchLibraryList(
@@ -120,4 +144,32 @@ export async function toggleFavorite(id: string): Promise<LibraryEntry> {
     body: JSON.stringify({ id }),
   });
   return readApiJson<LibraryEntry>(res);
+}
+
+// =========================
+// Batch Lookup
+// =========================
+
+/**
+ * Batch lookup for library entries - avoids N+1 calls.
+ * Returns found entries only (items not in library are omitted).
+ * @param items Array of items to lookup (max 50)
+ */
+export async function fetchEntriesLookup(
+  items: LookupItem[]
+): Promise<LibraryEntryLookup[]> {
+  if (items.length === 0) return [];
+  if (items.length > 50) {
+    console.warn("fetchEntriesLookup: truncating to 50 items");
+    items = items.slice(0, 50);
+  }
+
+  const res = await fetch(`${API_BASE}/lookup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items }),
+  });
+
+  const data = await readApiJson<{ found: LibraryEntryLookup[] }>(res);
+  return data.found;
 }

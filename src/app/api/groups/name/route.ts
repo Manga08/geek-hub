@@ -44,7 +44,7 @@ export async function PATCH(request: NextRequest) {
     // Check if user is an admin of the group
     const { data: membership, error: membershipError } = await supabase
       .from("group_members")
-      .select("role")
+      .select("member_role")
       .eq("group_id", group_id)
       .eq("user_id", user.id)
       .single();
@@ -56,7 +56,7 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (membership.role !== "admin") {
+    if (membership.member_role !== "admin") {
       return NextResponse.json(
         { error: "Only admins can update the group name" },
         { status: 403 }

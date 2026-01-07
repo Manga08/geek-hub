@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { catalogItemKey, fetchCatalogItem } from "@/features/catalog/queries";
 import { EntryQuickActions } from "@/features/library/components";
 import type { UnifiedCatalogItem } from "@/features/catalog/normalize/unified.types";
+import type { LibraryEntryLookup } from "@/features/library/queries";
 
 // Tiny 1x1 transparent placeholder for blur effect
 const BLUR_DATA_URL =
@@ -36,7 +37,15 @@ function typeLabel(type: UnifiedCatalogItem["type"]): string {
   return type;
 }
 
-export function MediaCard({ item }: { item: UnifiedCatalogItem }) {
+interface MediaCardProps {
+  item: UnifiedCatalogItem;
+  /** Pre-fetched entry from batch lookup (null = not in library, undefined = use individual fetch) */
+  prefetchedEntry?: LibraryEntryLookup | null;
+  /** Loading state from batch lookup */
+  prefetchedLoading?: boolean;
+}
+
+export function MediaCard({ item, prefetchedEntry, prefetchedLoading }: MediaCardProps) {
   const href = `/item/${item.type}/${item.key}`;
   const isGame = item.type === "game";
   const prefersReducedMotion = useReducedMotion();
@@ -117,6 +126,8 @@ export function MediaCard({ item }: { item: UnifiedCatalogItem }) {
               title={item.title}
               posterUrl={item.posterUrl}
               className="flex items-center gap-1.5"
+              prefetchedEntry={prefetchedEntry}
+              prefetchedLoading={prefetchedLoading}
             />
             <Button
               variant="ghost"

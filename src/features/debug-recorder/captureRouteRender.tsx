@@ -3,6 +3,7 @@
 import * as React from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { pushEvent } from "./store";
+import { onRouteChange } from "./captureWebVitals";
 import type { RouteRenderEvent } from "./types";
 
 // =========================
@@ -25,6 +26,9 @@ export function useRouteRenderCapture(): void {
 
     const fromRoute = previousRoute;
     previousRoute = currentRoute;
+
+    // Reset CLS for new route (reports final CLS from previous route)
+    onRouteChange(currentRoute);
 
     // Mark start of route change
     startTimeRef.current = performance.now();

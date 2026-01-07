@@ -10,6 +10,7 @@ import {
   formatZodErrors,
 } from "@/lib/api";
 import type { LibraryEntryWithProfile } from "@/features/stats/types";
+import type { Provider } from "@/features/catalog/normalize/unified.types";
 
 const MAX_ROWS = 5000;
 
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     const startDate = `${year}-01-01T00:00:00.000Z`;
     const endDate = `${year + 1}-01-01T00:00:00.000Z`;
 
-    // Build query
+    // Build query - select only columns needed by aggregator
     let query = supabase
       .from("library_entries")
       .select(`
@@ -53,7 +54,6 @@ export async function GET(request: NextRequest) {
         poster_url,
         status,
         rating,
-        notes,
         is_favorite,
         created_at,
         updated_at,
@@ -94,16 +94,16 @@ export async function GET(request: NextRequest) {
         user_id: row.user_id,
         group_id: row.group_id,
         type: row.type,
-        provider: row.provider,
-        external_id: row.external_id,
+        provider: row.provider as Provider,
+        external_id: String(row.external_id),
         title: row.title,
         poster_url: row.poster_url,
         status: row.status,
         rating: row.rating,
-        notes: row.notes,
         is_favorite: row.is_favorite,
         created_at: row.created_at,
         updated_at: row.updated_at,
+        notes: null,
         profiles,
       };
     });

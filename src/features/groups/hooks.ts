@@ -20,6 +20,7 @@ import {
 import type {
   CurrentGroupResponse,
   GroupRow,
+  GroupWithRole,
   GroupMemberWithProfile,
   CreateInviteParams,
   CreateInviteResponse,
@@ -44,7 +45,7 @@ export function useCurrentGroup() {
 }
 
 export function useGroupsList() {
-  return useQuery<GroupRow[]>({
+  return useQuery<GroupWithRole[]>({
     queryKey: groupKeys.list(),
     queryFn: fetchGroupsList,
     staleTime: 1000 * 60 * 5,

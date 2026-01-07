@@ -1,5 +1,5 @@
 import { pushEvent } from "./store";
-import type { WebVitalEvent } from "./types";
+import type { WebVitalEvent, CLSSource } from "./types";
 
 // =========================
 // Web Vitals Capture
@@ -9,6 +9,10 @@ import type { WebVitalEvent } from "./types";
 let isInstalled = false;
 let observers: PerformanceObserver[] = [];
 
+// CLS per-route tracking
+let currentRoute: string | null = null;
+let clsResetCallback: (() => void) | null = null;
+
 type WebVitalName = WebVitalEvent["name"];
 
 interface WebVitalMetric {
@@ -16,6 +20,7 @@ interface WebVitalMetric {
   value: number;
   rating?: "good" | "needs-improvement" | "poor";
   delta?: number;
+  sources?: CLSSource[];
 }
 
 // Rating thresholds based on Core Web Vitals
@@ -41,6 +46,7 @@ function reportMetric(metric: WebVitalMetric): void {
     value: Math.round(metric.value * 100) / 100,
     rating: metric.rating ?? getRating(metric.name, metric.value),
     delta: metric.delta,
+    sources: metric.sources,
   } satisfies Omit<WebVitalEvent, "id" | "timestamp">);
 }
 
@@ -92,21 +98,97 @@ function observeFCP(): PerformanceObserver | null {
 // CLS - Cumulative Layout Shift
 // =========================
 
+// Types for Layout Shift API
+interface LayoutShiftAttribution {
+  node?: Node | null;
+  previousRect: DOMRectReadOnly;
+  currentRect: DOMRectReadOnly;
+}
+
+interface LayoutShiftEntry extends PerformanceEntry {
+  value: number;
+  hadRecentInput: boolean;
+  sources?: LayoutShiftAttribution[];
+}
+
+function extractCLSSources(entries: LayoutShiftEntry[]): CLSSource[] {
+  const sources: CLSSource[] = [];
+  
+  for (const entry of entries) {
+    if (!entry.sources) continue;
+    
+    for (const source of entry.sources) {
+      if (!source.node || !(source.node instanceof Element)) continue;
+      
+      const el = source.node as Element;
+      sources.push({
+        tagName: el.tagName.toLowerCase(),
+        className: el.className?.toString?.() || "",
+        id: el.id || undefined,
+        prevRect: {
+          x: Math.round(source.previousRect.x),
+          y: Math.round(source.previousRect.y),
+          width: Math.round(source.previousRect.width),
+          height: Math.round(source.previousRect.height),
+        },
+        currentRect: {
+          x: Math.round(source.currentRect.x),
+          y: Math.round(source.currentRect.y),
+          width: Math.round(source.currentRect.width),
+          height: Math.round(source.currentRect.height),
+        },
+      });
+    }
+  }
+  
+  // Return top 3 sources (by shift magnitude)
+  return sources
+    .sort((a, b) => {
+      const shiftA = Math.abs(a.currentRect.y - a.prevRect.y) + Math.abs(a.currentRect.x - a.prevRect.x);
+      const shiftB = Math.abs(b.currentRect.y - b.prevRect.y) + Math.abs(b.currentRect.x - b.prevRect.x);
+      return shiftB - shiftA;
+    })
+    .slice(0, 3);
+}
+
 function observeCLS(): PerformanceObserver | null {
   if (typeof PerformanceObserver === "undefined") return null;
 
   let clsValue = 0;
   let sessionValue = 0;
-  let sessionEntries: PerformanceEntry[] = [];
+  let sessionEntries: LayoutShiftEntry[] = [];
   let reportTimeout: ReturnType<typeof setTimeout> | null = null;
   let lastReportedValue = -1;
 
+  // Expose reset function for route changes
+  clsResetCallback = () => {
+    // Report final CLS for previous route if significant
+    if (clsValue > 0.001 && currentRoute) {
+      const sources = extractCLSSources(sessionEntries);
+      reportMetric({ 
+        name: "CLS", 
+        value: clsValue, 
+        sources,
+        // Include route info in the metric
+      });
+    }
+    // Reset accumulators
+    clsValue = 0;
+    sessionValue = 0;
+    sessionEntries = [];
+    lastReportedValue = -1;
+    if (reportTimeout) {
+      clearTimeout(reportTimeout);
+      reportTimeout = null;
+    }
+  };
+
   try {
     const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries() as (PerformanceEntry & { value: number; hadRecentInput: boolean })[]) {
+      for (const entry of list.getEntries() as LayoutShiftEntry[]) {
         if (!entry.hadRecentInput) {
-          const firstSessionEntry = sessionEntries[0] as (PerformanceEntry & { startTime: number }) | undefined;
-          const lastSessionEntry = sessionEntries[sessionEntries.length - 1] as (PerformanceEntry & { startTime: number }) | undefined;
+          const firstSessionEntry = sessionEntries[0];
+          const lastSessionEntry = sessionEntries[sessionEntries.length - 1];
 
           if (
             sessionValue &&
@@ -135,7 +217,8 @@ function observeCLS(): PerformanceObserver | null {
         // Only report if value changed significantly (avoid duplicate reports)
         if (Math.abs(clsValue - lastReportedValue) > 0.001) {
           lastReportedValue = clsValue;
-          reportMetric({ name: "CLS", value: clsValue });
+          const sources = extractCLSSources(sessionEntries);
+          reportMetric({ name: "CLS", value: clsValue, sources });
         }
       }, 500);
     });
@@ -231,4 +314,33 @@ export function uninstallWebVitalsCapture(): void {
   observers.forEach((obs) => obs.disconnect());
   observers = [];
   isInstalled = false;
+  clsResetCallback = null;
+  currentRoute = null;
+}
+
+// =========================
+// CLS Per-Route Tracking
+// =========================
+
+/**
+ * Call this on route change to reset CLS accumulator
+ * Reports final CLS for previous route before resetting
+ */
+export function onRouteChange(newRoute: string): void {
+  // Skip if same route
+  if (newRoute === currentRoute) return;
+
+  // Reset CLS for new route
+  if (clsResetCallback) {
+    clsResetCallback();
+  }
+
+  currentRoute = newRoute;
+}
+
+/**
+ * Get current route being tracked
+ */
+export function getCurrentCLSRoute(): string | null {
+  return currentRoute;
 }

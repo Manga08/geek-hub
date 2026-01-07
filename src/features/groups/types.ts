@@ -9,6 +9,11 @@ export type GroupRow = {
   created_at?: string | null;
 };
 
+/** Group with the user's role in that group */
+export type GroupWithRole = GroupRow & {
+  role: GroupRole;
+};
+
 export type GroupMemberRow = {
   group_id: string;
   user_id: string;

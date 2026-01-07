@@ -108,19 +108,48 @@ export async function POST(request: NextRequest) {
 
     const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`; // Cache bust
 
-    // Update profile with new avatar URL
-    const { data: profile, error: updateError } = await supabase
+    // Update-first strategy: check if profile exists, then update or insert
+    const { data: existingProfile } = await supabase
       .from("profiles")
-      .upsert({
-        id: user.id,
-        avatar_url: avatarUrl,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "id" })
-      .select("id, display_name, avatar_url, default_group_id")
+      .select("id, display_name")
+      .eq("id", user.id)
       .single();
 
-    if (updateError) {
-      throw updateError;
+    let profile;
+    if (existingProfile) {
+      // Profile exists: just update avatar_url
+      const { data, error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id)
+        .select("id, display_name, avatar_url, default_group_id")
+        .single();
+
+      if (updateError) throw updateError;
+      profile = data;
+    } else {
+      // Profile doesn't exist: insert with display_name fallback
+      const displayName =
+        user.user_metadata?.display_name ||
+        user.email?.split("@")[0] ||
+        "Usuario";
+
+      const { data, error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          id: user.id,
+          display_name: displayName,
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .select("id, display_name, avatar_url, default_group_id")
+        .single();
+
+      if (insertError) throw insertError;
+      profile = data;
     }
 
     return NextResponse.json({
@@ -166,19 +195,48 @@ export async function DELETE() {
       }
     }
 
-    // Update profile to remove avatar URL
-    const { data: profile, error: updateError } = await supabase
+    // Update profile to remove avatar URL (update-first strategy)
+    const { data: existingProfile } = await supabase
       .from("profiles")
-      .upsert({
-        id: user.id,
-        avatar_url: null,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "id" })
-      .select("id, display_name, avatar_url, default_group_id")
+      .select("id, display_name")
+      .eq("id", user.id)
       .single();
 
-    if (updateError) {
-      throw updateError;
+    let profile;
+    if (existingProfile) {
+      // Profile exists: just update avatar_url to null
+      const { data, error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          avatar_url: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id)
+        .select("id, display_name, avatar_url, default_group_id")
+        .single();
+
+      if (updateError) throw updateError;
+      profile = data;
+    } else {
+      // Profile doesn't exist: insert with display_name fallback (no avatar)
+      const displayName =
+        user.user_metadata?.display_name ||
+        user.email?.split("@")[0] ||
+        "Usuario";
+
+      const { data, error: insertError } = await supabase
+        .from("profiles")
+        .insert({
+          id: user.id,
+          display_name: displayName,
+          avatar_url: null,
+          updated_at: new Date().toISOString(),
+        })
+        .select("id, display_name, avatar_url, default_group_id")
+        .single();
+
+      if (insertError) throw insertError;
+      profile = data;
     }
 
     return NextResponse.json({

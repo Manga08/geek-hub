@@ -62,7 +62,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       actorId: user.id,
       eventType: "list_item_added",
       entityType: "list_item",
-      entityId: `${id}:${body.external_id}`,
+      entityId: item.item_id,
       metadata: {
         list_id: id,
         list_name: list.name,
@@ -99,17 +99,17 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   try {
-    const body: { item_type: string; provider: string; external_id: string } & UpdateListItemDTO = await request.json();
+    const body: { item_id: string } & UpdateListItemDTO = await request.json();
 
-    if (!body.item_type || !body.provider || !body.external_id) {
+    if (!body.item_id) {
       return NextResponse.json(
-        { message: "Missing required fields: item_type, provider, external_id" },
+        { message: "Missing required field: item_id" },
         { status: 400 }
       );
     }
 
-    const { item_type, provider, external_id, ...dto } = body;
-    const item = await listsRepo.updateListItem(id, item_type, provider, external_id, dto);
+    const { item_id, ...dto } = body;
+    const item = await listsRepo.updateListItem(id, item_id, dto);
     return NextResponse.json(item);
   } catch (error) {
     console.error("PATCH /api/lists/[id]/items error:", error);
@@ -145,7 +145,19 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ message: "List not found" }, { status: 404 });
     }
 
-    await listsRepo.removeListItem(id, body.item_type, body.provider, body.external_id);
+    // Find item_id from items table
+    const { data: item } = await supabase
+      .from("items")
+      .select("id")
+      .eq("provider", body.provider)
+      .eq("external_id", body.external_id)
+      .maybeSingle();
+
+    if (!item) {
+      return NextResponse.json({ message: "Item not found" }, { status: 404 });
+    }
+
+    await listsRepo.removeListItem(id, item.id);
 
     // Log activity event
     await logActivityEvent({

@@ -6,6 +6,8 @@ export type DebugEventType =
   | "fetch"
   | "error"
   | "warn"
+  | "log"
+  | "info"
   | "query"
   | "web-vital"
   | "route-render"
@@ -29,7 +31,7 @@ export interface FetchEvent extends DebugEventBase {
 }
 
 export interface ConsoleEvent extends DebugEventBase {
-  type: "error" | "warn";
+  type: "error" | "warn" | "log" | "info";
   message: string;
   stack?: string;
 }
@@ -40,11 +42,22 @@ export interface QueryEvent extends DebugEventBase {
   action: "start" | "success" | "error";
   durationMs?: number;
   error?: string;
+  // New: additional query metadata
+  stale?: boolean;
+  dataUpdatedAt?: number;
 }
 
 // =========================
 // New: Render Timing Events
 // =========================
+
+export interface CLSSource {
+  tagName: string;
+  className: string;
+  id?: string;
+  prevRect: { x: number; y: number; width: number; height: number };
+  currentRect: { x: number; y: number; width: number; height: number };
+}
 
 export interface WebVitalEvent extends DebugEventBase {
   type: "web-vital";
@@ -53,6 +66,7 @@ export interface WebVitalEvent extends DebugEventBase {
   rating?: "good" | "needs-improvement" | "poor";
   delta?: number;
   navigationType?: string;
+  sources?: CLSSource[]; // Top 3 CLS sources
 }
 
 export interface RouteRenderEvent extends DebugEventBase {
@@ -102,9 +116,39 @@ export type DebugFilter =
   | "fetch"
   | "error"
   | "warn"
+  | "log"
+  | "info"
   | "query"
   | "render"
   | "server-log";
+
+// =========================
+// Snapshot Types for Inspectors
+// =========================
+
+export interface RQQueryState {
+  queryKey: string;
+  state: "fresh" | "stale" | "fetching" | "paused" | "inactive";
+  dataUpdatedAt?: number;
+  errorUpdatedAt?: number;
+  fetchStatus: "idle" | "fetching" | "paused";
+  isStale: boolean;
+  isInvalidated: boolean;
+}
+
+export interface AuthSnapshot {
+  userId: string | null;
+  email: string | null;
+  groupId: string | null;
+  groupName: string | null;
+  role: string | null;
+  expiresAt: number | null;
+}
+
+export interface StorageSnapshot {
+  localStorage: Record<string, string>;
+  sessionStorage: Record<string, string>;
+}
 
 // =========================
 // Constants

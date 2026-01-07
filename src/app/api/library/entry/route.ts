@@ -1,11 +1,10 @@
 import { NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { requireApiContext, requireSessionUserId } from "@/lib/auth/request-context";
 import { libraryRepo } from "@/features/library/repo";
 import { logActivityEvent, getCurrentGroupId } from "@/lib/activity-log";
 import {
   ok,
   badRequest,
-  unauthenticated,
   notFound,
   conflict,
   internal,
@@ -19,13 +18,14 @@ import {
 } from "@/lib/api";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Use lightweight auth with context
+  const authResult = await requireApiContext();
+  if (!authResult.ok) return authResult.response;
 
-  if (!user) {
-    return unauthenticated();
+  const { supabase, userId, defaultGroupId } = authResult.ctx;
+
+  if (!defaultGroupId) {
+    return notFound("No group context");
   }
 
   const { searchParams } = new URL(request.url);
@@ -38,8 +38,9 @@ export async function GET(request: NextRequest) {
   const { type, provider, externalId } = parsed.data;
 
   try {
-    // Use user-scoped method to find MY entry
-    const entry = await libraryRepo.findMyEntryByItem(type, provider, externalId);
+    // Pass context to avoid re-doing auth in repo
+    const ctx = { supabase, userId, groupId: defaultGroupId };
+    const entry = await libraryRepo.findMyEntryByItem(type, provider, externalId, undefined, ctx);
 
     if (!entry) {
       return notFound("Library entry not found");
@@ -53,13 +54,13 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const authResult = await requireApiContext();
+  if (!authResult.ok) return authResult.response;
 
-  if (!user) {
-    return unauthenticated();
+  const { supabase, userId, defaultGroupId } = authResult.ctx;
+
+  if (!defaultGroupId) {
+    return badRequest("No group context");
   }
 
   try {
@@ -71,13 +72,15 @@ export async function POST(request: NextRequest) {
     }
 
     const dto = parsed.data;
+    const ctx = { supabase, userId, groupId: defaultGroupId };
 
     // Check if MY entry already exists (user-scoped)
     const existing = await libraryRepo.findMyEntryByItem(
       dto.type,
       dto.provider,
       dto.external_id,
-      dto.group_id
+      dto.group_id,
+      ctx
     );
 
     if (existing) {
@@ -85,12 +88,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Create entry (group_id will be resolved from user's default if not provided)
-    const entry = await libraryRepo.create(dto);
+    const entry = await libraryRepo.create(dto, ctx);
 
     // Log activity event
     await logActivityEvent({
       groupId: entry.group_id,
-      actorId: user.id,
+      actorId: userId,
       eventType: "library_entry_added",
       entityType: "library_entry",
       entityId: entry.id,
@@ -108,14 +111,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const authResult = await requireSessionUserId();
+  if (!authResult.ok) return authResult.response;
 
-  if (!user) {
-    return unauthenticated();
-  }
+  const { userId } = authResult;
 
   try {
     const body = await request.json();
@@ -142,7 +141,7 @@ export async function PATCH(request: NextRequest) {
     if (parsed.data.status) {
       await logActivityEvent({
         groupId: entry.group_id,
-        actorId: user.id,
+        actorId: userId,
         eventType: "library_entry_updated",
         entityType: "library_entry",
         entityId: entry.id,
@@ -161,14 +160,10 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const authResult = await requireSessionUserId();
+  if (!authResult.ok) return authResult.response;
 
-  if (!user) {
-    return unauthenticated();
-  }
+  const { userId } = authResult;
 
   try {
     const body = await request.json();
@@ -191,7 +186,7 @@ export async function DELETE(request: NextRequest) {
     if (groupId) {
       await logActivityEvent({
         groupId,
-        actorId: user.id,
+        actorId: userId,
         eventType: "library_entry_deleted",
         entityType: "library_entry",
         entityId: id,
