@@ -26,12 +26,12 @@ import {
 } from "@/features/activity"
 
 const links = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/search", label: "Search", icon: Search },
-  { href: "/library", label: "Library", icon: Bookmark },
-  { href: "/lists", label: "Lists", icon: ListChecks },
-  { href: "/activity", label: "Activity", icon: Activity },
-  { href: "/stats", label: "Stats", icon: BarChart3 },
+  { href: "/dashboard", label: "Inicio", icon: Home },
+  { href: "/search", label: "Buscar", icon: Search },
+  { href: "/library", label: "Biblioteca", icon: Bookmark },
+  { href: "/lists", label: "Listas", icon: ListChecks },
+  { href: "/activity", label: "Actividad", icon: Activity },
+  { href: "/stats", label: "Estadísticas", icon: BarChart3 },
 ]
 
 // =========================

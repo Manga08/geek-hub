@@ -51,7 +51,7 @@ export function ForgotPasswordForm() {
         Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña.
       </p>
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-foreground">Email</label>
+        <label className="block text-sm font-medium text-foreground">Correo electrónico</label>
         <Input
           name="email"
           type="email"

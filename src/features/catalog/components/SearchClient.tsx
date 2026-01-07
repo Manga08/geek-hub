@@ -94,9 +94,9 @@ function SearchInner() {
                 <SelectValue placeholder="Selecciona" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="game">Game</SelectItem>
-                <SelectItem value="movie">Movie</SelectItem>
-                <SelectItem value="tv">TV</SelectItem>
+                <SelectItem value="game">Juego</SelectItem>
+                <SelectItem value="movie">Película</SelectItem>
+                <SelectItem value="tv">Serie</SelectItem>
                 <SelectItem value="anime">Anime</SelectItem>
               </SelectContent>
             </Select>

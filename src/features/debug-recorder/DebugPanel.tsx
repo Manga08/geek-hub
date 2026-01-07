@@ -44,10 +44,10 @@ type TabType = "all" | "events" | "render" | "server" | "inspect";
 // =========================
 
 const EVENT_FILTERS: { label: string; value: DebugFilter }[] = [
-  { label: "All", value: "all" },
+  { label: "Todos", value: "all" },
   { label: "API", value: "fetch" },
-  { label: "Errors", value: "error" },
-  { label: "Warns", value: "warn" },
+  { label: "Errores", value: "error" },
+  { label: "Avisos", value: "warn" },
   { label: "Query", value: "query" },
 ];
 
@@ -542,7 +542,7 @@ export function DebugPanel() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="w-full sm:max-w-lg flex flex-col">
           <SheetHeader>
-            <SheetTitle>Debug Recorder</SheetTitle>
+            <SheetTitle>Panel de Depuración</SheetTitle>
             <SheetDescription>
               {counts.all} eventos capturados
             </SheetDescription>
@@ -560,11 +560,11 @@ export function DebugPanel() {
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                 }`}
               >
-                {t === "all" && `All (${counts.all})`}
-                {t === "events" && `Events (${counts.events})`}
+                {t === "all" && `Todo (${counts.all})`}
+                {t === "events" && `Eventos (${counts.events})`}
                 {t === "render" && `Render (${counts.render})`}
-                {t === "server" && `Server (${counts.server})`}
-                {t === "inspect" && "Inspect"}
+                {t === "server" && `Servidor (${counts.server})`}
+                {t === "inspect" && "Inspeccionar"}
               </button>
             ))}
           </div>
@@ -596,7 +596,7 @@ export function DebugPanel() {
                 disabled={fetchingServer}
                 className="w-full rounded bg-orange-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-orange-500 transition-colors disabled:opacity-50"
               >
-                {fetchingServer ? "Fetching..." : "Fetch Server Logs"}
+                {fetchingServer ? "Cargando..." : "Obtener logs del servidor"}
               </button>
             </div>
           )}
@@ -615,7 +615,7 @@ export function DebugPanel() {
                         : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                     }`}
                   >
-                    {view === "rq" && "React Query"}
+                    {view === "rq" && "Consultas"}
                     {view === "auth" && "Auth"}
                     {view === "storage" && "Storage"}
                   </button>
@@ -635,12 +635,12 @@ export function DebugPanel() {
                   }}
                   className="px-2.5 py-1 rounded text-xs font-medium bg-green-600 text-white hover:bg-green-500 transition-colors"
                 >
-                  Refresh
+                  Actualizar
                 </button>
               </div>
               <div className="bg-black/30 rounded-lg p-3 max-h-[60vh] overflow-y-auto">
                 <pre className="text-xs font-mono text-foreground whitespace-pre-wrap">
-                  {inspectData || "Loading..."}
+                  {inspectData || "Cargando..."}
                 </pre>
               </div>
             </div>
@@ -653,20 +653,20 @@ export function DebugPanel() {
               disabled={fetchingServer}
               className="flex-1 rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500 transition-colors disabled:opacity-50"
             >
-              {fetchingServer ? "..." : copied ? "✓ Copied!" : "Copy"}
+              {fetchingServer ? "..." : copied ? "✓ Copiado!" : "Copiar"}
             </button>
             <button
               onClick={handleDownload}
               disabled={fetchingServer}
               className="flex-1 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500 transition-colors disabled:opacity-50"
             >
-              {fetchingServer ? "..." : "Download"}
+              {fetchingServer ? "..." : "Descargar"}
             </button>
             <button
               onClick={handleClear}
               className="flex-1 rounded bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 transition-colors"
             >
-              Clear
+              Limpiar
             </button>
           </div>
 
@@ -676,8 +676,8 @@ export function DebugPanel() {
               {filteredEvents.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
                   {tab === "server"
-                    ? "No server logs. Click 'Fetch Server Logs' to load."
-                    : "No events yet"}
+                    ? "Sin logs del servidor. Haz clic en 'Obtener logs del servidor' para cargar."
+                    : "Sin eventos aún"}
                 </div>
               ) : (
                 [...filteredEvents].reverse().map((event) => (

@@ -36,11 +36,11 @@ export default function JoinPage() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <GlassCard className="max-w-md p-8 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
-          <h1 className="mb-2 text-xl font-semibold">Invalid Invite Link</h1>
+          <h1 className="mb-2 text-xl font-semibold">Enlace de invitación inválido</h1>
           <p className="mb-6 text-muted-foreground">
-            No invite token was provided. Please check your invite link.
+            No se proporcionó un token de invitación. Por favor, verifica tu enlace.
           </p>
-          <Button onClick={handleGoHome}>Go to Home</Button>
+          <Button onClick={handleGoHome}>Ir al inicio</Button>
         </GlassCard>
       </div>
     );
@@ -51,9 +51,9 @@ export default function JoinPage() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <GlassCard className="max-w-md p-8 text-center">
           <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
-          <h1 className="mb-2 text-xl font-semibold">Joining Group...</h1>
+          <h1 className="mb-2 text-xl font-semibold">Uniéndote al grupo...</h1>
           <p className="text-muted-foreground">
-            Please wait while we process your invite.
+            Por favor espera mientras procesamos tu invitación.
           </p>
         </GlassCard>
       </div>
@@ -65,11 +65,11 @@ export default function JoinPage() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <GlassCard className="max-w-md p-8 text-center">
           <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
-          <h1 className="mb-2 text-xl font-semibold">Could Not Join Group</h1>
+          <h1 className="mb-2 text-xl font-semibold">No se pudo unir al grupo</h1>
           <p className="mb-6 text-muted-foreground">
-            {error?.message || "The invite link may be expired, revoked, or already used."}
+            {error?.message || "El enlace de invitación puede estar expirado, revocado o ya utilizado."}
           </p>
-          <Button onClick={handleGoHome}>Go to Home</Button>
+          <Button onClick={handleGoHome}>Ir al inicio</Button>
         </GlassCard>
       </div>
     );
@@ -80,20 +80,20 @@ export default function JoinPage() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <GlassCard className="max-w-md p-8 text-center">
           <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-green-500" />
-          <h1 className="mb-2 text-xl font-semibold">Welcome to the Group!</h1>
+          <h1 className="mb-2 text-xl font-semibold">¡Bienvenido al grupo!</h1>
           <p className="mb-2 text-muted-foreground">
-            You have joined <span className="font-medium text-foreground">{data.group.name}</span>
+            Te has unido a <span className="font-medium text-foreground">{data.group.name}</span>
           </p>
           <p className="mb-6 text-sm text-muted-foreground">
-            Your role: <span className="font-medium capitalize">{data.role}</span>
+            Tu rol: <span className="font-medium capitalize">{data.role}</span>
           </p>
           <div className="flex gap-2 justify-center">
             <Button variant="outline" onClick={handleGoHome}>
-              Go to Search
+              Ir a buscar
             </Button>
             <Button onClick={handleGoToLibrary}>
               <UserPlus className="mr-2 h-4 w-4" />
-              View Library
+              Ver biblioteca
             </Button>
           </div>
         </GlassCard>

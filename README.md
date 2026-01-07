@@ -27,7 +27,7 @@
 ### 👥 Grupos Colaborativos
 
 - Crea grupos para compartir tu biblioteca con amigos/familia
-- Roles: **Admin** (gestión completa), **Editor** (añadir/editar), **Viewer** (solo lectura)
+- Roles: **Admin** (gestión completa), **Member** (colaboración estándar)
 - Sistema de invitaciones por token único
 - Cambia entre grupos con el switcher en navbar
 
@@ -304,6 +304,33 @@ pnpm install --force
 
 ## 📋 Changelog
 
+### Phase 5D — UX: Settings index page
+
+- Nueva página índice `/settings` con acceso rápido a Perfil y Grupo.
+- Diseño premium con `GlassCard` interactiva (hover effects, blur).
+- Navegación visual clara con iconos y descripciones de sección.
+
+### Phase 5C — UI: Activity premium consistency
+
+- Refactor completo de `/activity` para alinearse al Spec V2.0 (Glass + Dark).
+- Implementación de `GlassCard` como contenedor principal del feed.
+- Motion suave con Framer Motion (stagger + layout animations).
+- Mejoras de accesibilidad y "Empty State" con CTA clara.
+- Skeletons de carga nativos en lugar de spinners genéricos.
+
+### Phase 5B — Catalog: Anime filtering
+
+- Implementación de heurística "Anime Real" en endpoint de búsqueda unificada.
+- Filtrado STRICT: Prioriza animación japonesa (`genre:16` + `lang:ja`/`country:JP`).
+- Mecanismo FALLBACK: Retorna animación general si hay pocos resultados (<5) estrictos.
+- Sin costo adicional de performance (0 requests extra, todo in-memory).
+
+### Phase 5A — Docs: Roles reales (admin/member)
+
+- Actualización de documentación para reflejar roles reales (admin vs member).
+- Eliminación de referencias obsoletas a roles planificados "editor/viewer".
+- Verificación de código tras barrido de grep (sin lógica obsoleta encontrada).
+
 ### Phase 4B — Debug & Performance Hardening (Enero 2026)
 
 - **Batch Lookup API**: Nuevo endpoint `POST /api/library/entry/lookup` para eliminar N+1 queries en Search.
@@ -347,7 +374,7 @@ pnpm install --force
 
 ### Phase 3N-3O — Groups Multi-tenant
 
-- Sistema de grupos con roles (admin/editor/viewer)
+- Sistema de grupos con roles (admin/member)
 - Invitaciones por token único
 - Switcher de grupos en navbar
 

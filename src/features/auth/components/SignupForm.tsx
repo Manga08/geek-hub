@@ -23,7 +23,7 @@ export function SignupForm() {
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-foreground">Email</label>
+        <label className="block text-sm font-medium text-foreground">Correo electrónico</label>
         <Input
           name="email"
           type="email"
@@ -32,7 +32,7 @@ export function SignupForm() {
         />
       </div>
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-foreground">Password</label>
+        <label className="block text-sm font-medium text-foreground">Contraseña</label>
         <Input
           name="password"
           type="password"

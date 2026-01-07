@@ -38,6 +38,7 @@ export interface TmdbBase {
   popularity?: number | null;
   vote_average?: number | null;
   vote_count?: number | null;
+  original_language?: string | null;
 }
 
 export interface TmdbMovie extends TmdbBase {
@@ -51,6 +52,7 @@ export interface TmdbTv extends TmdbBase {
   first_air_date?: string | null;
   number_of_seasons?: number | null;
   episode_run_time?: number[] | null;
+  origin_country?: string[] | null;
 }
 
 export interface TmdbSearchResponse<T> {

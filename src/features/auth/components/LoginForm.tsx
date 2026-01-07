@@ -14,7 +14,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? "Entrando..." : "Login"}
+      {pending ? "Entrando..." : "Iniciar sesión"}
     </Button>
   );
 }
@@ -32,7 +32,7 @@ export function LoginForm() {
         </div>
       ) : null}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-foreground">Email</label>
+        <label className="block text-sm font-medium text-foreground">Correo electrónico</label>
         <Input
           name="email"
           type="email"
@@ -42,7 +42,7 @@ export function LoginForm() {
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium text-foreground">Password</label>
+          <label className="block text-sm font-medium text-foreground">Contraseña</label>
           <Link
             href="/forgot-password"
             className="text-xs text-muted-foreground hover:text-primary"
