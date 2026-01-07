@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { NavActionPill } from "@/components/shared/NavActionPill";
 
 import { useCurrentGroup, useGroupsList, useSetCurrentGroup, useLeaveGroup } from "../hooks";
 import type { GroupRole } from "../types";
@@ -80,18 +81,18 @@ export function GroupSwitcher() {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="hidden items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-white/10 md:flex">
-            <Users className="h-3 w-3" />
+          <NavActionPill className="hidden md:flex gap-1.5 px-3 text-xs text-muted-foreground justify-start">
+            <Users className="h-3 w-3 shrink-0" />
             {isLoading ? (
               <span className="h-3 w-12 animate-pulse rounded bg-white/10" />
             ) : (
               <>
-                <span className="max-w-25 truncate">{currentGroupName}</span>
+                <span className="max-w-24 truncate">{currentGroupName}</span>
                 {displayRole && <RoleBadge role={displayRole} />}
               </>
             )}
-            <ChevronDown className="h-3 w-3 opacity-50" />
-          </button>
+            <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
+          </NavActionPill>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="min-w-45">
           <DropdownMenuItem asChild>
@@ -122,24 +123,24 @@ export function GroupSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <NavActionPill
           className={cn(
-            "hidden items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-white/10 md:flex",
+            "hidden md:flex gap-1.5 px-3 text-xs text-muted-foreground justify-start",
             (isPending || isLeaving) && "opacity-50 pointer-events-none"
           )}
           disabled={isPending || isLeaving}
         >
-          <Users className="h-3 w-3" />
+          <Users className="h-3 w-3 shrink-0" />
           {isLoading ? (
             <span className="h-3 w-12 animate-pulse rounded bg-white/10" />
           ) : (
             <>
-              <span className="max-w-25 truncate">{currentGroupName}</span>
+              <span className="max-w-24 truncate">{currentGroupName}</span>
               {displayRole && <RoleBadge role={displayRole} />}
             </>
           )}
-          <ChevronDown className="h-3 w-3 opacity-50" />
-        </button>
+          <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
+        </NavActionPill>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-45">
         {uniqueGroups.map((group) => (

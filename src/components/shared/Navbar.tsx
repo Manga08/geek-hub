@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
+import { NavActionPill } from "./NavActionPill"
 import { GroupSwitcher } from "@/features/groups"
 import { useProfile } from "@/features/profile"
 import {
@@ -72,17 +73,14 @@ function NotificationsPanel() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
-          title="Notificaciones"
-        >
+        <NavActionPill size="icon" title="Notificaciones" aria-label="Notificaciones">
           <Bell className="h-4 w-4 text-muted-foreground" />
           {count > 0 && (
             <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white shadow-lg">
               {count > 99 ? "99+" : count}
             </span>
           )}
-        </button>
+        </NavActionPill>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 max-h-[70vh] overflow-hidden">
         <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
@@ -173,7 +171,7 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 pr-3 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+        <NavActionPill className="gap-2 p-1 pr-3" aria-label={`Menú de usuario: ${displayName}`}>
           {isLoading ? (
             <div className="h-7 w-7 rounded-full bg-gray-700 animate-pulse" />
           ) : profile?.avatar_url ? (
@@ -192,7 +190,7 @@ function UserMenu() {
           <span className="text-sm text-gray-300 hidden md:block max-w-[100px] truncate">
             {displayName}
           </span>
-        </button>
+        </NavActionPill>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-48">
         <div className="px-2 py-1.5">
