@@ -50,6 +50,7 @@ export function normalizeTmdb(type: UnifiedItemType, raw: TmdbMovie | TmdbTv): U
     externalId,
     title,
     year,
+    rating: raw.vote_average ?? null,
     posterUrl,
     backdropUrl,
     genres,

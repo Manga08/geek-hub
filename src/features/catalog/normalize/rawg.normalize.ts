@@ -26,6 +26,7 @@ export function normalizeRawgItem(raw: RawgGameLike): UnifiedCatalogItem {
     title,
     year: parseYear(raw.released),
     posterUrl,
+    rating: raw.rating ?? (raw.metacritic ? raw.metacritic / 10 : null),
     backdropUrl,
     genres: Array.isArray(raw.genres) ? raw.genres.map((g) => g.name) : [],
     summary: raw.description_raw ?? null,

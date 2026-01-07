@@ -9,6 +9,7 @@ export interface UnifiedCatalogItem {
   externalId: string;
   title: string;
   year?: number | null;
+  rating?: number | null;
   posterUrl?: string | null;
   backdropUrl?: string | null;
   genres: string[];

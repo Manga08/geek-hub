@@ -325,10 +325,10 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:block h-6 w-px bg-white/10" />
-          
+
           <NotificationsPanel />
           <UserMenu />
-          
+
           <MobileNav />
         </div>
       </div>

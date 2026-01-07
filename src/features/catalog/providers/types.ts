@@ -14,6 +14,7 @@ export interface RawgGameLike {
   platforms?: unknown;
   stores?: unknown;
   metacritic?: number | null;
+  rating?: number | null;
   ratings_count?: number | null;
   slug?: string;
 }

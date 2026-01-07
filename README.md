@@ -304,6 +304,13 @@ pnpm install --force
 
 ## 📋 Changelog
 
+### Phase 6C — UI: Unified media cards
+
+- Estandarización de `MediaPosterFrame` (aspect 2/3) para todos los tipos de media (incluso Juegos).
+- Fallback visual consistente con iconografía por tipo (Gamepad, Film, Tv, MonitorPlay).
+- Unificación de estilo entre `MediaCard` (Search) y `LibraryCard` (Library).
+- Eliminación de saltos de layout (CLS) mediante contenedores con aspect-ratio fijo.
+
 ### Phase 6B — UI: Navbar premium redesign
 
 - Rediseño completo con estructura layout de 3 columnas (Brand - Links - Actions).
