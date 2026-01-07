@@ -63,7 +63,7 @@ export function GroupSwitcher() {
 
   const handleLeaveGroup = () => {
     if (!currentGroupId || isLeaving) return;
-    
+
     // Only allow leaving if not the only admin or if multiple groups exist
     if (displayRole === "admin" && uniqueGroups.length === 1) {
       alert("No puedes abandonar tu único grupo siendo administrador. Transfiere el rol primero.");

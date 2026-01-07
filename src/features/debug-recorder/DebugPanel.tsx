@@ -132,7 +132,7 @@ function WebVitalRow({ event }: { event: WebVitalEvent }) {
               {src.className && <span className="text-yellow-400">.{src.className.split(" ")[0]}</span>}
               <span className="text-cyan-400">&gt;</span>
               <span className="text-muted-foreground ml-2">
-                y: {src.prevRect.y}→{src.currentRect.y} 
+                y: {src.prevRect.y}→{src.currentRect.y}
                 {" "}(Δ{src.currentRect.y - src.prevRect.y}px)
               </span>
             </div>

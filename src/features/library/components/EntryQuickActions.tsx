@@ -66,11 +66,11 @@ export function EntryQuickActions({
   const isInLibrary = usePrefetched
     ? prefetchedEntry !== null
     : hookIsInLibrary;
-  
+
   const isFavorite = usePrefetched
     ? prefetchedEntry?.is_favorite ?? false
     : hookIsFavorite;
-  
+
   const isLoading = usePrefetched ? prefetchedLoading : hookIsLoading;
 
   const handleFavoriteClick = useCallback(

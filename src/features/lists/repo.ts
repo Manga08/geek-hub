@@ -103,7 +103,7 @@ export async function createList(dto: CreateListDTO, ctx?: ListsRepoContext): Pr
   // Use context if provided (avoids re-doing auth)
   const supabase = ctx?.supabase ?? await getSupabase();
   const groupId = dto.group_id ?? ctx?.groupId ?? await getCurrentGroupId(supabase);
-  
+
   // Get userId from context or auth
   let userId = ctx?.userId;
   if (!userId) {

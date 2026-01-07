@@ -63,10 +63,10 @@ CREATE INDEX IF NOT EXISTS idx_list_items_item
 -- EXPLAIN ANALYZE queries de ejemplo para verificar uso de índices:
 -- -----------------------------------------------------------------------------
 -- EXPLAIN ANALYZE
--- SELECT * FROM library_entries 
+-- SELECT * FROM library_entries
 -- WHERE group_id = 'uuid' AND user_id = 'uuid' AND type = 'movie' AND provider = 'tmdb';
 
 -- EXPLAIN ANALYZE
--- SELECT * FROM activity_events 
+-- SELECT * FROM activity_events
 -- WHERE group_id = 'uuid' AND created_at > '2024-01-01' AND actor_id != 'uuid'
 -- ORDER BY created_at DESC LIMIT 50;

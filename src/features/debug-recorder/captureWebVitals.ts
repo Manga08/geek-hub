@@ -113,13 +113,13 @@ interface LayoutShiftEntry extends PerformanceEntry {
 
 function extractCLSSources(entries: LayoutShiftEntry[]): CLSSource[] {
   const sources: CLSSource[] = [];
-  
+
   for (const entry of entries) {
     if (!entry.sources) continue;
-    
+
     for (const source of entry.sources) {
       if (!source.node || !(source.node instanceof Element)) continue;
-      
+
       const el = source.node as Element;
       sources.push({
         tagName: el.tagName.toLowerCase(),
@@ -140,7 +140,7 @@ function extractCLSSources(entries: LayoutShiftEntry[]): CLSSource[] {
       });
     }
   }
-  
+
   // Return top 3 sources (by shift magnitude)
   return sources
     .sort((a, b) => {
@@ -165,9 +165,9 @@ function observeCLS(): PerformanceObserver | null {
     // Report final CLS for previous route if significant
     if (clsValue > 0.001 && currentRoute) {
       const sources = extractCLSSources(sessionEntries);
-      reportMetric({ 
-        name: "CLS", 
-        value: clsValue, 
+      reportMetric({
+        name: "CLS",
+        value: clsValue,
         sources,
         // Include route info in the metric
       });

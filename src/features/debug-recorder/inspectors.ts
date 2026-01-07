@@ -196,7 +196,7 @@ const SENSITIVE_PATTERNS = [
  * @param key - The storage key
  * @param value - The raw value
  * @returns Sanitized value (redacted if sensitive, truncated otherwise)
- * 
+ *
  * Examples of redacted keys:
  * - "sb-xxx-auth-token" -> "[REDACTED]"
  * - "supabase.auth.token" -> "[REDACTED]"
@@ -206,17 +206,17 @@ const SENSITIVE_PATTERNS = [
 function sanitizeStorageValue(key: string, value: string): string {
   // Check if key matches any sensitive pattern
   const isSensitive = SENSITIVE_PATTERNS.some(pattern => pattern.test(key));
-  
+
   if (isSensitive) {
     return `[REDACTED] (length: ${value.length})`;
   }
-  
+
   // For non-sensitive values, truncate if too long (max 500 chars)
   const MAX_LENGTH = 500;
   if (value.length > MAX_LENGTH) {
     return value.slice(0, MAX_LENGTH) + `... [truncated, total: ${value.length}]`;
   }
-  
+
   return value;
 }
 
@@ -233,7 +233,7 @@ export function getStorageSnapshot(includeAll = false): StorageSnapshot {
   if (typeof window === "undefined") return result;
 
   // Helper to check if key is important
-  const isImportant = (key: string) => 
+  const isImportant = (key: string) =>
     includeAll || IMPORTANT_KEYS.some(prefix => key.startsWith(prefix));
 
   try {

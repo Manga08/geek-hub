@@ -15,8 +15,8 @@ function getRawgApiKey(): string {
 }
 
 async function fetchWithTimeout(
-  url: string, 
-  options: RequestInit = {}, 
+  url: string,
+  options: RequestInit = {},
   timeoutMs = DEFAULT_TIMEOUT_MS
 ) {
   const controller = new AbortController();

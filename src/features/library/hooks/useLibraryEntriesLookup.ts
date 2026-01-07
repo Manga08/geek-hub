@@ -26,7 +26,7 @@ interface UseLibraryEntriesLookupOptions {
 /**
  * Batch lookup hook for library entries.
  * Returns a Map keyed by `${type}:${provider}:${external_id}` -> entry or undefined.
- * 
+ *
  * @param items Array of items to lookup (will be capped at 50)
  * @param opts Options including enabled flag
  */
