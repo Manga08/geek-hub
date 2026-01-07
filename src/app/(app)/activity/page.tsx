@@ -83,8 +83,14 @@ function ActivityEventItem({ event }: { event: ActivityEvent }) {
       {/* Content */}
       <div className="min-w-0 flex-1 space-y-1">
         <p className="text-sm leading-relaxed text-foreground/90">
-          <span className="font-medium text-foreground">{displayName}</span>{" "}
-          <span dangerouslySetInnerHTML={{ __html: description.replace(displayName, "") }} />
+          {description.startsWith(displayName) ? (
+            <>
+              <span className="font-medium text-foreground">{displayName}</span>
+              {description.slice(displayName.length)}
+            </>
+          ) : (
+            description
+          )}
         </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <CalendarClock className="h-3 w-3" />
@@ -132,9 +138,7 @@ export default function ActivityPage() {
   const { mutate: markRead } = useMarkActivityRead();
 
   // Subscribe to real-time updates
-  useActivityRealtime(() => {
-    refetch();
-  });
+  useActivityRealtime({ ignoreOwnEvents: true });
 
   // Mark read on mount
   useEffect(() => {
@@ -170,10 +174,10 @@ export default function ActivityPage() {
           size="icon"
           onClick={() => refetch()}
           disabled={isRefetching}
-          className={cn("text-muted-foreground hover:text-foreground transition-all", isRefetching && "animate-spin")}
+          className="text-muted-foreground hover:text-foreground transition-all"
           aria-label="Actualizar actividad"
         >
-          <RefreshCw className="h-5 w-5" />
+          <RefreshCw className={cn("h-5 w-5", isRefetching && "animate-spin")} />
         </Button>
       </header>
 

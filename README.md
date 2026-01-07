@@ -304,6 +304,10 @@ pnpm install --force
 
 ## 📋 Changelog
 
+### Patch — Fix: Activity realtime & Security
+
+- Activity realtime hook signature + removed unsafe HTML rendering
+
 ### Phase 5D — UX: Settings index page
 
 - Nueva página índice `/settings` con acceso rápido a Perfil y Grupo.
