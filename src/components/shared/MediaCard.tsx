@@ -89,8 +89,8 @@ export function MediaCard({ item, prefetchedEntry, prefetchedLoading }: MediaCar
         >
           {/* Top Badge */}
           <div className="absolute left-2 top-2 z-10">
-            <Badge 
-              variant="secondary" 
+            <Badge
+              variant="secondary"
               className="px-1.5 py-0 text-[10px] uppercase font-bold tracking-wider opacity-80 backdrop-blur-md transition-opacity group-hover:opacity-100"
             >
               {typeLabel(item.type)}
@@ -99,7 +99,7 @@ export function MediaCard({ item, prefetchedEntry, prefetchedLoading }: MediaCar
 
           {/* Quick actions overlay - Top Right */}
           <div className="absolute right-2 top-2 z-10 flex translate-y-[-10px] items-center gap-1.5 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-             <div onClick={(e) => e.preventDefault()}> 
+             <div onClick={(e) => e.preventDefault()}>
                {/* Wrap in div to catch preventDefault correctly if button inside doesn't */}
                 <EntryQuickActions
                   itemType={item.type}
@@ -127,7 +127,7 @@ export function MediaCard({ item, prefetchedEntry, prefetchedLoading }: MediaCar
                </span>
             )}
           </div>
-          
+
           {year && (
             <p className="text-[11px] text-muted-foreground font-medium">
               {year}

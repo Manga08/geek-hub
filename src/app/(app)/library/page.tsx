@@ -47,6 +47,7 @@ import {
   type EntryStatus,
   type LibraryEntry,
 } from "@/features/library/types";
+import { MediaCardSkeleton } from "@/components/shared/Skeletons";
 
 // =====================
 // Constants
@@ -210,18 +211,7 @@ function LibraryGrid({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Skeleton() {
-  return (
-    <div className="animate-pulse rounded-xl border border-white/10 bg-white/3">
-      <div className="aspect-2/3 w-full bg-white/5" />
-      <div className="space-y-2 p-3">
-        <div className="h-4 w-12 rounded bg-white/10" />
-        <div className="h-4 w-full rounded bg-white/10" />
-        <div className="h-4 w-2/3 rounded bg-white/10" />
-      </div>
-    </div>
-  );
-}
+// Removed local Skeleton in favor of MediaCardSkeleton from shared
 
 // =====================
 // Bulk Action Bar
@@ -681,7 +671,7 @@ export default function LibraryPage() {
       {isLoading ? (
         <LibraryGrid>
           {Array.from({ length: 12 }).map((_, i) => (
-            <Skeleton key={i} />
+            <MediaCardSkeleton key={i} />
           ))}
         </LibraryGrid>
       ) : error ? (

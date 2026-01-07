@@ -304,6 +304,13 @@ pnpm install --force
 
 ## 📋 Changelog
 
+### Phase 6D — Perf/UI: Stable skeletons + reduced CLS
+
+- Implementación de `MediaCardSkeleton` con métricas exactas (aspectframe 2/3 + footer).
+- Integración de skeletons en `Search` y `Library` para carga progresiva sin saltos.
+- Unificación: Eliminado skeleton local duplicado en LibraryPage en favor del componente compartido.
+- Ajuste de espaciado en grids para asegurar consistencia visual entre estados de carga y contenido.
+
 ### Phase 6C — UI: Unified media cards
 
 - Estandarización de `MediaPosterFrame` (aspect 2/3) para todos los tipos de media (incluso Juegos).

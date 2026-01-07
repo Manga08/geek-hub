@@ -56,7 +56,7 @@ export function MediaPosterFrame({
 
       {/* Gradient Overlay for text readability */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10 opacity-60 transition-opacity duration-300 group-hover:opacity-80" />
-      
+
       {/* Content Slot */}
       {children}
     </div>

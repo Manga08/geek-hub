@@ -97,7 +97,7 @@ export function LibraryCard({ entry }: LibraryCardProps) {
           >
              {/* Badge */}
              <div className="absolute left-2 top-2 z-10">
-               <Badge 
+               <Badge
                  className={cn("px-1.5 py-0 text-[10px] uppercase font-bold tracking-wider opacity-90 backdrop-blur-md")}
                  style={{ backgroundColor: STATUS_COLORS[entry.status as EntryStatus] }}
                >
@@ -109,7 +109,7 @@ export function LibraryCard({ entry }: LibraryCardProps) {
              <div className="absolute right-2 top-2 z-10 flex translate-y-[-10px] flex-col gap-1.5 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                <Button
                  size="icon-sm"
-                 variant="ghost" 
+                 variant="ghost"
                  className="h-8 w-8 rounded-full bg-black/60 text-white backdrop-blur-sm hover:bg-black/80 hover:text-red-400"
                  onClick={(e) => {
                    e.preventDefault();
@@ -174,8 +174,8 @@ export function LibraryCard({ entry }: LibraryCardProps) {
             <Button variant="ghost" onClick={() => setDeleteOpen(false)}>
               Cancelar
             </Button>
-            <Button 
-               variant="destructive" 
+            <Button
+               variant="destructive"
                onClick={() => deleteMutation.mutate()}
                disabled={deleteMutation.isPending}
             >
