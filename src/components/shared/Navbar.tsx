@@ -227,7 +227,7 @@ function NavbarLinks() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-1 p-1">
+    <nav className="flex items-center gap-1">
       {links.map(({ href, label, icon: Icon }) => {
         const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));
 
@@ -236,9 +236,10 @@ function NavbarLinks() {
             key={href}
             href={href}
             className={cn(
-              "relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+              "relative flex items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50 xl:px-4",
               isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
+            title={label}
           >
             {isActive && (
               <motion.span
@@ -248,7 +249,7 @@ function NavbarLinks() {
               />
             )}
             <Icon className="h-4 w-4" />
-            <span>{label}</span>
+            <span className="hidden lg:inline-block">{label}</span>
           </Link>
         );
       })}
@@ -306,20 +307,23 @@ function MobileNav() {
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/60 backdrop-blur-xl supports-[backdrop-filter]:bg-black/60 h-16">
-      <div className="relative mx-auto flex h-full max-w-7xl items-center justify-between px-4">
+      <div className="mx-auto grid h-full max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4">
         {/* Left: Brand */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center">
           <Brand />
         </div>
 
-        {/* Center: Desktop Links */}
-        <div className="hidden md:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <NavbarLinks />
+        {/* Center: Desktop Links (Responsive) */}
+        <div className="hidden md:flex justify-center min-w-0">
+          <NavbarLinks />
         </div>
 
+        {/* Spacer for Flex fallback on mobile if grid behaves oddly, usually grid handles the gap */}
+        <div className="md:hidden" />
+
         {/* Right: Actions */}
-        <div className="flex items-center gap-3">
-          {/* GroupSwitcher visible on desktop, hidden on mobile to save space (can be added to sheet if needed, but keeping simple for now) */}
+        <div className="flex items-center justify-end gap-3">
+          {/* GroupSwitcher visible on desktop */}
           <div className="hidden md:block">
             <GroupSwitcher />
           </div>
