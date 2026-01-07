@@ -304,6 +304,13 @@ pnpm install --force
 
 ## 📋 Changelog
 
+### Phase 6B — UI: Navbar premium redesign
+
+- Rediseño completo con estructura layout de 3 columnas (Brand - Links - Actions).
+- State activo premium en links de escritorio usando `framer-motion` (pill background transition).
+- Navegación móvil movida a `Sheet` lateral para limpieza visual.
+- Altura fija (`h-16`) y efectos glass optimizados.
+
 ### Phase 6A — UI: Brand logo + wordmark
 
 - Nuevo componente `BrandMark` (SVG inline) estilo tech/premium.

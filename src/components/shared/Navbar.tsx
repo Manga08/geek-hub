@@ -3,7 +3,8 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Activity, BarChart3, Bell, Bookmark, Check, Home, ListChecks, Search, Settings, User, Users } from "lucide-react"
+import { Activity, BarChart3, Bell, Bookmark, Check, Home, ListChecks, Menu, Search, Settings, User, Users } from "lucide-react"
+import { motion } from "framer-motion"
 
 import {
   DropdownMenu,
@@ -12,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { GroupSwitcher } from "@/features/groups"
 import { useProfile } from "@/features/profile"
@@ -71,7 +73,7 @@ function NotificationsPanel() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           title="Notificaciones"
         >
           <Bell className="h-4 w-4 text-muted-foreground" />
@@ -159,6 +161,9 @@ function NotificationsPanel() {
   );
 }
 
+// =========================
+// User Menu
+// =========================
 function UserMenu() {
   const { data: profile, isLoading } = useProfile();
 
@@ -168,7 +173,7 @@ function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 pr-3 hover:bg-white/10 transition-colors">
+        <button className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 pr-3 hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
           {isLoading ? (
             <div className="h-7 w-7 rounded-full bg-gray-700 animate-pulse" />
           ) : profile?.avatar_url ? (
@@ -184,7 +189,7 @@ function UserMenu() {
               {initials}
             </div>
           )}
-          <span className="text-sm text-gray-300 hidden md:block max-w-24 truncate">
+          <span className="text-sm text-gray-300 hidden md:block max-w-[100px] truncate">
             {displayName}
           </span>
         </button>
@@ -214,59 +219,119 @@ function UserMenu() {
   );
 }
 
-export function Navbar() {
+// =========================
+// Navbar Subcomponents
+// =========================
+
+function NavbarLinks() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 mb-4 w-full border-b border-white/10 bg-black/40 backdrop-blur-xl">
-      <div className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:py-4">
-        <div className="flex items-center gap-3">
-          <Brand />
+    <nav className="flex items-center gap-1 p-1">
+      {links.map(({ href, label, icon: Icon }) => {
+        const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));
 
-          <div className="h-6 w-px bg-white/10 mx-1 hidden sm:block" />
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              "relative flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+              isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {isActive && (
+              <motion.span
+                layoutId="navbar-active-pill"
+                className="absolute inset-0 z-[-1] rounded-full bg-white/10 dark:bg-white/10"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              />
+            )}
+            <Icon className="h-4 w-4" />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
-          {/* Group Switcher */}
-          <GroupSwitcher />
-          <div className="hidden items-center gap-1 rounded-full border border-white/5 bg-white/5 px-1 text-sm text-muted-foreground shadow-sm sm:flex">
-            {links.map(({ href, label }) => (
+function MobileNav() {
+  const pathname = usePathname();
+
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <button className="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 bg-white/5 text-muted-foreground hover:text-foreground md:hidden">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Menú</span>
+        </button>
+      </SheetTrigger>
+      <SheetContent side="left" className="w-[300px] sm:w-[540px] pr-0">
+        <SheetHeader className="px-1 text-left">
+          <SheetTitle asChild>
+             <div className="scale-90 origin-left"><Brand /></div>
+          </SheetTitle>
+        </SheetHeader>
+        <div className="mt-8 flex flex-col gap-2">
+           <p className="px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Navegación</p>
+          {links.map(({ href, label, icon: Icon }) => {
+             const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));
+            return (
               <Link
                 key={href}
                 href={href}
                 className={cn(
-                  "rounded-full px-3 py-1 transition-colors",
-                  pathname?.startsWith(href)
-                    ? "bg-primary/20 text-foreground"
-                    : "hover:text-foreground"
+                  "flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors border-l-2",
+                  isActive
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:bg-white/5"
                 )}
               >
+                <Icon className="h-5 w-5" />
                 {label}
               </Link>
-            ))}
-          </div>
+            )
+          })}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// =========================
+// Main Navbar
+// =========================
+
+export function Navbar() {
+  return (
+    <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-black/60 backdrop-blur-xl supports-[backdrop-filter]:bg-black/60 h-16">
+      <div className="relative mx-auto flex h-full max-w-7xl items-center justify-between px-4">
+        {/* Left: Brand */}
+        <div className="flex items-center gap-4">
+          <Brand />
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1 shadow-sm sm:hidden">
-            {links.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-1 rounded-full px-2 py-1 text-xs text-muted-foreground transition-colors",
-                  pathname?.startsWith(href) && "bg-primary/15 text-foreground"
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{label}</span>
-              </Link>
-            ))}
+        {/* Center: Desktop Links */}
+        <div className="hidden md:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <NavbarLinks />
+        </div>
+
+        {/* Right: Actions */}
+        <div className="flex items-center gap-3">
+          {/* GroupSwitcher visible on desktop, hidden on mobile to save space (can be added to sheet if needed, but keeping simple for now) */}
+          <div className="hidden md:block">
+            <GroupSwitcher />
           </div>
+
+          <div className="hidden md:block h-6 w-px bg-white/10" />
+          
           <NotificationsPanel />
           <UserMenu />
+          
+          <MobileNav />
         </div>
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" aria-hidden />
       </div>
     </header>
-  )
+  );
 }
