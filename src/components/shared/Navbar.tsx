@@ -24,6 +24,7 @@ import {
   getEventDescription,
   ENTITY_ICONS,
 } from "@/features/activity"
+import { Brand } from "./Brand"
 
 const links = [
   { href: "/dashboard", label: "Inicio", icon: Home },
@@ -220,10 +221,10 @@ export function Navbar() {
     <header className="sticky top-0 z-40 mb-4 w-full border-b border-white/10 bg-black/40 backdrop-blur-xl">
       <div className="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:py-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 shadow-sm">
-            <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_0_6px_rgba(124,92,255,0.15)]" aria-hidden />
-            <span className="text-sm font-semibold tracking-tight text-foreground">GeekHub</span>
-          </div>
+          <Brand />
+
+          <div className="h-6 w-px bg-white/10 mx-1 hidden sm:block" />
+
           {/* Group Switcher */}
           <GroupSwitcher />
           <div className="hidden items-center gap-1 rounded-full border border-white/5 bg-white/5 px-1 text-sm text-muted-foreground shadow-sm sm:flex">

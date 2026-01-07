@@ -304,6 +304,12 @@ pnpm install --force
 
 ## 📋 Changelog
 
+### Phase 6A — UI: Brand logo + wordmark
+
+- Nuevo componente `BrandMark` (SVG inline) estilo tech/premium.
+- Componente `Brand` con variantes full/icon y efectos glass/glow.
+- Integración en navbar (reemplazo de placeholder anterior).
+
 ### Patch — Fix: Activity realtime & Security
 
 - Activity realtime hook signature + removed unsafe HTML rendering
