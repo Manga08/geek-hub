@@ -20,7 +20,7 @@ describe("normalizeRawgItem", () => {
     expect(item.type).toBe("game");
     expect(item.title).toBe("Halo");
     expect(item.year).toBe(2001);
-    expect(item.posterUrl).toBe("https://media.rawg.io/media/resize/1280/-/games/halo.jpg");
+    expect(item.posterUrl).toBe("https://media.rawg.io/media/resize/640/-/games/halo.jpg");
     expect(item.genres).toEqual(["Action", "Shooter"]);
   });
 
@@ -38,7 +38,7 @@ describe("normalizeRawgItem", () => {
     expect(item.posterUrl).toBe("https://img/extra.jpg");
   });
 
-  it("upgrades RAWG images to HQ with resize/1280/-", () => {
+  it("upgrades RAWG images to HQ with resize/640/-", () => {
     const raw: RawgGameLike = {
       id: 8,
       name: "Celeste",
@@ -50,7 +50,7 @@ describe("normalizeRawgItem", () => {
 
     const item = normalizeRawgItem(raw);
 
-    expect(item.posterUrl).toBe("https://media.rawg.io/media/resize/1280/-/screenshots/288/abc.jpg");
+    expect(item.posterUrl).toBe("https://media.rawg.io/media/resize/640/-/screenshots/288/abc.jpg");
   });
 
   it("does not double-resize already resized URLs", () => {

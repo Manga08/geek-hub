@@ -18,6 +18,13 @@ export function normalizeRawgItem(raw: RawgGameLike): UnifiedCatalogItem {
   const posterUrl = posterCandidate ? upgradeRawgImage(posterCandidate) : null;
   const backdropUrl = raw.background_image_additional ?? raw.background_image ?? null;
 
+  // Rating: Prefer Metacritic (0-100 -> 0-10), otherwise RAWG rating (0-5 -> 0-10)
+  const rating = raw.metacritic
+    ? raw.metacritic / 10
+    : raw.rating
+      ? raw.rating * 2
+      : null;
+
   return {
     key: `rawg-${externalId}`,
     type: "game",
@@ -26,7 +33,7 @@ export function normalizeRawgItem(raw: RawgGameLike): UnifiedCatalogItem {
     title,
     year: parseYear(raw.released),
     posterUrl,
-    rating: raw.rating ?? (raw.metacritic ? raw.metacritic / 10 : null),
+    rating,
     backdropUrl,
     genres: Array.isArray(raw.genres) ? raw.genres.map((g) => g.name) : [],
     summary: raw.description_raw ?? null,
@@ -44,11 +51,11 @@ export function upgradeRawgImage(url: string): string {
   // Already resized => leave as is
   if (url.includes("/resize/")) return url;
 
-  // media.rawg.io/media/... => insert resize/1280/-/ after /media/
+  // media.rawg.io/media/... => insert resize/640/-/ after /media/
   if (url.includes("media.rawg.io/media/") && !url.includes("/resize/")) {
     return url.replace(
       /media\.rawg\.io\/media\//,
-      "media.rawg.io/media/resize/1280/-/"
+      "media.rawg.io/media/resize/640/-/"
     );
   }
 
