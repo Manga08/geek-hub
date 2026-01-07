@@ -25,7 +25,7 @@ export function BrandMark({ className, variant = "hub" }: BrandMarkProps) {
             strokeWidth="1.5"
             strokeLinejoin="round"
           />
-          
+
           {/* Core Center Dot */}
           <circle cx="12" cy="12" r="1" fill="currentColor" />
 

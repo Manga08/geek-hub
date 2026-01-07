@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Heart, Edit, Loader2 } from "lucide-react";
+import { Heart, Edit, Loader2, Trash2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
@@ -98,8 +98,10 @@ export function LibraryCard({ entry }: LibraryCardProps) {
              {/* Badge */}
              <div className="absolute left-2 top-2 z-10">
                <Badge
-                 className={cn("px-1.5 py-0 text-[10px] uppercase font-bold tracking-wider opacity-90 backdrop-blur-md")}
-                 style={{ backgroundColor: STATUS_COLORS[entry.status as EntryStatus] }}
+                 className={cn(
+                   "px-1.5 py-0 text-[10px] uppercase font-bold tracking-wider opacity-90 backdrop-blur-md border",
+                   STATUS_COLORS[entry.status as EntryStatus]
+                 )}
                >
                  {STATUS_LABELS[entry.status as EntryStatus]}
                </Badge>
@@ -131,6 +133,18 @@ export function LibraryCard({ entry }: LibraryCardProps) {
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
+               <Button
+                 size="icon-sm"
+                 variant="ghost"
+                 className="h-8 w-8 rounded-full bg-black/60 text-white backdrop-blur-sm hover:bg-black/80 hover:text-red-500"
+                 onClick={(e) => {
+                   e.preventDefault();
+                   e.stopPropagation();
+                   setDeleteOpen(true);
+                 }}
+               >
+                 <Trash2 className="h-4 w-4" />
+               </Button>
              </div>
           </MediaPosterFrame>
 
