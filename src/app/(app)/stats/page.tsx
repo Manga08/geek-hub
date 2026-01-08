@@ -154,8 +154,11 @@ function TopRatedList({ entries }: { entries: StatsSummary["topRated"] }) {
       <h3 className="text-sm font-semibold text-gray-300 mb-4">Mejor puntuados</h3>
       <div className="space-y-3">
         {entries.map((entry, index) => (
-          <div key={entry.id} className="flex items-center gap-3">
-            <span className="w-6 text-center text-lg font-bold text-gray-500">
+          <div key={entry.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
+            <span className={cn(
+               "w-6 text-center text-lg font-bold",
+               index === 0 ? "text-amber-400" : "text-gray-500"
+            )}>
               {index + 1}
             </span>
             {entry.poster_url ? (
@@ -164,7 +167,7 @@ function TopRatedList({ entries }: { entries: StatsSummary["topRated"] }) {
                 alt=""
                 width={40}
                 height={60}
-                className="rounded-md object-cover"
+                className="rounded-md object-cover shadow-sm"
               />
             ) : (
               <div className="w-10 h-15 rounded-md bg-gray-700 flex items-center justify-center">
@@ -172,12 +175,12 @@ function TopRatedList({ entries }: { entries: StatsSummary["topRated"] }) {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-200 truncate">{entry.title ?? "Sin título"}</p>
+              <p className="text-sm font-medium text-gray-200 truncate">{entry.title ?? "Sin título"}</p>
               <p className="text-xs text-gray-500 capitalize">{entry.type}</p>
             </div>
-            <div className="flex items-center gap-1 text-amber-400">
-              <Star className="h-4 w-4 fill-amber-400" />
-              <span className="font-semibold">{entry.rating}</span>
+            <div className="flex items-center gap-1 text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
+              <Star className="h-3 w-3 fill-amber-400" />
+              <span className="text-sm font-bold">{entry.rating}</span>
             </div>
           </div>
         ))}
@@ -199,15 +202,15 @@ function Leaderboard({ members }: { members: StatsSummary["members"] }) {
         <Trophy className="h-4 w-4 text-amber-400" />
         <h3 className="text-sm font-semibold text-gray-300">Leaderboard</h3>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {members.map((member, index) => (
-          <div key={member.user_id} className="flex items-center gap-3">
+          <div key={member.user_id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
             <span className={cn(
-              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-              index === 0 ? "bg-amber-500/20 text-amber-400" :
+              "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+              index === 0 ? "bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/50" :
               index === 1 ? "bg-gray-400/20 text-gray-400" :
               index === 2 ? "bg-orange-500/20 text-orange-400" :
-              "bg-white/5 text-gray-500"
+              "bg-gray-800 text-gray-500"
             )}>
               {index + 1}
             </span>
@@ -217,7 +220,7 @@ function Leaderboard({ members }: { members: StatsSummary["members"] }) {
                 alt=""
                 width={32}
                 height={32}
-                className="rounded-full"
+                className="rounded-full ring-2 ring-black/20"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
@@ -225,7 +228,7 @@ function Leaderboard({ members }: { members: StatsSummary["members"] }) {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-200 truncate">
+              <p className="text-sm font-medium text-gray-200 truncate">
                 {member.display_name ?? "Usuario"}
               </p>
               <p className="text-xs text-gray-500">
@@ -233,9 +236,12 @@ function Leaderboard({ members }: { members: StatsSummary["members"] }) {
               </p>
             </div>
             {member.avgRating !== null && (
-              <div className="flex items-center gap-1 text-amber-400">
-                <Star className="h-3 w-3 fill-amber-400" />
-                <span className="text-sm">{member.avgRating}</span>
+              <div className="flex flex-col items-end sm:flex-row sm:items-center sm:gap-1">
+                <div className="flex items-center gap-1 text-amber-400">
+                   <Star className="h-3 w-3 fill-amber-400" />
+                   <span className="text-sm font-bold">{member.avgRating}</span>
+                </div>
+                <span className="text-[10px] text-gray-600 uppercase hidden sm:inline">Avg</span>
               </div>
             )}
           </div>

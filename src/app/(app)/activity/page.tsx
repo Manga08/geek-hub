@@ -19,6 +19,46 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // =========================
+// Link Helper
+// =========================
+
+function getEventTarget(event: ActivityEvent): { url: string | null; label: string | null } {
+  const { event_type, metadata } = event;
+
+  // Library Item
+  if (
+    event_type.startsWith("library_entry_") &&
+    metadata.item_type &&
+    metadata.provider &&
+    metadata.external_id
+  ) {
+    return {
+      url: `/item/${metadata.item_type}/${metadata.provider}-${metadata.external_id}`,
+      label: metadata.item_title ?? "Item",
+    };
+  }
+
+  // List
+  if (event_type.startsWith("list_") && metadata.list_id) {
+    return {
+      url: `/lists/${metadata.list_id}`,
+      label: metadata.list_name ?? metadata.name ?? "Lista",
+    };
+  }
+
+  // List Item (Link to List usually, or Item if we prefer)
+  // Let's link to the specific list
+  if (event_type.startsWith("list_item_") && metadata.list_id) {
+    return {
+      url: `/lists/${metadata.list_id}`,
+      label: metadata.list_name ?? "Lista",
+    };
+  }
+
+  return { url: null, label: null };
+}
+
+// =========================
 // Relative Time Helper
 // =========================
 
@@ -47,19 +87,14 @@ function ActivityEventItem({ event }: { event: ActivityEvent }) {
   const description = getEventDescription(event);
   const icon = ENTITY_ICONS[event.entity_type];
   const timeAgo = getRelativeTime(event.created_at);
+  const { url: targetUrl } = getEventTarget(event);
 
   const avatar = event.profiles?.avatar_url;
   const displayName = event.profiles?.display_name ?? "Usuario";
   const initials = displayName[0].toUpperCase();
 
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="group flex items-start gap-4 p-4 transition-colors hover:bg-white/5"
-    >
+  const Content = (
+    <div className="flex items-start gap-4 p-4 transition-colors hover:bg-white/5 relative">
       {/* Avatar */}
       <div className="relative shrink-0 mt-0.5">
         {avatar ? (
@@ -83,20 +118,39 @@ function ActivityEventItem({ event }: { event: ActivityEvent }) {
       {/* Content */}
       <div className="min-w-0 flex-1 space-y-1">
         <p className="text-sm leading-relaxed text-foreground/90">
-          {description.startsWith(displayName) ? (
-            <>
-              <span className="font-medium text-foreground">{displayName}</span>
-              {description.slice(displayName.length)}
-            </>
-          ) : (
-            description
-          )}
+          {/* Highlight User Name */}
+          <span className="font-medium text-foreground">{displayName}</span>
+          
+          {/* Rest of the text - we remove the name from start if exists to avoid duplication,
+              but getEventDescription usually returns full string "User did action".
+              We need to handle this carefully. Simple approach: Just render description but make whole card clickable.
+           */}
+           {" "}
+           {description.replace(displayName, "").trim()}
         </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <CalendarClock className="h-3 w-3" />
           <time dateTime={event.created_at}>{timeAgo}</time>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="group"
+    >
+      {targetUrl ? (
+        <Link href={targetUrl} className="block outline-none focus-visible:bg-white/5 rounded-lg active:scale-[0.99] transition-transform">
+          {Content}
+        </Link>
+      ) : (
+        Content
+      )}
     </motion.div>
   );
 }
@@ -182,7 +236,7 @@ export default function ActivityPage() {
       </header>
 
       {/* Feed Content */}
-      <GlassCard className="min-h-[400px] overflow-hidden">
+      <GlassCard className="min-h-[400px] overflow-hidden rounded-xl border-white/10">
         {isLoading ? (
           <div className="divide-y divide-white/5">
             {Array.from({ length: 5 }).map((_, i) => (
