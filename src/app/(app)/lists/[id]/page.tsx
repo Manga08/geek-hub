@@ -13,12 +13,21 @@ import {
   ChevronDown,
   ExternalLink,
   X,
+  MoreVertical,
+  Settings
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { GlassCard } from "@/components/shared/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -196,8 +205,8 @@ function ListItemCard({
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Actions - Desktop */}
+          <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
               variant="ghost"
               size="icon"
@@ -229,6 +238,35 @@ function ListItemCard({
             >
               <X className="h-4 w-4" />
             </Button>
+          </div>
+
+          {/* Actions - Mobile */}
+          <div className="sm:hidden">
+            <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                     <MoreVertical className="h-4 w-4" />
+                  </Button>
+               </DropdownMenuTrigger>
+               <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={onMoveUp} disabled={isFirst}>
+                     <ChevronUp className="mr-2 h-4 w-4" /> Mover arriba
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onMoveDown} disabled={isLast}>
+                     <ChevronDown className="mr-2 h-4 w-4" /> Mover abajo
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <Link href={itemUrl} className="w-full">
+                     <DropdownMenuItem>
+                        <ExternalLink className="mr-2 h-4 w-4" /> Ver detalles
+                     </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="text-destructive focus:text-destructive font-medium">
+                     <Trash2 className="mr-2 h-4 w-4" /> Quitar
+                  </DropdownMenuItem>
+               </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </GlassCard>
       </motion.div>
@@ -361,21 +399,24 @@ export default function ListDetailPage({ params }: PageProps) {
       ) : data ? (
         <>
           {/* Header */}
-          <div className="mb-8 flex items-start justify-between gap-4">
+          <div className="mb-6 flex items-start justify-between gap-4 sm:mb-8">
             <div className="flex-1 min-w-0">
-              <h1 className="text-3xl font-bold truncate">{data.list.name}</h1>
+              <h1 className="text-2xl font-bold truncate sm:text-3xl">{data.list.name}</h1>
               {data.list.description && (
-                <p className="mt-2 text-muted-foreground">{data.list.description}</p>
+                <p className="mt-1 text-sm text-muted-foreground sm:mt-2 sm:text-base">{data.list.description}</p>
               )}
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
                 {data.items.length} {data.items.length === 1 ? "elemento" : "elementos"}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* Desktop Actions */}
+            <div className="hidden sm:flex items-center gap-2">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setShowEditDialog(true)}
+                title="Editar lista"
               >
                 <Edit2 className="h-4 w-4" />
               </Button>
@@ -384,9 +425,35 @@ export default function ListDetailPage({ params }: PageProps) {
                 size="icon"
                 className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 onClick={() => setShowDeleteDialog(true)}
+                title="Eliminar lista"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
+            </div>
+
+            {/* Mobile Actions */}
+            <div className="sm:hidden">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon">
+                            <Settings className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
+                            <Edit2 className="mr-2 h-4 w-4" />
+                            Editar detalles
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            onClick={() => setShowDeleteDialog(true)}
+                            className="text-destructive focus:text-destructive"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Eliminar lista
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
           </div>
 

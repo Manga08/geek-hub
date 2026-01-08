@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Heart, Edit, Loader2, Trash2 } from "lucide-react";
+import { Heart, Edit, Loader2, Trash2, MoreVertical } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
@@ -31,6 +31,13 @@ import {
   STATUS_LABELS,
   STATUS_COLORS,
 } from "@/features/library/types";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const cardVariants: Variants = {
   initial: { opacity: 0, y: 12 },
@@ -107,10 +114,10 @@ export function LibraryCard({ entry }: LibraryCardProps) {
                </Badge>
              </div>
 
-             {/* Actions */}
-             <div className="absolute right-2 top-2 z-10 flex translate-y-[-10px] flex-col gap-1.5 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+             {/* Actions - Desktop Hover */}
+             <div className="hidden sm:flex absolute right-2 top-2 z-10 translate-y-[-10px] flex-col gap-1.5 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                <Button
-                 size="icon-sm"
+                 size="icon"
                  variant="ghost"
                  className="h-8 w-8 rounded-full bg-black/60 text-white backdrop-blur-sm hover:bg-black/80 hover:text-red-400"
                  onClick={(e) => {
@@ -122,7 +129,7 @@ export function LibraryCard({ entry }: LibraryCardProps) {
                  <Heart className={cn("h-4 w-4", entry.is_favorite && "fill-current text-red-500")} />
                </Button>
                <Button
-                  size="icon-sm"
+                  size="icon"
                   variant="ghost"
                   className="h-8 w-8 rounded-full bg-black/60 text-white backdrop-blur-sm hover:bg-black/80 hover:text-primary"
                   onClick={(e) => {
@@ -134,7 +141,7 @@ export function LibraryCard({ entry }: LibraryCardProps) {
                   <Edit className="h-4 w-4" />
                 </Button>
                <Button
-                 size="icon-sm"
+                 size="icon"
                  variant="ghost"
                  className="h-8 w-8 rounded-full bg-black/60 text-white backdrop-blur-sm hover:bg-black/80 hover:text-red-500"
                  onClick={(e) => {
@@ -145,6 +152,57 @@ export function LibraryCard({ entry }: LibraryCardProps) {
                >
                  <Trash2 className="h-4 w-4" />
                </Button>
+             </div>
+
+             {/* Actions - Mobile Dropdown */}
+             <div className="absolute right-1 top-1 z-20 sm:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 rounded-full bg-black/60 text-white backdrop-blur-sm"
+                      onClick={(e) => {
+                        // Prevent navigation when clicking the menu trigger
+                        e.stopPropagation();
+                        // Note: preventDefault might block the dropdown opening if not handled by Radix,
+                        // but Radix usually handles it. We just need to stop propagation to the Link.
+                      }}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                         e.stopPropagation();
+                         favoriteMutation.mutate();
+                      }}
+                    >
+                       <Heart className={cn("mr-2 h-4 w-4", entry.is_favorite && "fill-current text-red-500")} />
+                       {entry.is_favorite ? 'No es favorito' : 'Favorito'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditOpen(true);
+                      }}
+                    >
+                       <Edit className="mr-2 h-4 w-4" />
+                       Editar
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteOpen(true);
+                      }}
+                      className="text-red-500 focus:text-red-500"
+                    >
+                       <Trash2 className="mr-2 h-4 w-4" />
+                       Eliminar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
              </div>
           </MediaPosterFrame>
 

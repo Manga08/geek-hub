@@ -67,6 +67,7 @@ Asegurar una experiencia fluida y consistente en dispositivos móviles, alineada
 - [ ] **Skeletons:** `MediaGridSkeleton` coincide exactamente con el layout responsivo del Grid real (evita saltos al cargar).
 
 ## Phase M1: Navigation & Tabs
+
 - [ ] **Touch Targets:** Links del Navbar y botones de acción tienen área táctil >= 44px.
 - [ ] **Scrollable Tabs:** Filtros en Biblioteca y Stats deslizan horizontalmente en móvil (sin wrap que ocupe espacio vertical).
 - [ ] **Headers:** Títulos de página (H1) son responsivos (`text-2xl` en móvil) y no cortan iconos.

@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { List, Plus, Trash2 } from "lucide-react";
+import { List, Plus, Trash2, MoreVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { GlassCard } from "@/components/shared/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -140,7 +146,7 @@ function ListCard({ list, onDelete }: { list: ListWithItemCount; onDelete: () =>
               <Button
                 variant="ghost"
                 size="icon"
-                className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                className="hidden sm:flex shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -149,6 +155,37 @@ function ListCard({ list, onDelete }: { list: ListWithItemCount; onDelete: () =>
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
+
+              {/* Mobile Actions */}
+              <div className="sm:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-muted-foreground"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Prevent navigation (Link wrapper)
+                      }}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDeleteDialog(true);
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar lista
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </GlassCard>
         </Link>

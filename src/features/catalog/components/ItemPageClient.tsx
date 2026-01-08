@@ -32,7 +32,7 @@ function ItemSkeleton() {
         <div className="relative h-48 w-full bg-white/5 animate-pulse sm:h-64">
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         </div>
-        
+
         <div className="relative z-10 flex flex-col gap-6 p-4 pt-0 sm:p-6 sm:flex-row sm:pt-6">
           {/* Poster Skeleton */}
           <div className="w-36 -mt-20 mx-auto sm:mx-0 sm:mt-0 sm:w-48 shrink-0">
@@ -42,7 +42,7 @@ function ItemSkeleton() {
           {/* Content Skeleton */}
           <div className="flex-1 space-y-4 pt-2">
              <div className="mx-auto h-4 w-20 rounded bg-white/10 animate-pulse sm:mx-0" />
-             <div className="mx-auto h-8 w-3/4 rounded bg-white/10 animate-pulse sm:mx-0" /> 
+             <div className="mx-auto h-8 w-3/4 rounded bg-white/10 animate-pulse sm:mx-0" />
              <div className="flex justify-center gap-2 sm:justify-start">
                 <div className="h-5 w-16 rounded-full bg-white/10 animate-pulse" />
                 <div className="h-5 w-16 rounded-full bg-white/10 animate-pulse" />
