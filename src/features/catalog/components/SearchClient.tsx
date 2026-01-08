@@ -10,6 +10,7 @@ import { MediaCard } from "@/components/shared/MediaCard";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { MediaGridSkeleton } from "@/components/shared/Skeletons";
 import { GlassCard } from "@/components/shared/GlassCard";
+import { FilterSheet } from "@/components/shared/FilterSheet";
 import type { UnifiedItemType } from "@/features/catalog/normalize/unified.types";
 import { fetchCatalogSearch } from "@/features/catalog/queries";
 import { useLibraryEntriesLookup, type LookupItem } from "@/features/library";
@@ -62,10 +63,15 @@ function SearchInner() {
     { enabled: results.length > 0 }
   );
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = (event?: React.FormEvent) => {
+    event?.preventDefault();
     if (!query.trim()) return;
     setSubmittedQuery(query.trim());
+  };
+
+  const clearFilters = () => {
+    setQuery("");
+    setType("game");
   };
 
   const handleLoadMore = () => {
@@ -77,7 +83,7 @@ function SearchInner() {
   return (
     <div className="space-y-6">
       <GlassCard className="p-4 sm:p-5">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <form onSubmit={handleSubmit} className="hidden sm:flex sm:items-end gap-3">
           <div className="flex-1 space-y-2">
             <label className="text-sm font-medium text-muted-foreground">Búsqueda</label>
             <Input
@@ -105,6 +111,48 @@ function SearchInner() {
             {isFetching ? "Buscando..." : "Buscar"}
           </Button>
         </form>
+
+        <div className="sm:hidden">
+          <FilterSheet
+            title="Filtrar Catálogo"
+            description="Selecciona tipo y término de búsqueda"
+            onApply={() => handleSubmit()}
+            onClear={clearFilters}
+            isPending={isFetching}
+          >
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Búsqueda</label>
+                <Input
+                  placeholder="Grand Theft Auto..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Tipo de contenido
+                </label>
+                <Select
+                  value={type}
+                  onValueChange={(v) => setType(v as UnifiedItemType)}
+                >
+                  <SelectTrigger className="w-full bg-white/5 border-white/10">
+                    <SelectValue placeholder="Selecciona" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="game">Juego</SelectItem>
+                    <SelectItem value="movie">Película</SelectItem>
+                    <SelectItem value="tv">Serie</SelectItem>
+                    <SelectItem value="anime">Anime</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </FilterSheet>
+        </div>
       </GlassCard>
 
       {isInitialLoading ? <MediaGridSkeleton /> : null}
