@@ -13,6 +13,18 @@
 - **Mobile First Design:** Interfaz optimizada para dispositivos táctiles.
 - **QA Checklist:** [Ver guía de auditoría móvil](docs/mobile-qa.md).
 
+## 📜 Changelog (Recent Phases)
+
+- **Phase M0:** Mobile Audit & Baseline Fixes
+  - Auditoría global y fixes de overflow.
+  - GroupSwitcher accesible en móvil.
+  - QA Checklist creado.
+
+- **Phase M2:** Mobile Grid & Cards Density
+  - Layout Grid optimizado: 2 columnas en móvil / 6 en monitores XL.
+  - Densidad mejorada: reducción de padding en `MediaCard` para móviles (`p-2`).
+  - Skeletons sincronizados: `MediaGridSkeleton` ahora replica exactamente los breakpoints del grid real para evitar CLS.
+
 ## ✨ Características Principales
 
 ### 📚 Catálogo Unificado

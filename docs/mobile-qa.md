@@ -48,4 +48,10 @@ Asegurar una experiencia fluida y consistente en dispositivos móviles, alineada
 
 ### 7. Settings (`/settings/*`)
 - [ ] **Profile Form:** Inputs y avatares editables.
+
+## Phase M2: Grid Density & Stability (Specific)
+- [ ] **Mobile Density:** `MediaGrid` muestra 2 columnas en móviles (360px+).
+- [ ] **Compact Cards:** Padding interno reducido (`p-2`) en móvil para maximizar espacio de arte.
+- [ ] **Typography:** Títulos de cards permiten 2 líneas, sin romper layout.
+- [ ] **Skeletons:** `MediaGridSkeleton` coincide exactamente con el layout responsivo del Grid real (evita saltos al cargar).
 - [ ] **Switchers/Toggles:** Fácil interacción táctil.

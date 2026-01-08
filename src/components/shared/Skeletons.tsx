@@ -9,7 +9,7 @@ export function MediaCardSkeleton() {
       </div>
 
       {/* Footer Area */}
-      <div className="flex flex-1 flex-col gap-2 p-3">
+      <div className="flex flex-1 flex-col gap-2 p-2 sm:p-3">
         <div className="flex items-start justify-between gap-2">
           {/* Title Placeholder */}
           <div className="h-4 w-3/4 rounded bg-white/10" />
@@ -25,7 +25,7 @@ export function MediaCardSkeleton() {
 
 export function MediaGridSkeleton({ count = 10 }: { count?: number }) {
   return (
-    <div className="grid min-h-[400px] gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+    <div className="grid min-h-[400px] grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {Array.from({ length: count }).map((_, idx) => (
         <MediaCardSkeleton key={idx} />
       ))}

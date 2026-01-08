@@ -116,7 +116,7 @@ export function MediaCard({ item, prefetchedEntry, prefetchedLoading }: MediaCar
         </MediaPosterFrame>
 
         {/* Content Footer */}
-        <div className="flex flex-1 flex-col gap-1 p-3">
+        <div className="flex flex-1 flex-col gap-1 p-2 sm:p-3">
           <div className="flex items-start justify-between gap-2">
             <h3 className="line-clamp-2 text-sm font-medium leading-tight text-foreground/90 group-hover:text-primary transition-colors">
               {item.title}
