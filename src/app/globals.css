@@ -120,7 +120,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
     background-image:
       radial-gradient(1400px at 12% 18%, rgba(139, 92, 246, 0.14), transparent 45%),
       radial-gradient(1200px at 82% 0%, rgba(34, 211, 238, 0.12), transparent 40%),

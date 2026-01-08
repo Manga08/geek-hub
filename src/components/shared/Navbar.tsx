@@ -273,6 +273,13 @@ function MobileNav() {
           </SheetTitle>
         </SheetHeader>
         <div className="mt-8 flex flex-col gap-2">
+           <div className="px-4 mb-6">
+             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Grupo Activo</p>
+             <div className="flex w-full">
+                <GroupSwitcher />
+             </div>
+           </div>
+
            <p className="px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Navegación</p>
           {links.map(({ href, label, icon: Icon }) => {
              const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));

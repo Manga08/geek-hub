@@ -9,6 +9,10 @@
 
 ---
 
+## 📱 Mobile Support
+- **Mobile First Design:** Interfaz optimizada para dispositivos táctiles.
+- **QA Checklist:** [Ver guía de auditoría móvil](docs/mobile-qa.md).
+
 ## ✨ Características Principales
 
 ### 📚 Catálogo Unificado
@@ -303,6 +307,11 @@ pnpm install --force
 ---
 
 ## 📋 Changelog
+
+### Phase M0: Mobile Audit & Baseline (Current)
+
+- **Documentación:** Creado `docs/mobile-qa.md` con checklist de auditoría.
+- **Ajustes globales:** Verificación de overflows y tamaños táctiles.
 
 ### Phase 6D — Perf/UI: Stable skeletons + reduced CLS
 

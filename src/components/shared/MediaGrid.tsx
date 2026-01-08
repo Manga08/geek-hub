@@ -33,7 +33,7 @@ export function MediaGrid({ children }: { children: React.ReactNode }) {
 
   return (
     <motion.div
-      className="grid min-h-[400px] gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+      className="grid min-h-[400px] grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
       variants={prefersReducedMotion ? undefined : containerVariants}
       initial={prefersReducedMotion ? undefined : "hidden"}
       animate={prefersReducedMotion ? undefined : "show"}
