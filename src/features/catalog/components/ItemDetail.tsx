@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Heart, Plus, Loader2, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExpandableText } from "@/components/shared/ExpandableText";
 import { EntryDialog, OurRatingsPanel } from "@/features/library/components";
 import { useLibraryEntry, STATUS_LABELS, STATUS_COLORS, type EntryStatus } from "@/features/library";
 import { AddToListButton } from "@/features/lists";
@@ -31,8 +32,8 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
   return (
     <div className="space-y-6">
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_30px_120px_-80px_rgba(139,92,246,0.6)] backdrop-blur-md">
-        {item.backdropUrl ? (
-          <div className="relative h-48 w-full sm:h-64">
+        <div className="relative h-48 w-full sm:h-64">
+          {item.backdropUrl ? (
             <Image
               src={item.backdropUrl}
               alt={item.title}
@@ -41,42 +42,49 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
-          </div>
-        ) : null}
-        <div className="relative z-10 flex flex-col gap-4 p-6 sm:flex-row">
-          <div className="w-full sm:w-48">
-            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/5 to-black/40">
+          ) : (
+            <div className="absolute inset-0 bg-white/5" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
+        </div>
+        <div className="relative z-10 flex flex-col gap-6 p-4 pt-0 sm:p-6 sm:flex-row sm:pt-6">
+          <div className="w-36 -mt-20 mx-auto sm:mx-0 sm:mt-0 sm:w-48 shrink-0">
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-white/5 to-black/40 shadow-2xl">
               {item.posterUrl ? (
-                <Image src={item.posterUrl} alt={item.title} fill sizes="200px" className="object-cover" />
+                <Image src={item.posterUrl} alt={item.title} fill sizes="(max-width: 640px) 150px, 200px" className="object-cover" />
               ) : (
                 <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Sin imagen</div>
               )}
             </div>
           </div>
-          <div className="flex-1 space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="capitalize">
-                {item.type}
-              </Badge>
-              {item.year ? <span className="text-sm text-muted-foreground/90">{item.year}</span> : null}
-              <span className="text-xs uppercase tracking-wide text-muted-foreground/80">{item.provider}</span>
-            </div>
-            <h1 className="text-2xl font-semibold text-foreground">{item.title}</h1>
-            {item.genres.length ? (
-              <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                {item.genres.map((genre) => (
-                  <Badge key={genre} variant="outline" className="text-xs">
-                    {genre}
-                  </Badge>
-                ))}
+          <div className="flex-1 space-y-4">
+            <div className="flex flex-col gap-2 text-center sm:text-left">
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                <Badge variant="secondary" className="capitalize">
+                  {item.type}
+                </Badge>
+                {item.year ? <span className="text-sm text-muted-foreground/90">{item.year}</span> : null}
+                <span className="text-xs uppercase tracking-wide text-muted-foreground/80">{item.provider}</span>
               </div>
+              <h1 className="text-2xl font-bold leading-tight text-foreground sm:text-3xl">{item.title}</h1>
+              {item.genres.length ? (
+                <div className="flex flex-wrap justify-center gap-2 text-sm text-muted-foreground sm:justify-start">
+                  {item.genres.map((genre) => (
+                    <Badge key={genre} variant="outline" className="text-xs">
+                      {genre}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            {item.summary ? (
+              <ExpandableText text={item.summary} className="text-center sm:text-left" />
             ) : null}
-            {item.summary ? <p className="text-sm text-muted-foreground">{item.summary}</p> : null}
 
             {/* Library Entry Info */}
             {isInLibrary && entry ? (
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-3">
+              <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 p-3 sm:justify-start">
                 <Badge className={`border ${STATUS_COLORS[entry.status as EntryStatus]}`}>
                   {STATUS_LABELS[entry.status as EntryStatus]}
                 </Badge>
@@ -104,14 +112,14 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
             ) : null}
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2 pt-1">
+            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
               {isInLibrary ? (
                 <>
                   <Button
                     variant="outline"
                     onClick={() => toggleFavorite()}
                     disabled={isTogglingFavorite}
-                    className={isFavorite ? "border-red-500/30 text-red-400" : ""}
+                    className={`h-11 w-full sm:w-auto ${isFavorite ? "border-red-500/30 text-red-400" : ""}`}
                   >
                     {isTogglingFavorite ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -122,7 +130,7 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => setDialogOpen(true)} disabled={isLoading}>
+                <Button onClick={() => setDialogOpen(true)} disabled={isLoading} className="h-11 w-full sm:w-auto text-base">
                   {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -131,13 +139,16 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
                   Agregar a biblioteca
                 </Button>
               )}
-              <AddToListButton
-                itemType={item.type}
-                provider={item.provider}
-                externalId={item.externalId}
-                title={item.title}
-                posterUrl={item.posterUrl ?? null}
-              />
+              <div className="flex w-full sm:w-auto">
+                <AddToListButton
+                  itemType={item.type}
+                  provider={item.provider}
+                  externalId={item.externalId}
+                  title={item.title}
+                  posterUrl={item.posterUrl ?? null}
+                  className="h-11 w-full text-base sm:w-auto"
+                />
+               </div>
             </div>
           </div>
         </div>

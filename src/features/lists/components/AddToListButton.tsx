@@ -5,6 +5,7 @@ import { List, Plus, Check, Loader2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +24,7 @@ interface AddToListButtonProps {
   externalId: string;
   title: string | null;
   posterUrl: string | null;
+  className?: string;
 }
 
 export function AddToListButton({
@@ -31,6 +33,7 @@ export function AddToListButton({
   externalId,
   title,
   posterUrl,
+  className,
 }: AddToListButtonProps) {
   const queryClient = useQueryClient();
   const { data: lists, isLoading: listsLoading } = useLists();
@@ -54,7 +57,7 @@ export function AddToListButton({
 
   if (listsLoading) {
     return (
-      <Button variant="outline" disabled>
+      <Button variant="outline" disabled className={cn(className)}>
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         Cargando...
       </Button>
@@ -68,7 +71,7 @@ export function AddToListButton({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" className={cn(className)}>
           <List className="mr-2 h-4 w-4" />
           Agregar a lista
         </Button>
