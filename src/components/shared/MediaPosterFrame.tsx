@@ -40,56 +40,19 @@ export function MediaPosterFrame({
   return (
     <div className={cn("relative aspect-[2/3] w-full overflow-hidden bg-muted", className)}>
       {src ? (
-        <>
-          {/* Smart-Fit for Games: Background Blur Layer */}
-          {isGame ? (
-            <>
-              {/* Mobile Only: Blurred Background for "Contain" mode */}
-              <div className="absolute inset-0 z-0 md:hidden">
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  className="object-cover opacity-60 blur-xl scale-110"
-                  aria-hidden="true"
-                  priority={priority}
-                  sizes={sizes}
-                />
-                <div className="absolute inset-0 bg-black/40" />
-              </div>
-
-              {/* Main Image Layer */}
-              <Image
-                src={src}
-                alt={alt}
-                fill
-                className={cn(
-                  "transition-transform duration-500 will-change-transform z-10 group-hover:scale-105",
-                  // Mobile: contain + padding to avoid crop
-                  "object-contain p-2 sm:p-3",
-                  // Desktop: cover + full bleed + top alignment for premium look
-                  "md:object-cover md:p-0 md:object-[center_top]"
-                )}
-                placeholder="blur"
-                blurDataURL={BLUR_DATA_URL}
-                sizes={sizes}
-                priority={priority}
-              />
-            </>
-          ) : (
-             /* Standard Cover for other media types (Movies, TV, Anime) */
-            <Image
-              src={src}
-              alt={alt}
-              fill
-              className="object-cover transition-transform duration-500 will-change-transform group-hover:scale-105"
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
-              sizes={sizes}
-              priority={priority}
-            />
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className={cn(
+            "object-cover transition-transform duration-500 will-change-transform group-hover:scale-105",
+            isGame && "object-[center_top]"
           )}
-        </>
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
+          sizes={sizes}
+          priority={priority}
+        />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 via-white/5 to-black/40">
           {TYPE_ICONS[type] || <Clapperboard className="h-8 w-8 text-white/20" />}
