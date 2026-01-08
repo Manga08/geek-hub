@@ -30,13 +30,17 @@ export interface NavActionPillProps
 }
 
 const NavActionPill = React.forwardRef<HTMLButtonElement, NavActionPillProps>(
-  ({ className, size, active, asChild = false, ...props }, ref) => {
+  ({ className, size, active, asChild = false, type = "button", ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    // If wrapping a child (Slot), 'type' might be ignored or passed down depending on Radix Slot behavior,
+    // but for the default "button" case, we want specific type="button" to avoid form submission.
+    const buttonProps = asChild ? props : { type, ...props }
+
     return (
       <Comp
         className={cn(navActionPillVariants({ size, active, className }))}
         ref={ref}
-        {...props}
+        {...buttonProps}
       />
     )
   }

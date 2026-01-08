@@ -42,33 +42,45 @@ export function MediaPosterFrame({
       {src ? (
         <>
           {/* Smart-Fit for Games: Background Blur Layer */}
-          {isGame && (
-            <div className="absolute inset-0 z-0">
-               <Image
-                src={src}
-                alt=""
-                fill
-                className="object-cover opacity-60 blur-xl scale-110"
-                aria-hidden
+          {isGame ? (
+            <>
+              {/* Option A: Div based background to avoid double Next/Image overhead */}
+              <div
+                className="absolute inset-0 z-0 bg-cover bg-center opacity-60 blur-xl scale-110"
+                style={{ backgroundImage: `url(${src})` }}
+                aria-hidden="true"
               />
-              <div className="absolute inset-0 bg-black/40" />
-            </div>
-          )}
+              <div className="absolute inset-0 z-0 bg-black/40" />
 
-          {/* Main Image Layer */}
-          <Image
-            src={src}
-            alt={alt}
-            fill
-            className={cn(
-              "transition-transform duration-500 will-change-transform group-hover:scale-105",
-              isGame ? "object-contain p-4 z-10" : "object-cover"
-            )}
-            placeholder="blur"
-            blurDataURL={BLUR_DATA_URL}
-            sizes={sizes}
-            priority={priority}
-          />
+              {/* Framed Foreground Image */}
+              <div className="absolute inset-0 z-10 flex items-center justify-center p-2 sm:p-3">
+                 <div className="relative h-full w-full overflow-hidden rounded-xl bg-black/20 shadow-lg ring-1 ring-white/10 transition-transform duration-500 will-change-transform group-hover:scale-105">
+                    <Image
+                      src={src}
+                      alt={alt}
+                      fill
+                      className="object-contain"
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
+                      sizes={sizes}
+                      priority={priority}
+                    />
+                 </div>
+              </div>
+            </>
+          ) : (
+             /* Standard Cover for other media types (Movies, TV, Anime) */
+            <Image
+              src={src}
+              alt={alt}
+              fill
+              className="object-cover transition-transform duration-500 will-change-transform group-hover:scale-105"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
+              sizes={sizes}
+              priority={priority}
+            />
+          )}
         </>
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-white/10 via-white/5 to-black/40">

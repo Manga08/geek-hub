@@ -19,9 +19,10 @@ export function normalizeRawgItem(raw: RawgGameLike): UnifiedCatalogItem {
   const backdropUrl = raw.background_image_additional ?? raw.background_image ?? null;
 
   // Rating: Prefer Metacritic (0-100 -> 0-10), otherwise RAWG rating (0-5 -> 0-10)
-  const rating = raw.metacritic
+  // Check explicit null/undefined to allow 0 values
+  const rating = (raw.metacritic != null)
     ? raw.metacritic / 10
-    : raw.rating
+    : (raw.rating != null)
       ? raw.rating * 2
       : null;
 

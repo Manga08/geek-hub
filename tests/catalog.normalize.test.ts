@@ -65,6 +65,49 @@ describe("normalizeRawgItem", () => {
 
     expect(item.posterUrl).toBe("https://media.rawg.io/media/resize/640/-/games/abc.jpg");
   });
+
+  describe("rating logic", () => {
+    it("converts metacritic 0-100 to 0-10", () => {
+      const raw: RawgGameLike = {
+        id: 10,
+        name: "Test Game",
+        background_image: "foo.jpg",
+        metacritic: 80,
+      };
+      expect(normalizeRawgItem(raw).rating).toBe(8);
+    });
+
+    it("handles metacritic 0 correctly (no falsy bug)", () => {
+      const raw: RawgGameLike = {
+        id: 11,
+        name: "Test Game",
+        background_image: "foo.jpg",
+        metacritic: 0,
+        rating: 4.5, // Should stay ignored because metacritic exists
+      };
+      expect(normalizeRawgItem(raw).rating).toBe(0);
+    });
+
+    it("falls back to rating * 2 if metacritic is missing", () => {
+      const raw: RawgGameLike = {
+        id: 12,
+        name: "Test Game",
+        background_image: "foo.jpg",
+        rating: 4.3,
+      };
+      expect(normalizeRawgItem(raw).rating).toBe(8.6);
+    });
+
+    it("handles rating 0 correctly (no null)", () => {
+      const raw: RawgGameLike = {
+        id: 13,
+        name: "Test Game",
+        background_image: "foo.jpg",
+        rating: 0,
+      };
+      expect(normalizeRawgItem(raw).rating).toBe(0);
+    });
+  });
 });
 
 describe("normalizeTmdbItem", () => {
