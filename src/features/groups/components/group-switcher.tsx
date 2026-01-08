@@ -34,7 +34,11 @@ function RoleBadge({ role }: { role: GroupRole }) {
   );
 }
 
-export function GroupSwitcher() {
+interface GroupSwitcherProps {
+  variant?: "desktop" | "mobileNav" | "mobileTopbar";
+}
+
+export function GroupSwitcher({ variant = "desktop" }: GroupSwitcherProps) {
   const { data: currentGroupData, isLoading: isCurrentLoading } = useCurrentGroup();
   const { data: groupsList, isLoading: isListLoading } = useGroupsList();
   const { mutate: setCurrentGroup, isPending } = useSetCurrentGroup();
@@ -76,25 +80,76 @@ export function GroupSwitcher() {
     }
   };
 
+  // Trigger content varies by variant
+  const TriggerContent = () => {
+    if (variant === "mobileTopbar") {
+      return (
+        <NavActionPill
+          className={cn(
+            "flex gap-1.5 px-3 text-xs text-muted-foreground justify-start",
+             (isPending || isLeaving) && "opacity-50 pointer-events-none"
+          )}
+          disabled={isPending || isLeaving}
+        >
+          <Users className="h-4 w-4 shrink-0" />
+           {isLoading ? (
+             <span className="h-3 w-12 animate-pulse rounded bg-white/10 hidden sm:inline-block" />
+           ) : (
+             <span className="max-w-[80px] truncate hidden sm:inline-block">{currentGroupName}</span>
+           )}
+          <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
+        </NavActionPill>
+      );
+    }
+
+    if (variant === "mobileNav") {
+       return (
+          <button
+             className={cn(
+               "flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-foreground hover:bg-white/10 transition-colors",
+               (isPending || isLeaving) && "opacity-50 pointer-events-none"
+             )}
+             disabled={isPending || isLeaving}
+          >
+             <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary">
+                   <Users className="h-4 w-4" />
+                </div>
+                <div className="flex flex-col items-start overflow-hidden">
+                   <span className="truncate font-medium w-full text-left">{currentGroupName}</span>
+                   {displayRole && <RoleBadge role={displayRole} />}
+                </div>
+             </div>
+             <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </button>
+       );
+    }
+
+    // Desktop
+    return (
+        <NavActionPill className={cn("hidden md:flex gap-1.5 px-3 text-xs text-muted-foreground justify-start", (isPending || isLeaving) && "opacity-50 pointer-events-none")}>
+          <Users className="h-3 w-3 shrink-0" />
+          {isLoading ? (
+            <span className="h-3 w-12 animate-pulse rounded bg-white/10" />
+          ) : (
+            <>
+              <span className="max-w-24 truncate">{currentGroupName}</span>
+              {displayRole && <RoleBadge role={displayRole} />}
+            </>
+          )}
+          <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
+        </NavActionPill>
+    );
+  };
+
   // Single group: show dropdown with manage and leave options
   if (!hasMultipleGroups) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <NavActionPill className="hidden md:flex gap-1.5 px-3 text-xs text-muted-foreground justify-start">
-            <Users className="h-3 w-3 shrink-0" />
-            {isLoading ? (
-              <span className="h-3 w-12 animate-pulse rounded bg-white/10" />
-            ) : (
-              <>
-                <span className="max-w-24 truncate">{currentGroupName}</span>
-                {displayRole && <RoleBadge role={displayRole} />}
-              </>
-            )}
-            <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
-          </NavActionPill>
+          {TriggerContent()}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-45">
+        <DropdownMenuContent align={variant === "mobileNav" ? "start" : "end"} className={cn("min-w-56", variant === "mobileNav" && "w-64")}>
           <DropdownMenuItem asChild>
             <Link href="/settings/group" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -123,26 +178,9 @@ export function GroupSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <NavActionPill
-          className={cn(
-            "hidden md:flex gap-1.5 px-3 text-xs text-muted-foreground justify-start",
-            (isPending || isLeaving) && "opacity-50 pointer-events-none"
-          )}
-          disabled={isPending || isLeaving}
-        >
-          <Users className="h-3 w-3 shrink-0" />
-          {isLoading ? (
-            <span className="h-3 w-12 animate-pulse rounded bg-white/10" />
-          ) : (
-            <>
-              <span className="max-w-24 truncate">{currentGroupName}</span>
-              {displayRole && <RoleBadge role={displayRole} />}
-            </>
-          )}
-          <ChevronDown className="h-3 w-3 opacity-50 shrink-0" />
-        </NavActionPill>
+        {TriggerContent()}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-45">
+      <DropdownMenuContent align={variant === "mobileNav" ? "start" : "end"} className={cn("min-w-56", variant === "mobileNav" && "w-64")}>
         {uniqueGroups.map((group) => (
           <DropdownMenuItem
             key={group.id}

@@ -78,6 +78,13 @@ export const ENTITY_ICONS: Record<EntityType, string> = {
  */
 export function getEventDescription(event: ActivityEvent): string {
   const actorName = event.profiles?.display_name ?? "Usuario";
+
+  // Fix: Handle malformed event types from legacy data or bad parsing
+  const rawType = event.event_type as string;
+  if (rawType === '["user", "joined_group"]' || rawType.includes("joined_group")) {
+    return `${actorName} se unió al grupo`;
+  }
+
   const label = EVENT_LABELS[event.event_type] ?? event.event_type;
   const meta = event.metadata;
 

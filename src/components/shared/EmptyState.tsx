@@ -1,7 +1,10 @@
-export function EmptyState({ message }: { message: string }) {
+import { GlassCard } from "./GlassCard";
+import { cn } from "@/lib/utils";
+
+export function EmptyState({ message, className }: { message: string, className?: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-zinc-200 bg-white p-6 text-center text-sm text-zinc-600">
-      {message}
-    </div>
+    <GlassCard className={cn("p-8 text-center", className)}>
+      <p className="text-sm text-muted-foreground">{message}</p>
+    </GlassCard>
   );
 }

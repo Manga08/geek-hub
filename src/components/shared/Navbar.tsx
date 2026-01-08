@@ -261,7 +261,7 @@ function MobileNav() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button className="relative flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/5 text-muted-foreground hover:text-foreground md:hidden after:absolute after:-inset-1">
+        <button className="relative flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/5 text-muted-foreground hover:text-foreground md:hidden after:absolute after:-inset-1 after:content-['']">
           <Menu className="h-5 w-5" />
           <span className="sr-only">Menú</span>
         </button>
@@ -276,7 +276,7 @@ function MobileNav() {
            <div className="px-4 mb-6">
              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Grupo Activo</p>
              <div className="flex w-full">
-                <GroupSwitcher />
+                <GroupSwitcher variant="mobileNav" />
              </div>
            </div>
 
@@ -331,6 +331,11 @@ export function Navbar() {
           {/* GroupSwitcher visible on desktop */}
           <div className="hidden md:block">
             <GroupSwitcher />
+          </div>
+
+          {/* GroupSwitcher visible on mobile topbar */}
+          <div className="md:hidden">
+            <GroupSwitcher variant="mobileTopbar" />
           </div>
 
           <div className="hidden md:block h-6 w-px bg-white/10" />

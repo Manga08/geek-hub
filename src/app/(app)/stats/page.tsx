@@ -152,38 +152,58 @@ function TopRatedList({ entries }: { entries: StatsSummary["topRated"] }) {
   return (
     <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4">
       <h3 className="text-sm font-semibold text-gray-300 mb-4">Mejor puntuados</h3>
-      <div className="space-y-3">
-        {entries.map((entry, index) => (
-          <div key={entry.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors">
-            <span className={cn(
-               "w-6 text-center text-lg font-bold",
-               index === 0 ? "text-amber-400" : "text-gray-500"
-            )}>
-              {index + 1}
-            </span>
-            {entry.poster_url ? (
-              <Image
-                src={entry.poster_url}
-                alt=""
-                width={40}
-                height={60}
-                className="rounded-md object-cover shadow-sm"
-              />
-            ) : (
-              <div className="w-10 h-15 rounded-md bg-gray-700 flex items-center justify-center">
-                <Film className="h-4 w-4 text-gray-500" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {entries.map((entry, index) => {
+          const rank = index + 1;
+          let medalClass = "bg-gray-800 text-gray-400 border-gray-700";
+
+          if (rank === 1) medalClass = "bg-yellow-500/20 text-yellow-400 border-yellow-500/50 shadow-[0_0_12px_-4px_rgba(234,179,8,0.6)]";
+          else if (rank === 2) medalClass = "bg-slate-400/20 text-slate-300 border-slate-400/50";
+          else if (rank === 3) medalClass = "bg-amber-700/20 text-amber-500 border-amber-700/50";
+
+          return (
+            <div key={entry.id} className="group relative flex flex-col gap-2">
+              <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-gray-800 border border-white/5 shadow-sm transition-all group-hover:scale-[1.02] group-hover:shadow-md">
+                {entry.poster_url ? (
+                  <Image
+                    src={entry.poster_url}
+                    alt={entry.title ?? ""}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 50vw, 33vw"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center bg-gray-700/50">
+                    <Film className="h-8 w-8 text-gray-600" />
+                  </div>
+                )}
+
+                {/* Medal / Rank Badge */}
+                <div className={cn(
+                  "absolute top-2 left-2 flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold backdrop-blur-md shadow-sm z-10",
+                  medalClass
+                )}>
+                  {rank}
+                </div>
+
+                {/* Rating Badge */}
+                <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-black/70 px-1.5 py-0.5 text-xs font-bold text-amber-400 backdrop-blur-sm border border-white/10 shadow-sm z-10">
+                  <Star className="h-3 w-3 fill-amber-400" />
+                  {entry.rating}
+                </div>
               </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-200 truncate">{entry.title ?? "Sin título"}</p>
-              <p className="text-xs text-gray-500 capitalize">{entry.type}</p>
+
+              <div className="space-y-0.5 px-0.5">
+                <p className="truncate text-xs font-medium text-gray-200" title={entry.title ?? ""}>
+                  {entry.title ?? "Sin título"}
+                </p>
+                <p className="text-[10px] text-gray-500 capitalize truncate">
+                  {entry.type === 'tv' ? 'TV' : entry.type}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-amber-400 bg-amber-400/10 px-2 py-1 rounded-md">
-              <Star className="h-3 w-3 fill-amber-400" />
-              <span className="text-sm font-bold">{entry.rating}</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

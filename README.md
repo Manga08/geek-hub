@@ -26,12 +26,12 @@
   - Densidad mejorada: reducción de padding en `MediaCard` para móviles (`p-2`).
   - Skeletons sincronizados: `MediaGridSkeleton` ahora replica exactamente los breakpoints del grid real para evitar CLS.
 
-- **Phase M1:** Mobile Navigation Premium (2025-01-07)
+- **Phase M1:** Mobile Navigation Premium (2026-01-07)
   - `ScrollableTabs`: Nuevo componente para navegación horizontal en filtros (Library, Stats) con degradados sutiles.
   - Touch Targets: Botones de navegación y menú expandidos a min 44px (usando pseudo-elementos para mantener estética).
   - Consistencia Visual: Ajustes de tipografía responsiva en headers (Activity).
 
-- **Phase M3:** Mobile Filters Drawer (Sheet) (2025-01-07)
+- **Phase M3:** Mobile Filters Drawer (Sheet) (2026-01-07)
   - `FilterSheet`: Componente wrapper que encapsula la lógica de "mostrar inline en Desktop, Sheet en Mobile".
   - Refactor en `/search`: Se ocultan los filtros complejos detrás de un botón "Filtros" en móviles.
   - Performance: Filtros móviles solo aplican cambios mediante botón dedicado "Aplicar", evitando re-renders en cada keystroke.

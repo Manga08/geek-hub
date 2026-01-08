@@ -118,15 +118,15 @@ function ActivityEventItem({ event }: { event: ActivityEvent }) {
       {/* Content */}
       <div className="min-w-0 flex-1 space-y-1">
         <p className="text-sm leading-relaxed text-foreground/90">
-          {/* Highlight User Name */}
-          <span className="font-medium text-foreground">{displayName}</span>
-          
-          {/* Rest of the text - we remove the name from start if exists to avoid duplication,
-              but getEventDescription usually returns full string "User did action".
-              We need to handle this carefully. Simple approach: Just render description but make whole card clickable.
-           */}
-           {" "}
-           {description.replace(displayName, "").trim()}
+          {description.startsWith(displayName) ? (
+            <>
+              <span className="font-medium text-foreground">{displayName}</span>
+              {" "}
+              {description.slice(displayName.length).trimStart()}
+            </>
+          ) : (
+            description
+          )}
         </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <CalendarClock className="h-3 w-3" />

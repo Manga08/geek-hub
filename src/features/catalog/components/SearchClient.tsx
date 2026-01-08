@@ -71,6 +71,7 @@ function SearchInner() {
 
   const clearFilters = () => {
     setQuery("");
+    setSubmittedQuery("");
     setType("game");
   };
 
