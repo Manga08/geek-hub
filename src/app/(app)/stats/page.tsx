@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollableTabs } from "@/components/shared/ScrollableTabs";
 import {
   useStatsSummary,
   type StatsScope,
@@ -392,17 +393,20 @@ export default function StatsPage() {
             </select>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-2 overflow-hidden w-full lg:w-auto">
             <span className="text-sm text-gray-500">Tipo:</span>
-            {TYPE_OPTIONS.map((opt) => (
-              <FilterChip
-                key={opt.value}
-                active={type === opt.value}
-                onClick={() => setType(opt.value)}
-              >
-                {opt.label}
-              </FilterChip>
-            ))}
+            <ScrollableTabs className="-mx-4 px-4 sm:mx-0 sm:px-0 lg:max-w-none">
+              {TYPE_OPTIONS.map((opt) => (
+                <FilterChip
+                  key={opt.value}
+                  active={type === opt.value}
+                  onClick={() => setType(opt.value)}
+                >
+                  <opt.icon className="h-3.5 w-3.5 inline mr-1" />
+                  {opt.label}
+                </FilterChip>
+              ))}
+            </ScrollableTabs>
           </div>
         </div>
       </div>

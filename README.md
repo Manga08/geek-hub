@@ -10,6 +10,7 @@
 ---
 
 ## 📱 Mobile Support
+
 - **Mobile First Design:** Interfaz optimizada para dispositivos táctiles.
 - **QA Checklist:** [Ver guía de auditoría móvil](docs/mobile-qa.md).
 
@@ -24,6 +25,11 @@
   - Layout Grid optimizado: 2 columnas en móvil / 6 en monitores XL.
   - Densidad mejorada: reducción de padding en `MediaCard` para móviles (`p-2`).
   - Skeletons sincronizados: `MediaGridSkeleton` ahora replica exactamente los breakpoints del grid real para evitar CLS.
+
+- **Phase M1:** Mobile Navigation Premium (2025-01-07)
+  - `ScrollableTabs`: Nuevo componente para navegación horizontal en filtros (Library, Stats) con degradados sutiles.
+  - Touch Targets: Botones de navegación y menú expandidos a min 44px (usando pseudo-elementos para mantener estética).
+  - Consistencia Visual: Ajustes de tipografía responsiva en headers (Activity).
 
 ## ✨ Características Principales
 

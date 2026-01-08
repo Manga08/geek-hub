@@ -26,6 +26,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { GlassCard } from "@/components/shared/GlassCard";
+import { ScrollableTabs } from "@/components/shared/ScrollableTabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -115,7 +116,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
+      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all ${
         active
           ? variant === "status"
             ? "ring-2 ring-primary ring-offset-1 ring-offset-background"
@@ -141,7 +142,7 @@ function StatusChip({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3 py-1.5 text-sm font-medium transition-all border ${
+      className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all border ${
         active
           ? STATUS_COLORS[status]
           : "bg-white/5 border-transparent text-muted-foreground hover:bg-white/10"
@@ -597,35 +598,39 @@ export default function LibraryPage() {
         </form>
 
         {/* Type filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="flex flex-col gap-2">
+          <span className="ml-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Tipo
           </span>
-          {TYPES.map(({ value, label, icon: Icon }) => (
-            <FilterChip
-              key={value}
-              active={filters.type === value || (!filters.type && value === "")}
-              onClick={() => updateFilters({ type: value || undefined })}
-            >
-              <Icon className="mr-1.5 inline-block h-3.5 w-3.5" />
-              {label}
-            </FilterChip>
-          ))}
+          <ScrollableTabs className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            {TYPES.map(({ value, label, icon: Icon }) => (
+              <FilterChip
+                key={value}
+                active={filters.type === value || (!filters.type && value === "")}
+                onClick={() => updateFilters({ type: value || undefined })}
+              >
+                <Icon className="mr-1.5 inline-block h-3.5 w-3.5" />
+                {label}
+              </FilterChip>
+            ))}
+          </ScrollableTabs>
         </div>
 
         {/* Status filters (multi-select) */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="flex flex-col gap-2">
+          <span className="ml-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Estado
           </span>
-          {ALL_STATUSES.map((status) => (
-            <StatusChip
-              key={status}
-              status={status}
-              active={statusArray.includes(status)}
-              onClick={() => toggleStatus(status)}
-            />
-          ))}
+          <ScrollableTabs className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            {ALL_STATUSES.map((status) => (
+              <StatusChip
+                key={status}
+                status={status}
+                active={statusArray.includes(status)}
+                onClick={() => toggleStatus(status)}
+              />
+            ))}
+          </ScrollableTabs>
         </div>
 
         {/* Bottom row: special filters + sort */}
