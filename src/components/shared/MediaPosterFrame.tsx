@@ -44,29 +44,37 @@ export function MediaPosterFrame({
           {/* Smart-Fit for Games: Background Blur Layer */}
           {isGame ? (
             <>
-              {/* Option A: Div based background to avoid double Next/Image overhead */}
-              <div
-                className="absolute inset-0 z-0 bg-cover bg-center opacity-60 blur-xl scale-110"
-                style={{ backgroundImage: `url(${src})` }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-0 z-0 bg-black/40" />
-
-              {/* Framed Foreground Image */}
-              <div className="absolute inset-0 z-10 flex items-center justify-center p-2 sm:p-3">
-                 <div className="relative h-full w-full overflow-hidden rounded-xl bg-black/20 shadow-lg ring-1 ring-white/10 transition-transform duration-500 will-change-transform group-hover:scale-105">
-                    <Image
-                      src={src}
-                      alt={alt}
-                      fill
-                      className="object-contain"
-                      placeholder="blur"
-                      blurDataURL={BLUR_DATA_URL}
-                      sizes={sizes}
-                      priority={priority}
-                    />
-                 </div>
+              {/* Mobile Only: Blurred Background for "Contain" mode */}
+              <div className="absolute inset-0 z-0 md:hidden">
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  className="object-cover opacity-60 blur-xl scale-110"
+                  aria-hidden="true"
+                  priority={priority}
+                  sizes={sizes}
+                />
+                <div className="absolute inset-0 bg-black/40" />
               </div>
+
+              {/* Main Image Layer */}
+              <Image
+                src={src}
+                alt={alt}
+                fill
+                className={cn(
+                  "transition-transform duration-500 will-change-transform z-10 group-hover:scale-105",
+                  // Mobile: contain + padding to avoid crop
+                  "object-contain p-2 sm:p-3",
+                  // Desktop: cover + full bleed + top alignment for premium look
+                  "md:object-cover md:p-0 md:object-[center_top]"
+                )}
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
+                sizes={sizes}
+                priority={priority}
+              />
             </>
           ) : (
              /* Standard Cover for other media types (Movies, TV, Anime) */
