@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Brand } from "@/components/shared/Brand";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ResetPasswordForm } from "@/features/auth/components/ResetPasswordForm";
 
@@ -23,16 +23,25 @@ export default async function ResetPasswordPage() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(to_right,transparent,rgba(139,92,246,0.4),transparent,rgba(139,92,246,0.4),transparent)]" aria-hidden />
       
       <div className="relative w-full max-w-lg">
-        <div className="absolute inset-0 -z-10 rounded-3xl bg-primary/15 blur-3xl" aria-hidden />
-        <div className="relative rounded-2xl border border-white/10 bg-white/5 p-1 shadow-2xl backdrop-blur-xl transition-transform duration-200 ease-out hover:-translate-y-0.5">
-          <Card className="w-full border-white/10 bg-white/10 shadow-[0_20px_80px_-60px_rgba(0,0,0,0.9)] backdrop-blur-xl">
-            <CardHeader>
-              <CardTitle className="text-xl">Nueva contraseña</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResetPasswordForm />
-            </CardContent>
-          </Card>
+        <div className="absolute inset-0 -z-10 rounded-3xl bg-primary/15 blur-3xl opacity-50" aria-hidden />
+        <div className="relative rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8 shadow-2xl backdrop-blur-xl transition-transform duration-200 ease-out hover:-translate-y-0.5">
+          <div className="flex flex-col items-center gap-8 w-full">
+            <div className="flex flex-col items-center gap-2">
+              <Brand className="scale-110" />
+            </div>
+
+            <Card className="w-full max-w-md border-0 bg-transparent shadow-none p-0">
+              <CardHeader className="text-center space-y-2 pb-6 pt-0 px-0">
+                <CardTitle className="text-2xl font-bold tracking-tight">Nueva contraseña</CardTitle>
+                <CardDescription className="text-base">
+                  Establece una contraseña segura para tu cuenta
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pb-6 px-0">
+                <ResetPasswordForm />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>

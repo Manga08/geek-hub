@@ -22,7 +22,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   const variants = prefersReducedMotion ? pageVariantsReduced : pageVariants;
 
   return (
-    <AnimatePresence initial={false}>
+    <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         key={pathname}
         variants={variants}

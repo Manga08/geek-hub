@@ -25,7 +25,7 @@ export default async function AuthLayout({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/40 via-transparent to-primary/40" aria-hidden />
       <div className="relative w-full max-w-lg">
         <div className="absolute inset-0 -z-10 rounded-3xl bg-primary/15 blur-3xl" aria-hidden />
-        <div className="relative rounded-2xl border border-white/10 bg-white/5 p-1 shadow-2xl backdrop-blur-xl transition-transform duration-200 ease-out hover:-translate-y-0.5">
+        <div className="relative rounded-2xl border border-white/10 bg-white/5 p-6 md:p-8 shadow-2xl backdrop-blur-xl transition-transform duration-200 ease-out hover:-translate-y-0.5">
           {children}
         </div>
       </div>

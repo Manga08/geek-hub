@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Activity, RefreshCw, ChevronDown, CalendarClock, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -194,10 +194,14 @@ export default function ActivityPage() {
   // Subscribe to real-time updates
   useActivityRealtime({ ignoreOwnEvents: true });
 
-  // Mark read on mount
+  // Mark read on mount — use ref to prevent duplicate calls
+  const hasMarkedRead = useRef(false);
   useEffect(() => {
-    markRead();
-  }, [markRead]);
+    if (!hasMarkedRead.current) {
+      hasMarkedRead.current = true;
+      markRead();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Framer Motion variants
   const containerVariants = {

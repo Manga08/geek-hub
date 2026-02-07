@@ -13,7 +13,7 @@ export function AttributionFooter() {
   const [rawgLogoError, setRawgLogoError] = useState(false);
 
   return (
-    <footer className="mt-auto border-t border-white/5 bg-black/20 backdrop-blur-sm">
+    <footer className="mt-auto min-h-29 sm:min-h-29 border-t border-white/5 bg-black/20 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-6 text-center sm:flex-row sm:justify-between sm:text-left">
         {/* TMDb Attribution */}
         <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start">

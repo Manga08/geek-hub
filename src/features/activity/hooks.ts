@@ -68,8 +68,10 @@ export function useUnreadActivityCount() {
     queryKey: activityKeys.unread(groupId),
     queryFn: () => fetchUnreadCount(groupId ?? undefined),
     enabled: !!groupId,
-    staleTime: 30 * 1000, // 30s - avoid excessive refetches
+    staleTime: 60 * 1000, // 60s - avoid excessive refetches
+    gcTime: 5 * 60 * 1000, // 5min - keep in cache longer
     refetchOnWindowFocus: false, // Realtime handles updates
+    refetchOnMount: false, // Prevent duplicate calls on mount
   });
 }
 
@@ -83,12 +85,11 @@ export function useMarkActivityRead() {
   const groupId = currentGroup?.group?.id ?? null;
 
   return useMutation({
+    mutationKey: ["activity", "markRead", groupId],
     mutationFn: () => markActivityRead(groupId ?? undefined),
     onSuccess: () => {
-      // Invalidate unread count after marking as read
-      queryClient.invalidateQueries({
-        queryKey: activityKeys.unread(groupId),
-      });
+      // Set count to 0 directly instead of invalidating to avoid duplicate refetches
+      queryClient.setQueryData(activityKeys.unread(groupId), { count: 0 });
     },
   });
 }

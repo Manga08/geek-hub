@@ -39,8 +39,13 @@ export function useLibraryEntry({
   });
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey });
-    queryClient.invalidateQueries({ queryKey: libraryKeys.all });
+    // Only invalidate list/lookup queries (not byItem — already updated by optimistic/settled)
+    // libraryKeys.all is ["library"] which is a prefix that matches byItem too,
+    // causing duplicate refetches. Instead, invalidate only list & lookup keys.
+    queryClient.invalidateQueries({ queryKey: libraryKeys.list() });
+    queryClient.invalidateQueries({ queryKey: [...libraryKeys.all, "lookup"] });
+    // Refetch the specific entry once (not via prefix match)
+    queryClient.invalidateQueries({ queryKey, exact: true });
   };
 
   // Quick add with default status

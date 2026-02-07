@@ -38,7 +38,7 @@ export function ItemDetail({ item }: { item: UnifiedCatalogItem }) {
               src={item.backdropUrl}
               alt={item.title}
               fill
-              sizes="100vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 90vw, 1200px"
               className="object-cover"
               priority
             />

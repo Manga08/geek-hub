@@ -439,17 +439,35 @@ export default function StatsPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="space-y-6">
+        <div className="space-y-6 min-h-150">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="rounded-xl border border-white/10 bg-gray-900/50 p-4 animate-pulse">
-                <div className="h-12 bg-gray-700 rounded" />
+                <div className="h-4 w-20 bg-gray-700/50 rounded mb-3" />
+                <div className="h-8 w-16 bg-gray-700 rounded" />
               </div>
             ))}
           </div>
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4 h-80 animate-pulse" />
-            <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4 h-80 animate-pulse" />
+            <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4 h-80 animate-pulse">
+              <div className="h-5 w-32 bg-gray-700/50 rounded mb-4" />
+              <div className="space-y-2">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="h-6 bg-gray-700/30 rounded" style={{ width: `${60 + i * 5}%` }} />
+                ))}
+              </div>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4 h-80 animate-pulse">
+              <div className="h-5 w-28 bg-gray-700/50 rounded mb-4" />
+              <div className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-gray-700/50 rounded" />
+                    <div className="flex-1 h-4 bg-gray-700/30 rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       ) : isError ? (

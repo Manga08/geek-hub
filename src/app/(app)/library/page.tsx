@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Library,
@@ -448,10 +448,11 @@ export default function LibraryPage() {
   );
 
   // Query
-  const { data: entries, isLoading, error } = useQuery({
+  const { data: entries, isLoading, error, isPlaceholderData } = useQuery({
     queryKey: libraryKeys.list(filters),
     queryFn: () => fetchLibraryList(filters),
     staleTime: 1000 * 60 * 2,
+    placeholderData: keepPreviousData, // Keep old data visible during filter changes to avoid CLS
   });
 
   // Bulk mutation

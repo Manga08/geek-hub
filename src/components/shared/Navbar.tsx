@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Activity, BarChart3, Bell, Bookmark, Check, Home, ListChecks, Menu, Search, Settings, User, Users } from "lucide-react"
+import { Activity, BarChart3, Bell, Bookmark, Check, Home, ListChecks, Menu, Search, Settings, User, Users, LogOut } from "lucide-react"
 import { motion } from "framer-motion"
 
 import {
@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils"
 import { NavActionPill } from "./NavActionPill"
 import { GroupSwitcher } from "@/features/groups"
 import { useProfile } from "@/features/profile"
+import { signOutAction } from "@/features/auth/actions"
 import {
   useUnreadActivityCount,
   useMarkActivityRead,
@@ -211,6 +212,19 @@ function UserMenu() {
             <Users className="h-4 w-4" />
             Gestión de grupo
           </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator className="bg-white/10" />
+        
+        <DropdownMenuItem 
+          className="group flex items-center gap-2 text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer transition-colors duration-200"
+          onSelect={async (e) => {
+            e.preventDefault(); // Evita que se cierre el menú inmediatamente si queremos mostrar algo, pero aquí está bien.
+            await signOutAction();
+          }}
+        >
+          <LogOut className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+          <span className="font-medium">Cerrar sesión</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

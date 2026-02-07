@@ -239,10 +239,42 @@ export default function ProfileSettingsPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-6 px-4 max-w-2xl">
-        <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-          <p className="text-gray-500 mt-2">Cargando perfil...</p>
-        </div>
+        <header className="mb-8">
+          <div className="h-5 w-16 bg-gray-800 rounded animate-pulse mb-4" />
+          <div className="h-8 w-64 bg-gray-800 rounded animate-pulse" />
+          <div className="h-4 w-80 bg-gray-800/60 rounded animate-pulse mt-2" />
+        </header>
+        <section className="mb-8 p-6 rounded-lg border border-gray-800 bg-gray-900/50">
+          <div className="h-6 w-32 bg-gray-800 rounded animate-pulse mb-4" />
+          <div className="flex flex-col items-center gap-4">
+            {/* Avatar + camera button wrapper (matches relative container ~120px) */}
+            <div className="relative h-30 w-30 flex items-center justify-center">
+              <div className="h-24 w-24 rounded-full bg-gray-800 animate-pulse" />
+            </div>
+            <div className="flex gap-2">
+              <div className="h-8 w-28 bg-gray-800 rounded animate-pulse" />
+            </div>
+          </div>
+        </section>
+        <section className="p-6 rounded-lg border border-gray-800 bg-gray-900/50">
+          <div className="h-6 w-44 bg-gray-800 rounded animate-pulse mb-4" />
+          <div className="space-y-4">
+            {/* Display name label + input */}
+            <div className="space-y-2">
+              <div className="h-4 w-36 bg-gray-800/60 rounded animate-pulse" />
+              <div className="h-10 w-full max-w-sm bg-gray-800 rounded animate-pulse" />
+              <div className="h-3 w-72 bg-gray-800/40 rounded animate-pulse" />
+            </div>
+            {/* Email label + input */}
+            <div className="space-y-2">
+              <div className="h-4 w-12 bg-gray-800/60 rounded animate-pulse" />
+              <div className="h-10 w-full max-w-sm bg-gray-800 rounded animate-pulse" />
+              <div className="h-3 w-56 bg-gray-800/40 rounded animate-pulse" />
+            </div>
+            {/* Save button */}
+            <div className="h-9 w-24 bg-gray-800 rounded animate-pulse" />
+          </div>
+        </section>
       </div>
     );
   }

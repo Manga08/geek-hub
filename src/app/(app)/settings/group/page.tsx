@@ -600,9 +600,46 @@ export default function GroupSettingsPage() {
     return (
       <div className="container mx-auto max-w-2xl px-4 py-8">
         <div className="space-y-6">
-          <div className="h-8 w-48 animate-pulse rounded bg-white/10" />
-          <div className="h-32 animate-pulse rounded-xl bg-white/10" />
-          <div className="h-64 animate-pulse rounded-xl bg-white/10" />
+          {/* Header skeleton */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-9 w-9 rounded-full bg-white/10 animate-pulse" />
+            <div>
+              <div className="h-7 w-56 animate-pulse rounded bg-white/10" />
+              <div className="h-4 w-72 animate-pulse rounded bg-white/10 mt-2" />
+            </div>
+          </div>
+          {/* Group info skeleton */}
+          <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4 animate-pulse">
+            <div className="h-4 w-40 bg-white/10 rounded mb-3" />
+            <div className="h-6 w-48 bg-white/10 rounded mb-1" />
+            <div className="h-5 w-16 bg-white/10 rounded" />
+          </div>
+          {/* Members skeleton */}
+          <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4 animate-pulse">
+            <div className="h-5 w-28 bg-white/10 rounded mb-4" />
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-white/10" />
+                  <div className="flex-1">
+                    <div className="h-4 w-32 bg-white/10 rounded" />
+                    <div className="h-3 w-20 bg-white/10 rounded mt-1" />
+                  </div>
+                  <div className="h-8 w-20 bg-white/10 rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Invites skeleton */}
+          <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4 animate-pulse">
+            <div className="h-5 w-32 bg-white/10 rounded mb-4" />
+            <div className="h-16 w-full bg-white/10 rounded" />
+          </div>
+          {/* Danger zone skeleton */}
+          <div className="rounded-xl border border-white/10 bg-gray-900/50 p-4 animate-pulse">
+            <div className="h-5 w-36 bg-white/10 rounded mb-3" />
+            <div className="h-10 w-40 bg-white/10 rounded" />
+          </div>
         </div>
       </div>
     );
